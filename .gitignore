@@ -1,0 +1,9 @@
+# raw collected data (~2.5 GB JSONL; not reproducible, not tracked)
+market_data/
+market_data_cloud/
+*.jsonl
+
+__pycache__/
+*.pyc
+desktop.ini
+*.lnk
