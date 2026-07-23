@@ -1,0 +1,32 @@
+=== Reconstructing local chain (07-05 .. 07-11, truncated at splice uid) ===
+  market_data\btcusd_2026-07-05.jsonl done, last_update_id=4484450132
+  market_data\btcusd_2026-07-06.jsonl done, last_update_id=4486904678
+  market_data\btcusd_2026-07-07.jsonl done, last_update_id=4489099158
+  market_data\btcusd_2026-07-08.jsonl done, last_update_id=4491241687
+  market_data\btcusd_2026-07-09.jsonl done, last_update_id=4493185540
+  market_data\btcusd_2026-07-10.jsonl done, last_update_id=4494912094
+  market_data\btcusd_2026-07-11.jsonl done, last_update_id=4495452846
+
+=== Reconstructing cloud chain (07-11 .. 07-15, own snapshot anchor) ===
+  market_data_cloud\btcusd_2026-07-11.jsonl done, last_update_id=4495654977
+  market_data_cloud\btcusd_2026-07-12.jsonl done, last_update_id=4496533003
+  market_data_cloud\btcusd_2026-07-13.jsonl done, last_update_id=4498248645
+  market_data_cloud\btcusd_2026-07-14.jsonl done, last_update_id=4499906840
+  market_data_cloud\btcusd_2026-07-15.jsonl done, last_update_id=4501406117
+
+Grid built: 869509 one-second samples, 159116 of them crossed (18.3%)
+Gap intervals (same as compute_volatility.py): 7
+
+=== Volatility, gap-excluded only (original, for reference) vs gap+crossed-excluded (clean) ===
+  interval=   1s
+    gap-excluded only : n=  869454  excluded=     54  std= 5.238e-05  annualized_sigma= 29.41%
+    gap+crossed-excl. : n=  710323  excluded= 159185  std= 5.612e-05  annualized_sigma= 31.51%
+  interval=  10s
+    gap-excluded only : n=   86940  excluded=     10  std= 1.919e-04  annualized_sigma= 34.07%
+    gap+crossed-excl. : n=   71015  excluded=  15935  std= 2.063e-04  annualized_sigma= 36.63%
+  interval= 1min
+    gap-excluded only : n=   14486  excluded=      5  std= 4.863e-04  annualized_sigma= 35.26%
+    gap+crossed-excl. : n=   11830  excluded=   2661  std= 5.230e-04  annualized_sigma= 37.92%
+  interval= 5min
+    gap-excluded only : n=    2894  excluded=      4  std= 1.065e-03  annualized_sigma= 34.54%
+    gap+crossed-excl. : n=    2362  excluded=    536  std= 1.148e-03  annualized_sigma= 37.21%

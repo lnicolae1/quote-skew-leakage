@@ -1,0 +1,80 @@
+=== spread_depth_profile.py ===
+Reconstructing local chain (07-05 .. 07-11, truncated at splice uid)...
+
+Reconstructing cloud chain (07-11 .. 07-15, own snapshot anchor)...
+
+=== Gap intervals detected during reconstruction ===
+  resumption: 2026-07-05T16:54:59.246745+00:00 -> 2026-07-05T16:55:00.053630+00:00 (4 updates lost)
+  invisible_span: 2026-07-09T00:02:01.450294+00:00 -> 2026-07-09T00:02:09.143922+00:00 (137 updates lost)
+  resumption: 2026-07-09T00:02:09.143922+00:00 -> 2026-07-09T00:02:09.657656+00:00 (11 updates lost)
+  invisible_span: 2026-07-11T00:04:01.064725+00:00 -> 2026-07-11T00:04:10.925672+00:00 (99 updates lost)
+  resumption: 2026-07-11T00:04:10.925672+00:00 -> 2026-07-11T00:04:11.471073+00:00 (1 updates lost)
+  invisible_span: 2026-07-13T22:31:05.214118+00:00 -> 2026-07-13T22:31:15.843315+00:00 (17 updates lost)
+  invisible_span: 2026-07-13T22:33:04.594669+00:00 -> 2026-07-13T22:33:24.314144+00:00 (203 updates lost)
+Total gaps found: 7, total updates lost: 472
+
+=== Sample coverage ===
+Total 1s grid samples considered: 869509
+  excluded (book not yet initialized): 0
+  excluded (crossed book, best_bid >= best_ask): 159116
+  excluded (gap-straddling, within 120s buffer window of a detected gap): 40
+  clean samples used for stats below: 710353
+  clean fraction: 81.696%
+
+=== Task 1: Spread (clean samples only) ===
+
+  Absolute spread (best_ask - best_bid), in USD:
+    n=710353  mean=3.445553  median=1.830000  std=5.031740
+    p 1: 0.010000
+    p 5: 0.010000
+    p25: 0.010000
+    p50: 1.830000
+    p75: 4.610000
+    p95: 13.860000
+    p99: 20.100000
+
+  Relative spread (spread / mid), in basis points:
+    n=710353  mean=0.5436  median=0.2873  std=0.7956
+    p 1: 0.0015
+    p 5: 0.0016
+    p25: 0.0016
+    p50: 0.2873
+    p75: 0.7248
+    p95: 2.1908
+    p99: 3.1796
+
+=== Task 2: Depth profile (avg resting size per distance bucket, clean samples only) ===
+
+      bucket |  bid avg qty (BTC) |  bid avg #levels |  ask avg qty (BTC) |  ask avg #levels
+  ------------------------------------------------------------------------------------------
+       0-1bp |             0.0452 |             2.15 |             0.0247 |             1.95
+       1-2bp |             0.0649 |             1.95 |             0.0388 |             1.56
+       2-5bp |             0.2284 |             4.70 |             0.1611 |             4.41
+      5-10bp |             0.7545 |             5.74 |             0.4109 |             4.51
+     10-20bp |             3.1375 |            16.43 |             2.8143 |            17.00
+     20-50bp |             5.3161 |            25.71 |             5.1780 |            28.16
+    50-100bp |             0.5538 |            14.39 |             0.7204 |            16.36
+      100+bp |            69.5349 |           595.28 |            25.0580 |           917.17
+
+  Average total levels per clean sample: bid=666.34  ask=991.13
+
+=== Task 3: 1000-level snapshot-cap caveat ===
+  REST snapshots are capped at 1000 levels/side (limit=1000); the
+  diff stream is uncapped, so the reconstructed book can exceed
+  1000 levels/side as diffs add levels.
+  Max bid levels seen at any point in the full stream: 730
+  Max ask levels seen at any point in the full stream: 1103
+  Clean samples with >1000 bid levels: 0 (0.0%)
+  Clean samples with >1000 ask levels: 357646 (50.348%)
+  >>> Beyond-cap levels are present in this dataset (levels/side exceeded 1000 at
+      least once). Those excess levels can only sit deep in the book; a snapshot
+      anchor can never itself contain more than 1000 levels/side, so anything past
+      level 1000 was built entirely from diff-stream additions accumulating since
+      the last (re)connect. Practically, this means the far-tail bucket (100+bp)
+      is the one most likely to be contaminated by this beyond-cap accumulation --
+      it may not represent 'real' resting depth as cleanly as a full independent
+      snapshot would, since it's a mix of originally-snapshotted levels and levels
+      added later purely via diffs with no independent cross-check beyond rank 1000
+      (per the verified fact: never compare reconstructed depth to a snapshot past
+      rank 1000). The near-touch buckets (0-1bp .. 50-100bp) are NOT affected --
+      they sit well inside the 1000-level cap essentially always.

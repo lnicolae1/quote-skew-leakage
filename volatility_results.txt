@@ -1,0 +1,35 @@
+=== Local chain (07-05 .. 07-11, truncated at splice uid) ===
+  market_data\btcusd_2026-07-05.jsonl: 1 snapshots, 85456 diffs applied, 0 crossed-book instances, last_update_id=4484450132
+  market_data\btcusd_2026-07-06.jsonl: 0 snapshots, 380854 diffs applied, 0 crossed-book instances, last_update_id=4486904678
+  market_data\btcusd_2026-07-07.jsonl: 0 snapshots, 374707 diffs applied, 0 crossed-book instances, last_update_id=4489099158
+  market_data\btcusd_2026-07-08.jsonl: 0 snapshots, 395438 diffs applied, 0 crossed-book instances, last_update_id=4491241687
+  market_data\btcusd_2026-07-09.jsonl: 1 snapshots, 337319 diffs applied, 280395 crossed-book instances, last_update_id=4493185540
+  market_data\btcusd_2026-07-10.jsonl: 0 snapshots, 308165 diffs applied, 308165 crossed-book instances, last_update_id=4494912094
+  market_data\btcusd_2026-07-11.jsonl: 1 snapshots, 135081 diffs applied, 637 crossed-book instances, last_update_id=4495452846
+
+Local chain stopped at last_update_id=4495452846 (expect 4495452846)
+
+=== Cloud chain (07-11 .. 07-15, own snapshot anchor) ===
+  market_data_cloud\btcusd_2026-07-11.jsonl: 1 snapshots, 45790 diffs applied, 0 crossed-book instances, last_update_id=4495654977
+  market_data_cloud\btcusd_2026-07-12.jsonl: 0 snapshots, 201090 diffs applied, 0 crossed-book instances, last_update_id=4496533003
+  market_data_cloud\btcusd_2026-07-13.jsonl: 2 snapshots, 276472 diffs applied, 0 crossed-book instances, last_update_id=4498248645
+  market_data_cloud\btcusd_2026-07-14.jsonl: 0 snapshots, 280170 diffs applied, 0 crossed-book instances, last_update_id=4499906840
+  market_data_cloud\btcusd_2026-07-15.jsonl: 0 snapshots, 243721 diffs applied, 0 crossed-book instances, last_update_id=4501406117
+
+Grid built: start=2026-07-05T16:54:59+00:00, 869509 one-second samples (span = 241.53 hours)
+
+=== Gaps ===
+  resumption: 2026-07-05T16:54:59.246745+00:00 -> 2026-07-05T16:55:00.053630+00:00 (4 updates lost)
+  invisible_span: 2026-07-09T00:02:01.450294+00:00 -> 2026-07-09T00:02:09.143922+00:00 (137 updates lost)
+  resumption: 2026-07-09T00:02:09.143922+00:00 -> 2026-07-09T00:02:09.657656+00:00 (11 updates lost)
+  invisible_span: 2026-07-11T00:04:01.064725+00:00 -> 2026-07-11T00:04:10.925672+00:00 (99 updates lost)
+  resumption: 2026-07-11T00:04:10.925672+00:00 -> 2026-07-11T00:04:11.471073+00:00 (1 updates lost)
+  invisible_span: 2026-07-13T22:31:05.214118+00:00 -> 2026-07-13T22:31:15.843315+00:00 (17 updates lost)
+  invisible_span: 2026-07-13T22:33:04.594669+00:00 -> 2026-07-13T22:33:24.314144+00:00 (203 updates lost)
+Total gaps found: 7, total updates lost: 472
+
+=== Volatility from mid-price log returns ===
+  interval=   1s  n_returns=  869454  excluded(gap)= 54  mean= 2.614e-08  std= 5.238e-05  annualized_sigma= 29.41%
+  interval=  10s  n_returns=   86940  excluded(gap)= 10  mean= 2.636e-07  std= 1.919e-04  annualized_sigma= 34.07%
+  interval= 1min  n_returns=   14486  excluded(gap)=  5  mean= 1.583e-06  std= 4.863e-04  annualized_sigma= 35.26%
+  interval= 5min  n_returns=    2894  excluded(gap)=  4  mean= 9.346e-06  std= 1.065e-03  annualized_sigma= 34.54%

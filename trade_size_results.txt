@@ -1,0 +1,64 @@
+=== trade_size_dist.py; empirical trade-size distribution ===
+Streaming aggTrade 'q' from 12 btcusd_ spot files (local 07-05..07-11 + cloud 07-11..07-15), dedup by aggTrade id.
+
+  market_data\btcusd_2026-07-05.jsonl: 876 aggTrade records, 876 new after dedup
+  market_data\btcusd_2026-07-06.jsonl: 4832 aggTrade records, 4832 new after dedup
+  market_data\btcusd_2026-07-07.jsonl: 3967 aggTrade records, 3967 new after dedup
+  market_data\btcusd_2026-07-08.jsonl: 5130 aggTrade records, 5130 new after dedup
+  market_data\btcusd_2026-07-09.jsonl: 6091 aggTrade records, 6091 new after dedup
+  market_data\btcusd_2026-07-10.jsonl: 5320 aggTrade records, 5320 new after dedup
+  market_data\btcusd_2026-07-11.jsonl: 1050 aggTrade records, 1050 new after dedup
+  market_data_cloud\btcusd_2026-07-11.jsonl: 379 aggTrade records, 379 new after dedup
+  market_data_cloud\btcusd_2026-07-12.jsonl: 1164 aggTrade records, 1164 new after dedup
+  market_data_cloud\btcusd_2026-07-13.jsonl: 3033 aggTrade records, 3033 new after dedup
+  market_data_cloud\btcusd_2026-07-14.jsonl: 4574 aggTrade records, 4574 new after dedup
+  market_data_cloud\btcusd_2026-07-15.jsonl: 2768 aggTrade records, 2768 new after dedup
+
+Total raw aggTrade records (pre-dedup): 39184
+Duplicate agg IDs removed (local/cloud 07-11 overlap): 0
+Unique trades (sample count for the distribution): 39184
+
+=== Summary statistics (BTC) ===
+  count : 39184
+  mean  : 0.00346543
+  std   : 0.01932409  (population)
+  min   : 0.00001000
+  max   : 0.93444000
+  median: 0.00076000
+
+=== Percentiles (BTC) ===
+  p    1 : 0.00003000
+  p    5 : 0.00010000
+  p   25 : 0.00048000
+  p   50 : 0.00076000
+  p   75 : 0.00161000
+  p   90 : 0.00260000
+  p   95 : 0.00473000
+  p   99 : 0.06045350
+  p 99.9 : 0.24131217
+
+=== Tail characterization ===
+  top-1% cutoff k (count): 392
+  p99 / median ratio        : 79.54
+  p99.9 / median ratio      : 317.52
+  max / median ratio        : 1229.53
+  mean(top 1%) / median     : 214.84
+  mean(top 1%) / overall mean: 47.12
+
+  Hill tail-index estimates (P(X>x) ~ x^-alpha; smaller alpha = fatter):
+    top 0.5% (k=196, threshold u=0.161530 BTC): alpha = 4.066
+    top 1.0% (k=392, threshold u=0.060360 BTC): alpha = 1.140
+    top 2.0% (k=784, threshold u=0.031600 BTC): alpha = 1.191
+
+  Reference alpha ~= 1.15 for the size tail (1.1-1.2 consistent;
+  much larger alpha = thinner tail than
+  assumed).
+
+=== Saved samples ===
+  file  : trade_sizes.bin
+  format: raw float64 (array('d')), native byte order, no header
+  count : 39184 values (== unique trade count above)
+  bytes : 313472
+  reload (stdlib): a=array.array('d'); a.fromfile(open(path,'rb'), N)
+  samples saved sorted ascending; order carries no meaning
+        for resampling.

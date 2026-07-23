@@ -1,0 +1,58 @@
+=== Chaining state through 07-05..07-08 (unmodified stream_reconstruct) ===
+  chaining market_data\btcusd_2026-07-05.jsonl ...
+  chaining market_data\btcusd_2026-07-06.jsonl ...
+  chaining market_data\btcusd_2026-07-07.jsonl ...
+  chaining market_data\btcusd_2026-07-08.jsonl ...
+State after 07-08: last_update_id=4491241687
+Book state entering 07-09: best_bid=62250.41000000 best_ask=62250.43000000 crossed? False
+
+=== Diagnosing 07-09 (task 1 + task 2) ===
+  SNAPSHOT at 2026-07-09T00:02:09.143922+00:00 lastUpdateId=4491244696 invisible_span_before=(4491244559, 4491244696, 137)
+
+  *** First crossing in this file ***
+  local_timestamp=2026-07-09T00:02:20.962636+00:00  update_id(u)=4491244963  U=4491244957
+  previous last_update_id=4491244956  contiguous (U == prev+1)? True
+  best_bid=62174.39000000  best_ask=62173.99000000  best_bid - best_ask=0.4000000000014552
+  this diff's raw bid updates: [['62173.78000000', '0.01608000'], ['62172.50000000', '0.00000000'], ['62148.18000000', '0.00000000']]
+  this diff's raw ask updates: [['62173.99000000', '0.00048000'], ['62192.96000000', '0.00000000'], ['62249.87000000', '0.04681000'], ['62495.49000000', '0.15606000']]
+  Top 5 bids (desc): [('62174.39000000', '0.01608000'), ('62173.78000000', '0.01608000'), ('62173.71000000', '0.00097000'), ('62173.36000000', '0.00164000'), ('62171.48000000', '0.03441000')]
+  Top 5 asks (asc):  [('62173.99000000', '0.00048000'), ('62176.75000000', '0.00173000'), ('62190.13000000', '0.00510000'), ('62190.14000000', '0.03309000'), ('62196.77000000', '0.04681000')]
+
+07-09 summary: total diffs=337319 total crossed instances=280395
+
+--- Ghost search: did a deletion (qty=0) for the offending price ever arrive? ---
+At first crossing: best_bid=62174.39 best_ask=62173.99
+Searching market_data\btcusd_2026-07-09.jsonl and market_data\btcusd_2026-07-10.jsonl for any deletion (qty->0) of price ['62174.39000000', '62173.99000000'] ...
+  price=62174.39000000: deletions(qty=0) found = 7
+    ('market_data\\btcusd_2026-07-09.jsonl', '2026-07-09T00:00:58.109076+00:00', 4491243052, 4491243064, 'b')
+    ('market_data\\btcusd_2026-07-09.jsonl', '2026-07-09T00:03:17.399413+00:00', 4491246767, 4491246772, 'b')
+    ('market_data\\btcusd_2026-07-09.jsonl', '2026-07-09T00:04:11.734345+00:00', 4491247916, 4491247960, 'a')
+    ('market_data\\btcusd_2026-07-09.jsonl', '2026-07-09T00:04:31.749782+00:00', 4491248392, 4491248411, 'b')
+    ('market_data\\btcusd_2026-07-09.jsonl', '2026-07-09T00:05:55.504974+00:00', 4491250620, 4491250641, 'a')
+    ('market_data\\btcusd_2026-07-09.jsonl', '2026-07-09T12:47:40.466296+00:00', 4492143272, 4492143286, 'b')
+    ('market_data\\btcusd_2026-07-09.jsonl', '2026-07-09T12:47:41.067695+00:00', 4492143299, 4492143301, 'b')
+  price=62173.99000000: deletions(qty=0) found = 4
+    ('market_data\\btcusd_2026-07-09.jsonl', '2026-07-09T00:02:23.964352+00:00', 4491245082, 4491245083, 'a')
+    ('market_data\\btcusd_2026-07-09.jsonl', '2026-07-09T00:04:35.951728+00:00', 4491248485, 4491248500, 'a')
+    ('market_data\\btcusd_2026-07-09.jsonl', '2026-07-09T04:41:51.283489+00:00', 4491591011, 4491591012, 'b')
+    ('market_data\\btcusd_2026-07-09.jsonl', '2026-07-09T04:47:47.119565+00:00', 4491595321, 4491595324, 'b')
+
+=== Diagnosing 07-10 for median crossing magnitude ===
+
+  *** First crossing in this file ***
+  local_timestamp=2026-07-10T00:00:00.233410+00:00  update_id(u)=4493185542  U=4493185541
+  previous last_update_id=4493185540  contiguous (U == prev+1)? True
+  best_bid=63185.65000000  best_ask=62196.77000000  best_bid - best_ask=988.8800000000047
+  this diff's raw bid updates: [['63178.59000000', '0.01582000'], ['63174.08000000', '0.00000000']]
+  this diff's raw ask updates: []
+  Top 5 bids (desc): [('63185.65000000', '0.00025000'), ('63181.60000000', '0.17562000'), ('63179.41000000', '0.03402000'), ('63178.59000000', '0.01582000'), ('63175.59000000', '0.03138000')]
+  Top 5 asks (asc):  [('62196.77000000', '0.04681000'), ('63185.66000000', '0.00048000'), ('63192.86000000', '0.00163000'), ('63199.33000000', '0.00404000'), ('63199.34000000', '0.03378000')]
+07-10 summary: total diffs=308165 total crossed instances=308165
+Median crossing magnitude (bb-ba) across 07-09+07-10: 1123.1500000000015
+Min crossing magnitude: 0.0  Max: 2462.1300000000047
+
+=== Task 4: confirm clearing at 07-11 00:04:10 snapshot ===
+  snapshot at 2026-07-11T00:04:10.925672+00:00 lastUpdateId=4494915679 bb=64072.12000000 ba=64073.76000000 crossed=False
+  ^ this is the 00:04:10 re-anchor snapshot (lastUpdateId=4494915679)
+Diffs applied after the re-anchor snapshot: 134612
+Of those, crossed: 0

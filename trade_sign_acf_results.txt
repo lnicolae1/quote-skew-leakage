@@ -1,0 +1,115 @@
+Reading aggTrade records from 12 btcusd_ spot files...
+  market_data\btcusd_2026-07-05.jsonl: 876 aggTrade records
+  market_data\btcusd_2026-07-06.jsonl: 4832 aggTrade records
+  market_data\btcusd_2026-07-07.jsonl: 3967 aggTrade records
+  market_data\btcusd_2026-07-08.jsonl: 5130 aggTrade records
+  market_data\btcusd_2026-07-09.jsonl: 6091 aggTrade records
+  market_data\btcusd_2026-07-10.jsonl: 5320 aggTrade records
+  market_data\btcusd_2026-07-11.jsonl: 1050 aggTrade records
+  market_data_cloud\btcusd_2026-07-11.jsonl: 379 aggTrade records
+  market_data_cloud\btcusd_2026-07-12.jsonl: 1164 aggTrade records
+  market_data_cloud\btcusd_2026-07-13.jsonl: 3033 aggTrade records
+  market_data_cloud\btcusd_2026-07-14.jsonl: 4574 aggTrade records
+  market_data_cloud\btcusd_2026-07-15.jsonl: 2768 aggTrade records
+
+Total raw aggTrade records read (pre-dedup): 39184
+Duplicate agg IDs removed (local/cloud 07-11 overlap): 0
+Unique trades after dedup, sorted by agg id: 39184
+
+Sanity check; sign balance: +1 (buy-initiated): 18822 (48.03%), -1 (sell-initiated): 20362 (51.97%)
+
+=== Trade-sign ACF, lags 1..1000 ===
+Computing dense ACF at every integer lag 1..1000 for Bartlett SE (this is the slow part)...
+   lag     rho(lag)  Bartlett SE  |rho|>1.96*SE   pairs (N-lag)  indep blocks (N//lag)
+     1       0.4102       0.0051            yes           39183                  39184
+     2       0.3273       0.0058            yes           39182                  19592
+     3       0.2882       0.0063            yes           39181                  13061
+     5       0.2312       0.0069            yes           39179                   7836
+     7       0.1987       0.0072            yes           39177                   5597
+    10       0.1608       0.0076            yes           39174                   3918
+    15       0.1230       0.0079            yes           39169                   2612
+    20       0.1018       0.0081            yes           39164                   1959
+    30       0.0726       0.0083            yes           39154                   1306
+    50       0.0626       0.0086            yes           39134                    783
+    70       0.0582       0.0088            yes           39114                    559
+   100       0.0555       0.0090            yes           39084                    391
+   150       0.0445       0.0094            yes           39034                    261
+   200       0.0316       0.0096            yes           38984                    195
+   300       0.0226       0.0098            yes           38884                    130
+   500       0.0276       0.0101            yes           38684                     78
+   700       0.0100       0.0103             NO           38484                     55
+  1000       0.0118       0.0105             NO           38184                     39
+
+=== Local log-log slope between consecutive measured lags ===
+      interval      slope
+          1->2    -0.3257
+          2->3    -0.3140
+          3->5    -0.4310
+          5->7    -0.4511
+         7->10    -0.5927
+        10->15    -0.6619
+        15->20    -0.6556
+        20->30    -0.8334
+        30->50    -0.2909
+        50->70    -0.2165
+       70->100    -0.1319
+      100->150    -0.5484
+      150->200    -1.1827
+      200->300    -0.8275
+      300->500     0.3912
+      500->700    -3.0139
+     700->1000     0.4514
+
+=== DFA on the sign series ===
+Box sizes used: [10, 14, 21, 30, 43, 61, 88, 126, 182, 261, 375, 539, 775, 1113, 1599, 2298, 3302, 4745, 6818, 9796]
+  n (box size)           F(n)
+            10       0.750389
+            14       0.979745
+            21       1.378531
+            30       1.864971
+            43       2.511213
+            61       3.397178
+            88       4.485713
+           126       5.751562
+           182       7.680270
+           261       9.848714
+           375      13.180233
+           539      17.245177
+           775      23.369384
+          1113      30.955466
+          1599      42.471719
+          2298      59.077618
+          3302      75.098038
+          4745      88.410942
+          6818     127.980390
+          9796     213.093776
+
+=== DFA local log-log slope between consecutive box sizes ===
+(flat across box sizes = single scaling regime;
+ drift or steps = one global H
+ does not fit)
+          interval  local slope
+            10->14       0.7926
+            14->21       0.8422
+            21->30       0.8473
+            30->43       0.8264
+            43->61       0.8642
+            61->88       0.7585
+           88->126       0.6925
+          126->182       0.7864
+          182->261       0.6898
+          261->375       0.8040
+          375->539       0.7410
+          539->775       0.8368
+         775->1113       0.7767
+        1113->1599       0.8730
+        1599->2298       0.9100
+        2298->3302       0.6619
+        3302->4745       0.4501
+        4745->6818       1.0204
+        6818->9796       1.4069
+
+DFA fit over all box sizes (single global H; unreliable
+if the local slopes above drift):
+  Hurst exponent H = 0.7910
+  gamma = 2(1-H) = 0.4180
