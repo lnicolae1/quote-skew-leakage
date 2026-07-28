@@ -104,10 +104,13 @@ def _seed_book(eng, mid=REFERENCE_PRICE):
 
 
 # --- the run ---
-def run_sim(gamma, horizon_s, duration_s, seed):
+def run_sim(gamma, horizon_s, duration_s, seed, k=None):
     """One full simulation; identical arguments give identical output.
 
     gamma      : MM risk aversion, MarketMaker(gamma=...)
+    k          : fill-decay coefficient, MarketMaker(k=...); None keeps DEFAULT_K (never edited).
+                 AS term2 (2/gamma)*ln(1+gamma/k) -> 2/k as gamma -> 0; term1 = C sets skew,
+                 term2 sets baseline width, so a gamma sweep at fixed k moves only skew
     horizon_s  : MM quoting horizon T, seconds; if duration_s > horizon_s, skew is 0 after T
                  (flagged as 'duration_exceeds_horizon')
     duration_s : simulated length, seconds
@@ -129,7 +132,8 @@ def run_sim(gamma, horizon_s, duration_s, seed):
     noise = NoiseTraderFlow(value_fn=value_fn, reference_price=REFERENCE_PRICE,
                             seed=seed_noise)
     informed = InformedTraderFlow(seed=seed_inf)
-    mm = MarketMaker(gamma=gamma, horizon=horizon_s)
+    mm = MarketMaker(gamma=gamma, horizon=horizon_s,
+                     **({} if k is None else {"k": k}))
 
     birth = {oid: 0.0 for oid in eng.orders}
     ages = []
@@ -293,6 +297,7 @@ def run_sim(gamma, horizon_s, duration_s, seed):
     return {
         # what was run
         "gamma": gamma,
+        "k": mm.k,                 # k actually used
         "horizon_s": horizon_s,
         "duration_s": duration_s,
         "seed": seed,
@@ -361,7 +366,9 @@ def run_sim(gamma, horizon_s, duration_s, seed):
         # competitiveness
         "median_mm_quoted_spread": med_mm_spread,
         "median_residual_touch_spread": med_resid_spread,
+        "n_resid_spreads": len(resid_spreads),
         "median_residual_touch_spread_excluding_seed": med_resid_spread_ns,
+        "n_resid_spreads_ns": len(resid_spreads_ns),
         "mm_spread_over_residual_spread": (
             med_mm_spread / med_resid_spread
             if med_mm_spread and med_resid_spread else None),
@@ -390,8 +397,10 @@ def run_sim(gamma, horizon_s, duration_s, seed):
             "its own aggressive fills; needs new instrumentation and a "
             "mark-out horizon. | emergent_trade_rate_per_s counts trade "
             "events (records with >=1 fill), as in diag_final.py, comparable "
-            "to the 0.0416/s figure. | k=1.5 is a flagged placeholder. | "
+            "to the 0.0416/s figure. | k=%s%s | "
             "DIAGNOSTIC_* keys are not the Phase 6 sniffer."
+            % (mm.k, " (DEFAULT_K, a flagged placeholder)" if k is None
+               else " (passed in; DEFAULT_K unedited)")
         ),
     }
 
@@ -424,13 +433,15 @@ def main():
     p.add_argument("--duration", type=float, default=86400.0,
                    help="simulated run length, seconds")
     p.add_argument("--seed", type=int, default=0)
+    p.add_argument("--k", type=float, default=None,
+                   help="MM fill-decay coefficient; omit to use DEFAULT_K")
     p.add_argument("--selftest", action="store_true",
                    help="run the determinism check and exit")
     a = p.parse_args()
     if a.selftest:
         _selftest()
         return
-    out = run_sim(a.gamma, a.horizon, a.duration, a.seed)
+    out = run_sim(a.gamma, a.horizon, a.duration, a.seed, k=a.k)
     print(json.dumps(out, indent=2, sort_keys=True))
 
 
