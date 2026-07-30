@@ -3,6 +3,9 @@ market_data/
 market_data_cloud/
 *.jsonl
 
+# sweep pickles (regenerable; gamma_sweep_results*.txt hold every field)
+sweep_raw*.pkl
+
 __pycache__/
 *.pyc
 desktop.ini
