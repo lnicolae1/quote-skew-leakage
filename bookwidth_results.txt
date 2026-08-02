@@ -1,0 +1,135 @@
+====================================================================================================
+Book-width diagnosis; why is the residual book ~4bp wide?
+====================================================================================================
+MM ABSENT. Informed traders present (same setup measure_k.py used).
+Locked config: lam=0.2255  p_market=0.020  mean_lifetime=180s  disp=0.0020
+Profile: 3 seeds x 86400s. Sensitivity: 1 seed x 21600s per cell.
+
+  seed 0: median spread 2.5881bp  two-sided 99.95%  mean resting 17.5/side  (2s)
+  seed 1: median spread 2.8125bp  two-sided 99.93%  mean resting 17.6/side  (5s)
+  seed 2: median spread 2.7845bp  two-sided 99.96%  mean resting 17.5/side  (7s)
+
+====================================================================================================
+Section 0; touch width (pooled, 259061 two-sided samples)
+====================================================================================================
+  median 2.7210 bp    mean 3.5656 bp
+    p5     0.1882 bp
+    p25    1.1227 bp
+    p50    2.7210 bp
+    p75    5.0119 bp
+    p95    9.7454 bp
+  mean resting non-seed orders per side: 17.5
+  analytic prediction 2*1.2533*disp/N_per_side = 2.8615 bp
+    measured / predicted = 0.95x  (excess above 1.0 = staleness)
+
+====================================================================================================
+Section 1; placement vs resting distance
+====================================================================================================
+  Signed distance: positive = passive (priced behind the mid),
+  negative = aggressive (priced through the mid, i.e. marketable).
+
+  Noise limit orders placed: 57353
+    vs mid at submission:  median +14.0775 bp   mean +15.9973 bp
+      p05  -2.8441  p25  +6.0538  p75 +24.1790  p95 +41.3462
+      aggressive (negative, marketable on arrival): 5296 (9.23%)
+    vs V at submission:    median +13.5704 bp   mean +16.0129 bp
+  informed limit orders placed: 437
+    vs mid at submission:  median  -4.9112 bp   mean  -5.8625 bp
+      p05 -13.2809  p25  -8.0867  p75  -2.8750  p95  -0.9422
+      aggressive (negative, marketable on arrival): 437 (100.00%)
+    vs V at submission:    median  +0.0133 bp   mean  +0.0315 bp
+
+  Resting distance from mid, time-averaged (order-seconds weighted,
+  non-seed orders only, 9077114 order-seconds):
+    median  16.1250 bp
+      p5     1.8750 bp
+      p25    8.3750 bp
+      p75   26.0750 bp
+      p95   43.4250 bp
+
+====================================================================================================
+Section 2; time-averaged depth profile by distance from mid
+====================================================================================================
+  Reminder: no order can sit closer to the mid than half the spread,
+  so empty near buckets are implied by the spread, not independent.
+
+  bucket     |  bid qty BTC bid orders  bid lvls |  ask qty BTC ask orders  ask lvls
+  ----------------------------------------------------------------------------------------
+  0-0.5bp    |      0.00168       0.23      0.23 |      0.00164       0.23      0.23
+  0.5-1bp    |      0.00176       0.23      0.23 |      0.00141       0.23      0.23
+  1-2bp      |      0.00217       0.46      0.46 |      0.00234       0.46      0.46
+  2-5bp      |      0.00633       1.54      1.53 |      0.00559       1.53      1.53
+  5-10bp     |      0.01187       2.83      2.83 |      0.00900       2.90      2.89
+  10+bp      |      0.04611      12.27     12.26 |      0.03979      12.13     12.13
+  ----------------------------------------------------------------------------------------
+  Total      |      0.06993      17.56           |      0.05977      17.47          
+  seeded-book orders excluded above: 0.01519 BTC bid / 0.00318 BTC ask
+  (the 10 _seed_book orders never expire; they have no B2 lifetime
+   -- so they are reported separately rather than mixed in.)
+
+====================================================================================================
+Section 3; fate by placement distance
+====================================================================================================
+  'immediate' = traded on arrival (never rested).
+  'fill'/'cancel' = rested, then first-passage fill / B2 expiry.
+
+  placed at           n |  immediate     filled  cancelled    resting
+  --------------------------------------------------------------------------
+  Aggressive       5733 |      72.8%      10.0%      17.3%       0.0%
+  0-0.5bp           579 |       0.0%      31.8%      68.0%       0.2%
+  0.5-1bp           593 |       0.0%      32.9%      67.1%       0.0%
+  1-2bp            1255 |       0.0%      29.3%      70.6%       0.1%
+  2-5bp            4826 |       0.0%      22.3%      77.5%       0.2%
+  5-10bp           8878 |       0.0%      14.6%      85.2%       0.2%
+  10+bp           35926 |       0.0%       4.1%      95.8%       0.2%
+
+====================================================================================================
+Section 4; one-at-A-time sensitivity of the touch width
+====================================================================================================
+  Each row varies one parameter; the others stay at the locked config.
+  trade/s is shown because a config that fixes the width by raising
+  supply may break the Phase 3 trade-rate calibration (target 0.0451).
+
+  disp:
+    value          median bp     mean bp   2-sided% resting/side    trade/s
+    0.00050           1.0955      1.8200     99.61%         12.9     0.0570
+    0.00100           1.3891      2.0165     99.91%         15.3     0.0425
+    0.00200           2.5272      3.2127     99.99%         17.4     0.0255  <== locked
+    0.00400           4.4201      5.6995     99.94%         18.6     0.0165
+    0.00800           8.9089     10.8316     99.99%         19.1     0.0114
+    elasticity d ln(width) / d ln(disp) = +0.772
+
+  mean_lifetime:
+    value          median bp     mean bp   2-sided% resting/side    trade/s
+    45.00000          8.2182     10.3368     98.44%          4.8     0.0126
+    90.00000          4.2447      5.4040     99.93%          9.2     0.0181
+    180.00000         2.5272      3.2127     99.99%         17.4     0.0255  <== locked
+    360.00000         1.7140      2.4049     99.99%         32.0     0.0350
+    720.00000         1.2484      2.1622    100.00%         56.2     0.0443
+    elasticity d ln(width) / d ln(mean_lifetime) = -0.675
+
+  lam:
+    value          median bp     mean bp   2-sided% resting/side    trade/s
+    0.05638           9.3592     12.4189     98.30%          4.6     0.0095
+    0.11275           3.3053      5.2507     99.06%          8.9     0.0138
+    0.22550           2.5272      3.2127     99.99%         17.4     0.0255  <== locked
+    0.45100           1.7105      2.1737    100.00%         34.5     0.0439
+    0.90200           1.0616      1.5465    100.00%         66.3     0.0951
+    elasticity d ln(width) / d ln(lam) = -0.723
+
+  p_market:
+    value          median bp     mean bp   2-sided% resting/side    trade/s
+    0.00500           2.1167      2.9839    100.00%         18.3     0.0215
+    0.01000           2.1370      3.0701     99.99%         17.6     0.0226
+    0.02000           2.5272      3.2127     99.99%         17.4     0.0255  <== locked
+    0.04000           3.1662      4.3122     99.87%         16.5     0.0275
+    0.08000           4.2042      5.3315     99.38%         15.0     0.0344
+    elasticity d ln(width) / d ln(p_market) = +0.255
+
+  Ranked by |elasticity|; which single knob moves the width most:
+    disp           +0.772
+    lam            -0.723
+    mean_lifetime  -0.675
+    p_market       +0.255
+
+  total wall clock 9s
