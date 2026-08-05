@@ -21,8 +21,12 @@ DISP = 0.0055
 P_MARKET = 0.0126
 SAMPLE_EVERY = 60
 
-K_BRACKET = [(0.07721, "best-fitting standard window (0-40, R2=0.9175)"),
-             (0.09026, "tightest of the bracket (0-20), most favourable to MM")]
+K_BRACKET = [(0.17763, "Option 1 near-touch $0.25-5, R2=0.9929  [PRIMARY]"),
+             (0.16230, "Option 1 near-touch $0.25-10, R2=0.9954  [check]"),
+             (0.12429, "Option 1 full swept range $0.25-30, R2=0.9584")]
+
+ONE_TICK_USD = 0.01
+ONE_TICK_BP = 1e4 * ONE_TICK_USD / 62000.0
 
 K06747 = {"full_median_bp": 0.3110, "resid_median_bp": 0.3110,
           "mm_passive_share": 0.95, "mm_near_share": 0.00,
@@ -162,12 +166,18 @@ def main():
     print("%d seeds x %.0fs. gamma=DEFAULT_GAMMA=%g (not chosen). DEFAULT_K "
           "never edited." % (len(SEEDS), T, DEFAULT_GAMMA))
     print("")
-    print("measure_k_clipped.py found no principled k: over $0-5, where the MM "
-          "would quote,")
-    print("k = -0.019 +/- 0.040 (R2 = 0.07); the hazard is FLAT, not "
-          "exponential. The exp form")
-    print("only appears over tens of dollars, where the window choice moves k "
-          "by 2.3x.")
+    print("k values are the section 3.6 Option 1 measurements (the MM's own "
+          "quotes, its own fills,")
+    print("distance set not inferred). The earlier measure_k_clipped.py values "
+          "are NOT used: that")
+    print("estimator is unresolvable near the touch; not flat; because it "
+          "re-attributes distance")
+    print("once per second while the mid's 1-second sd is $4.11, blurring "
+          "every fill by ~+/-$4.")
+    print("Measured properly the same region fits at R2 = 0.9929. The "
+          "log-hazard is convex, so no")
+    print("single k describes the curve: this is a bracket and cannot become "
+          "a calibration.")
     print("")
 
     print("=" * 124)
@@ -207,11 +217,6 @@ def main():
             return K06747.get(key, default)
         return results[k].get(key, default)
 
-    def se(k, key):
-        if k == 0.06747:
-            return None
-        return results[k].get(key + "_se")
-
     rows = [
         ("full-book touch (bp)", "full_median_bp", "%10.4f"),
         ("residual touch (bp)", "resid_median_bp", "%10.4f"),
@@ -228,14 +233,25 @@ def main():
         ("sd of skew (bp)", "sd_skew_bp", "%10.6f"),
         ("max |skew| ($)", "max_abs_skew_usd", "%10.5f"),
     ]
-    print("  %-30s %12s %12s %12s" % ("", "k=0.06747", "k=0.07721", "k=0.09026"))
-    print("  " + "-" * 70)
+    print("  %-30s %s"
+          % ("", " ".join("%12s" % ("k=%.5f" % k) for k in ks)))
+    print("  " + "-" * (30 + 13 * len(ks)))
     for label, key, fmt in rows:
         cells = []
         for k in ks:
             v = get(k, key)
-            cells.append("          -" if v is None else (fmt % v))
-        print("  %-30s %s" % (label, " ".join("%12s" % c.strip() for c in cells)))
+            cells.append("-" if v is None else (fmt % v).strip())
+        print("  %-30s %s" % (label, " ".join("%12s" % c for c in cells)))
+    print("")
+    print("  one tick = $%.2f = %.6f bp; the floor below which the quote "
+          "centre does not move" % (ONE_TICK_USD, ONE_TICK_BP))
+    print("  a full price increment, and no observer can read it however "
+          "sophisticated.")
+    print("  %-30s %s"
+          % ("sd(skew) in ticks", " ".join(
+              "%12s" % ("-" if get(k, "sd_skew_usd") is None
+                        else "%.3f" % (get(k, "sd_skew_usd") / ONE_TICK_USD))
+              for k in ks)))
 
     print("")
     print("  old 17.5-orders/side book (gamma sweep, k=0.06747, 3 days):")
@@ -264,11 +280,28 @@ def main():
               "$%.5f = %.6f bp"
               % (k, sdq, sdq / OLD_BOOK["sd_q"], sdsk, get(k, "sd_skew_bp")))
     print("")
-    print("  A tick is $0.01 = %.6f bp. If sd(skew) is below one tick the "
-          "quote centre does not" % (1e4 * 0.01 / 62000.0))
-    print("  move measurably at all and no observer; however sophisticated "
-          "-- can read it.")
-    print("  This is reported, not adjudicated.")
+    print("  the floor that matters: one tick = $%.2f = %.6f bp. If sd(skew) "
+          "is below a tick the" % (ONE_TICK_USD, ONE_TICK_BP))
+    print("  quote centre does not move a full price increment, so no "
+          "observer; however")
+    print("  sophisticated; can read it, and a null Phase 6 result would be "
+          "uninterpretable.")
+    print("")
+    print("  %-14s %14s %14s %12s" % ("k", "sd(skew) $", "in ticks", "verdict"))
+    for k in ks:
+        sdsk = get(k, "sd_skew_usd")
+        if sdsk is None:
+            print("  %-14.5f %14s %14s %12s" % (k, "-", "-", "not measured"))
+            continue
+        ticks = sdsk / ONE_TICK_USD
+        print("  %-14.5f %14.5f %14.3f %12s"
+              % (k, sdsk, ticks,
+                 "ABOVE floor" if ticks >= 1.0 else "BELOW floor"))
+    print("")
+    print("  Reported, not adjudicated; but the tick floor is a hard "
+          "observability limit, not a")
+    print("  modelling preference: a sub-tick quote-centre movement is not "
+          "representable on the book.")
 
 
 if __name__ == "__main__":
