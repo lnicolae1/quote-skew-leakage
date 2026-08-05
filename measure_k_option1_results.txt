@@ -1,0 +1,54 @@
+====================================================================================================
+Measure k: Option 1 (the MM's own quotes, its own fills)
+====================================================================================================
+Working point: lam=1.8040 p_market=0.0126 mean_lifetime=720s disp=0.0055, JOIN clipping.
+Controlled quoter: one order per side at delta from mid, size 0.02 BTC,
+cancelled and reposted every second (market_maker.py cadence). No AS formula,
+no skew, no gamma; delta set by the script.
+10 seeds x 86400s per delta.  k is internally calibrated.
+
+Scale check: mid's 1-second sd = $4.11; this book's touch = $1.93.
+Quote distance and 1 s price move are comparable near the touch; check R2 first.
+
+ delta ($)    exposure(s)      fills    bid/ask     lambda(/s)    ln lambda
+----------------------------------------------------------------------------------------------------
+      0.25        1728000      10535  4481/6054     6.0966e-03      -5.1000
+      0.39        1728000      10113  4475/5638     5.8524e-03      -5.1409
+      0.60        1728000       9481  4455/5026     5.4867e-03      -5.2054
+      0.92        1728000       8999  4276/4723     5.2078e-03      -5.2576
+      1.43        1728000       8331  3916/4415     4.8212e-03      -5.3347
+      2.20        1728000       7279  3446/3833     4.2124e-03      -5.4697
+      3.40        1728000       5946  2814/3132     3.4410e-03      -5.6720
+      5.26        1728000       4521  2159/2362     2.6163e-03      -5.9460
+      8.13        1728000       2952  1394/1558     1.7083e-03      -6.3722
+     12.56        1728000       1756    796/960     1.0162e-03      -6.8917
+     19.41        1728000        991    419/572     5.7350e-04      -7.4638
+     30.00        1728000        516    210/306     2.9861e-04      -8.1164
+
+====================================================================================================
+Exponential fit  ln lambda = ln A - k * delta   (weighted by fill count)
+====================================================================================================
+full swept range $0.25-30       k = 0.12429 +/- 0.00818   R2 = 0.9584   npoints=12  nfills=71420
+                                1/k = $8.05     2/k = $16.09  = 2.5954 bp
+near-touch $0.25-5              k = 0.17763 +/- 0.00674   R2 = 0.9929   npoints=7  nfills=60684
+                                1/k = $5.63     2/k = $11.26  = 1.8160 bp
+near-touch $0.25-10             k = 0.16230 +/- 0.00418   R2 = 0.9954   npoints=9  nfills=68157
+                                1/k = $6.16     2/k = $12.32  = 1.9875 bp
+far field $5-30                 k = 0.09573 +/- 0.01054   R2 = 0.9649   npoints=5  nfills=10736
+                                1/k = $10.45     2/k = $20.89  = 3.3698 bp
+
+====================================================================================================
+Comparison
+====================================================================================================
+  estimator / window                                  k      2/k ($)    x touch
+  measure_k.py (old book, MM-absent, 0-40)      0.06747        29.64      15.4x
+  measure_k_clipped.py bracket, low (full)      0.03997        50.04      26.0x
+  measure_k_clipped.py bracket, high (0-20)     0.09026        22.16      11.5x
+  Option 1: full swept range $0.25-30           0.12429        16.09       8.3x   R2=0.9584
+  Option 1: near-touch $0.25-5                  0.17763        11.26       5.8x   R2=0.9929
+  Option 1: near-touch $0.25-10                 0.16230        12.32       6.4x   R2=0.9954
+  Option 1: far field $5-30                     0.09573        20.89      10.8x   R2=0.9649
+
+  this book's touch: 0.3110 bp = $1.93
+
+total wall clock 421s

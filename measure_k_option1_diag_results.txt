@@ -1,0 +1,57 @@
+================================================================================================================
+Check 1; is the bid/ASK asymmetry explained by value-path drift?
+================================================================================================================
+Per-seed drift over one day, and that seed's own ask/bid fill ratio at 3 deltas.
+generate_value_path is driftless in log space, so the deterministic drift is only
++0.019%/day. Any real asymmetry must come from realized per-seed drift (daily sd ~$1,200).
+
+  seed        drift $      drift %  bid fills  ask fills    ask/bid    ln(a/b)
+  ----------------------------------------------------------------------------
+  0           1798.67       2.9011        796       1284     1.6131     0.4781
+  1            746.58       1.2042        781       1177     1.5070     0.4101
+  2           1944.14       3.1357        711       1382     1.9437     0.6646
+  3            886.94       1.4305        670       1070     1.5970     0.4681
+  4          -1144.49      -1.8459       1019       1103     1.0824     0.0792
+  5           -317.70      -0.5124       1056       1065     1.0085     0.0085
+  6           -358.51      -0.5782       1275       1121     0.8792    -0.1287
+  7           1267.15       2.0438       1088       1118     1.0276     0.0272
+  8           -151.21      -0.2439        935       1113     1.1904     0.1743
+  9           -219.92      -0.3547        990       1012     1.0222     0.0220
+
+  mean log-drift over the 10 seeds: +0.007032  (= +0.706% = $+437.49)
+  sd of log-drift across seeds     : 0.016522
+  pooled bid 9321 / ask 11445 -> ask/bid = 1.2279
+
+  Correlation seed log-drift vs seed ln(ask/bid): r = +0.7526  (t = +3.23, n = 10)
+  Expected under the drift explanation: strongly positive.
+
+  De-drift control; same seeds, net drift removed, volatility untouched
+  delta  bid(drift) ask(drift)        a/b      bid(dd)    ask(dd)        a/b
+  ----------------------------------------------------------------------------
+  0.25         4481       6054     1.3510         4754       5549     1.1672
+  2.20         3446       3833     1.1123         3660       3613     0.9872
+  8.13         1394       1558     1.1176         1423       1420     0.9979
+
+  If drift is the cause, the right-hand a/b column should sit at ~1.00.
+
+================================================================================================================
+Check 2; what shape is the fill-intensity curve?
+================================================================================================================
+  12 points read from measure_k_option1_results.txt
+  All three forms predict ln lambda with the same fill-count weights, so R2 is comparable.
+
+  form                                           R2       params
+  ------------------------------------------------------------------
+  exponential  lam = A*exp(-k*d)  [as]      0.95844   ln A=-5.1556  k=0.12429
+  quadratic    ln lam = a+b*d+c*d^2         0.99867   a=-5.0830 b=-0.17814 c=0.002639
+  power law    lam = A*d^-b                 0.77216   ln A=-5.4080  b=0.38508
+
+  residual variance left unexplained (1-R2):  exponential 0.04156   quadratic 0.00133   power 0.22784
+  quadratic c = +0.002639 > 0 -> log-hazard is convex: decay slows with distance,
+  i.e. the tail is fatter than a single exponential. The local decay rate is
+  -(b + 2c*d): 0.17682 at $0.25, 0.15175 at $5, 0.01978 at $30.
+
+  Note on the power law: lambda = A*d^-b diverges as d -> 0, so it cannot be right
+  at the touch however well it fits the swept range. Reported for comparison only.
+
+  total wall clock 313s
