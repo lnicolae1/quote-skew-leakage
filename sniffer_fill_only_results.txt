@@ -1,0 +1,71 @@
+======================================================================================================================
+Fill-only sniffer (vacuity guard)
+======================================================================================================================
+Working point: lam=1.8040 p_market=0.0126 mean_lifetime=720s disp=0.0055, JOIN clipping. MM present.
+15 seeds x 86400s per k. gamma=DEFAULT_GAMMA=1e-06 (not chosen). DEFAULT_K untouched.
+Time split 70/30, out-of-sample metrics only, R2 against the test-set mean.
+
+Sniffer input per trade print: time, price, size, aggressor side.
+No counterparty identity (PublicPrint has no such field;
+build_features() receives only the prints list).
+Features: integrated signed volume from t=0, plus trailing-window integrals at 60/300/900/3600 s.
+No skew feature.
+
+  k=0.17763 measured in 62s
+  k=0.16230 measured in 62s
+  k=0.12429 measured in 62s
+
+======================================================================================================================
+Completeness check: oracle q = sum of signed MM fills (uses identity; not the sniffer)
+======================================================================================================================
+  Must be R2 = 1.0 exactly; otherwise prints are dropped and the
+  fill-only numbers below are invalid.
+  k                 oracle R2   max |oracle-q| BTC     prints/day
+  0.17763        1.0000000000            0.000e+00           5027
+  0.16230        1.0000000000            0.000e+00           5042
+  0.12429        1.0000000000            0.000e+00           5128
+
+======================================================================================================================
+Floor: fill-only out-of-sample R2 against true inventory
+======================================================================================================================
+  k                 univariate R2      multivariate R2      windows-only R2    RMSE BTC   sd(q) BTC
+  0.17763      -5.7783 +/- 1.4237    -6.1963 +/- 1.4862    -5.0789 +/- 1.7169      0.06644     0.04533
+  0.16230      -7.4470 +/- 2.2764    -7.9196 +/- 2.3209    -6.1863 +/- 2.0903      0.07200     0.04761
+  0.12429      -9.7966 +/- 3.9930   -10.6738 +/- 4.1374    -7.9250 +/- 2.7932      0.07129     0.04967
+
+  univariate    = q ~ integrated signed volume from t=0
+                  construction, with attribution unavailable.
+  multivariate  = that plus the trailing-window integrals.
+  Windows-only  = trailing windows, no cumulative term (the floor quoted).
+                  The cumulative term is a random walk while q
+                  mean-reverts, so its train-slice slope does not generalize;
+                  a negative R2 there is a specification artifact.
+                  Windowed integrals are stationary:
+                  strongest fill-only adversary.
+  Negative out-of-sample R2 = worse than the test-set mean.
+  RMSE: windows-only model, BTC; sd(q) for scale.
+
+======================================================================================================================
+Attribution ambiguity
+======================================================================================================================
+  Limit-order posting by noise traders creates
+  fill-attribution ambiguity.
+  k               noise limit %    MM fill share     MM vol share   MM passive <=1bp
+  0.17763                98.74%            8.63%           17.20%             31.29%
+  0.16230                98.74%            7.95%           16.57%              3.70%
+  0.12429                98.74%            5.87%           14.48%              0.00%
+  k=0.17763: MM share of all resting passive size 0.95%
+  k=0.16230: MM share of all resting passive size 0.95%
+  k=0.12429: MM share of all resting passive size 0.95%
+
+======================================================================================================================
+Verdict against the bands
+======================================================================================================================
+  Two bands:
+    R2 ~ 1.0     -> attribution clean; nothing downstream means anything; DO NOT PROCEED
+    R2 ~ 0.3-0.6 -> real ambiguity; PROCEED and report the number
+  0.6-1.0 and below 0.3: no instruction; flagged.
+
+  k=0.17763  fill-only R2 (windows-only) = -5.0789  ->  BELOW 0.3: no instruction given
+  k=0.16230  fill-only R2 (windows-only) = -6.1863  ->  BELOW 0.3: no instruction given
+  k=0.12429  fill-only R2 (windows-only) = -7.9250  ->  BELOW 0.3: no instruction given
