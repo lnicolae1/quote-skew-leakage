@@ -1,0 +1,69 @@
+========================================================================================================================
+Skew sniffer, undefended baseline (left endpoint)
+========================================================================================================================
+Working point: lam=1.8040 p_market=0.0126 mean_lifetime=720s disp=0.0055, JOIN clipping. MM present.
+15 seeds x 86400s per k. gamma=DEFAULT_GAMMA=1e-06 (not chosen). DEFAULT_K untouched. horizon=86400s.
+Time split 70/30, out-of-sample only, R2 against the test-set mean.
+
+Sniffer sees: MM bid/ask, book mid, clock, (T-t), public prints.
+Not visible to it: inventory, cash, PnL, counterparties, MM internal state.
+Adversary knows gamma, sigma and (T-t).
+
+skew = (MM_bid + MM_ask)/2 - observed_mid.  C = gamma*sigma^2*(T-t) varies:
+(T-t) decays within the test slice, which depresses raw-skew OLS;
+normalized feature skew/(mid^2*tau) is the one to compare
+with the predicted R2 = 1.0.
+
+  k=0.17763 measured in 122s  (kept 84672 of 86400 samples after the tau floor)
+  k=0.16230 measured in 119s  (kept 84672 of 86400 samples after the tau floor)
+  k=0.12429 measured in 113s  (kept 84672 of 86400 samples after the tau floor)
+
+========================================================================================================================
+Left endpoint: skew-sniffer out-of-sample R2 against true inventory
+========================================================================================================================
+  k                   raw skew R2        normalized R2      multivariate R2    RMSE BTC    sd(q) test
+  0.17763      -5.9894 +/- 2.0591   1.000000 +/- 0.000000  1.000000 +/- 0.000000   1.817e-11       0.02984
+  0.16230      -8.8414 +/- 4.2988   1.000000 +/- 0.000000  1.000000 +/- 0.000000   1.815e-11       0.02990
+  0.12429     -14.0248 +/- 8.4839   1.000000 +/- 0.000000  1.000000 +/- 0.000000   1.809e-11       0.02846
+
+  raw skew     = q ~ skew, constant slope.
+  Normalized   = q ~ skew/(mid^2 * tau), adversary knows mid and (T-t).
+                 Left endpoint.
+  multivariate = plus spread width, skew velocity (60/300 s) and trailing fill volume (60/300/900/3600 s).
+  RMSE: normalized model, BTC. sd(q): test-slice SD,
+  the scale for an R2 against the test-set mean (full-run
+  sd is larger).
+
+  Mid sensitivity: normalized skew against the full-book mid instead of the
+  residual mid:
+    k=0.17763  R2 = +0.0347 +/- 0.3468   (vs +1.000000 with the residual mid)
+    k=0.16230  R2 = -0.1015 +/- 0.5027   (vs +1.000000 with the residual mid)
+    k=0.12429  R2 = -0.0155 +/- 0.6137   (vs +1.000000 with the residual mid)
+  The MM cancels before observing the mid (market_maker.observe_mid), so
+  an adversary using the post-requote full-book mid is reading a different quantity
+  than the one the MM priced against, and loses most of the signal.
+
+========================================================================================================================
+Skew channel vs fill channel
+========================================================================================================================
+  k            skew R2 (normalized)        fill-only floor            gap
+  0.17763                    1.0000                -5.0789         6.0789
+  0.16230                    1.0000                -6.1863         7.1863
+  0.12429                    1.0000                -7.9250         8.9250
+
+  fill-only floor: windows-only spec, strongest fill-only adversary measured.
+  Negative floor: fill integration predicts
+  worse than the test-set mean; recoverable inventory information
+  arrives through the quote channel
+  (which a quote-side defense can act on).
+
+========================================================================================================================
+Degenerate features (excluded)
+========================================================================================================================
+  quote_update_rate and quoted_size_imbalance are listed as observable.
+  Both are degenerate here:
+    quote_update_rate     : MM requotes every second, so
+                             constant.
+    quoted_size_imbalance; nonzero on 0.00% of samples (the MM posts DEFAULT_QUOTE_SIZE
+                             on both sides).
+  Neither is in the multivariate model.
