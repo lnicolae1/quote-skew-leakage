@@ -1,0 +1,146 @@
+==========================================================================================================================
+Phase 6 steps 8 and 9; saturation (2.7.1) and level-vs-velocity (2.7.2), the inference half
+==========================================================================================================================
+Working point: lam=1.8040 p_market=0.0126 mean_lifetime=720s disp=0.0055, JOIN clipping. MM present.
+15 seeds x 86400s per k. gamma=DEFAULT_GAMMA=1e-06 (not chosen). DEFAULT_K untouched. horizon=86400s.
+Time split 70/30, out-of-sample only. Residual mid throughout.
+
+Scope; 2.7.1 and 2.7.2 both put damage (bps) on the y-axis. This is the x-axis only.
+Damage is step 7 (paired-seed A/B with a trading sniffer) and it needs the sniffer's
+trading rule, which appendix open question 4 calls 'the one open question that running
+Code will not answer ... a design choice, not a measurement'. Not chosen here.
+
+  k=0.17763 measured in 143s   sd(q) test = 0.02984 BTC
+  k=0.16230 measured in 135s   sd(q) test = 0.02990 BTC
+  k=0.12429 measured in 128s   sd(q) test = 0.02846 BTC
+
+==========================================================================================================================
+Cross-check; the w -> 0 anchor must reproduce the committed step 4 baseline (8cbfec0: 1.000000)
+==========================================================================================================================
+  k=0.17763   no coarsening, R2 = 1.000000 +/- 0.000000
+  k=0.16230   no coarsening, R2 = 1.000000 +/- 0.000000
+  k=0.12429   no coarsening, R2 = 1.000000 +/- 0.000000
+  If these are not 1.000000 the simulation loop reproduced in this file has drifted
+  from sniffer_skew.run() and nothing below is trustworthy.
+
+==========================================================================================================================
+Step 8; saturation via coarsened labels (2.7.1). x-axis of the damage plot.
+==========================================================================================================================
+
+  k = 0.17763   [Option 1 near-touch $0.25-5, R2=0.9929  [primary]]
+  sd(q) on the test slice = 0.02984 BTC
+
+    bucket w  w / sd(q)          8a literal R2       8b bucket-res R2    8b analytic
+      0.0010       0.03    0.999988 +/- 0.000005    0.999857 +/- 0.000023       0.999915
+      0.0020       0.07    0.999954 +/- 0.000028    0.999423 +/- 0.000118       0.999658
+      0.0030       0.10    0.999958 +/- 0.000017    0.998795 +/- 0.000232       0.999232
+      0.0050       0.17    0.999729 +/- 0.000087    0.996717 +/- 0.000514       0.997865
+      0.0075       0.25    0.999415 +/- 0.000246    0.992273 +/- 0.001302       0.995197
+      0.0100       0.34    0.998370 +/- 0.000614    0.985464 +/- 0.002614       0.991461
+      0.0150       0.50    0.996241 +/- 0.002093    0.965592 +/- 0.005484       0.980788
+      0.0200       0.67    0.996121 +/- 0.001263    0.950690 +/- 0.008908       0.965845
+      0.0300       1.01    0.989394 +/- 0.003647    0.864287 +/- 0.028489       0.923151
+      0.0500       1.68    0.963085 +/- 0.016962    0.627803 +/- 0.071480       0.786531
+      0.0750       2.51    0.909142 +/- 0.021397    0.164828 +/- 0.189465       0.519694
+      0.1000       3.35    0.699660 +/- 0.081080   -0.709556 +/- 0.399944       0.146123
+      0.2000       6.70   -4.808197 +/- 1.436179   -7.017614 +/- 1.607898      -2.415507
+      0.5000      16.76  -13.099889 +/- 4.411617  -13.099889 +/- 4.411617     -20.346916
+      1.0000      33.51  -13.099889 +/- 4.411617  -13.099889 +/- 4.411617     -84.387664
+
+    first w with R2 < 0.5 :  8a literal = 0.2000 BTC (6.7 x sd)     8b bucket-resolution = 0.0750 BTC (2.5 x sd)
+    first w with R2 < 0.1 :  8a literal = 0.2000 BTC (6.7 x sd)     8b bucket-resolution = 0.1000 BTC (3.4 x sd)
+
+  k = 0.16230   [Option 1 near-touch $0.25-10, R2=0.9954]
+  sd(q) on the test slice = 0.02990 BTC
+
+    bucket w  w / sd(q)          8a literal R2       8b bucket-res R2    8b analytic
+      0.0010       0.03    0.999996 +/- 0.000002    0.999860 +/- 0.000029       0.999918
+      0.0020       0.07    0.999952 +/- 0.000019    0.999387 +/- 0.000126       0.999670
+      0.0030       0.10    0.999963 +/- 0.000011    0.998512 +/- 0.000357       0.999259
+      0.0050       0.17    0.999623 +/- 0.000217    0.996081 +/- 0.000875       0.997941
+      0.0075       0.25    0.999523 +/- 0.000141    0.991246 +/- 0.001919       0.995366
+      0.0100       0.33    0.997521 +/- 0.000721    0.983460 +/- 0.002997       0.991762
+      0.0150       0.50    0.996484 +/- 0.001987    0.965004 +/- 0.008354       0.981465
+      0.0200       0.67    0.989203 +/- 0.006682    0.924183 +/- 0.015985       0.967049
+      0.0300       1.00    0.989586 +/- 0.002619    0.855229 +/- 0.029627       0.925860
+      0.0500       1.67    0.972079 +/- 0.008840    0.640358 +/- 0.081202       0.794056
+      0.0750       2.51    0.728173 +/- 0.079653   -0.173700 +/- 0.239546       0.536627
+      0.1000       3.34    0.441214 +/- 0.201409   -0.882459 +/- 0.543918       0.176226
+      0.2000       6.69   -4.209601 +/- 1.643834   -7.500593 +/- 2.029984      -2.295096
+      0.5000      16.72  -18.840226 +/- 8.606813  -18.840226 +/- 8.606813     -19.594352
+      1.0000      33.45  -18.840226 +/- 8.606813  -18.840226 +/- 8.606813     -81.377409
+
+    first w with R2 < 0.5 :  8a literal = 0.1000 BTC (3.3 x sd)     8b bucket-resolution = 0.0750 BTC (2.5 x sd)
+    first w with R2 < 0.1 :  8a literal = 0.2000 BTC (6.7 x sd)     8b bucket-resolution = 0.0750 BTC (2.5 x sd)
+
+  k = 0.12429   [Option 1 full swept range, R2=0.9584]
+  sd(q) on the test slice = 0.02846 BTC
+
+    bucket w  w / sd(q)          8a literal R2       8b bucket-res R2    8b analytic
+      0.0010       0.04    0.999984 +/- 0.000008    0.999845 +/- 0.000026       0.999908
+      0.0020       0.07    0.999937 +/- 0.000019    0.999301 +/- 0.000133       0.999632
+      0.0030       0.11    0.999916 +/- 0.000030    0.998485 +/- 0.000287       0.999172
+      0.0050       0.18    0.999052 +/- 0.000419    0.995788 +/- 0.000766       0.997700
+      0.0075       0.26    0.998907 +/- 0.000686    0.990262 +/- 0.001933       0.994825
+      0.0100       0.35    0.996303 +/- 0.001187    0.978757 +/- 0.005199       0.990800
+      0.0150       0.53    0.990436 +/- 0.005264    0.955282 +/- 0.010250       0.979300
+      0.0200       0.70    0.980927 +/- 0.008700    0.928881 +/- 0.013356       0.963199
+      0.0300       1.05    0.987089 +/- 0.005597    0.840451 +/- 0.035060       0.917199
+      0.0500       1.76    0.889271 +/- 0.053831    0.457355 +/- 0.101768       0.769996
+      0.0750       2.64    0.503740 +/- 0.236938   -0.415957 +/- 0.316511       0.482491
+      0.1000       3.51    0.104781 +/- 0.419368   -0.858648 +/- 0.342588       0.079984
+      0.2000       7.03   -2.455493 +/- 1.134661   -6.833102 +/- 2.071023      -2.680065
+      0.5000      17.57  -28.918978 +/- 16.225101  -28.918978 +/- 16.225101     -22.000407
+      1.0000      35.13  -28.918978 +/- 16.225101  -28.918978 +/- 16.225101     -91.001628
+
+    first w with R2 < 0.5 :  8a literal = 0.1000 BTC (3.5 x sd)     8b bucket-resolution = 0.0500 BTC (1.8 x sd)
+    first w with R2 < 0.1 :  8a literal = 0.2000 BTC (7.0 x sd)     8b bucket-resolution = 0.0750 BTC (2.6 x sd)
+
+  8a literal       = 2.7.1's construction exactly: coarsen the label, refit OLS, score the
+                     raw OLS output against TRUE q.
+  8b bucket-res    = same fit, prediction snapped to the nearest bucket centre. A sniffer
+                     trained on bucket labels cannot know finer than a bucket. This is the
+                     curve that has the shape 2.7.1 describes ('destroys within-bucket
+                     magnitude, preserves sign/bucket exactly').
+  8b analytic      = 1 - (w^2/12)/Var_test(q), the pure quantization-noise prediction for a
+                     model that is otherwise perfect. Agreement means the curve carries no
+                     information beyond sd(q).
+
+  Reading it: 2.7.1; 'If the curve saturates, the tension largely dissolves ... If the
+  curve is linear or convex, the tension is real and probably fundamental.' That reading
+  applies to the damage curve, not to this one. What this page fixes is which bucket
+  widths are worth sweeping in Phase 7; widths where R2 is still ~1 destroy nothing an
+  adversary was using, and widths past the collapse are the ones with something to trade off.
+
+==========================================================================================================================
+Step 9; level vs velocity (2.7.2 / 2.8.6b Route 2)
+==========================================================================================================================
+  Predicting the inventory level q, out of sample:
+
+  k                    level only   velocity only(raw)  velocity only(norm)       both (raw vel)      both (norm vel)
+  0.17763      1.000000+/-0.000000     -4.1164+/-1.0803       -4.0754+/-1.0734      1.000000+/-0.000000    1.000000+/-0.000000 
+  0.16230      1.000000+/-0.000000     -5.0222+/-1.3030       -5.0165+/-1.3169      1.000000+/-0.000000    1.000000+/-0.000000 
+  0.12429      1.000000+/-0.000000     -6.9839+/-2.4645       -7.0607+/-2.5388      1.000000+/-0.000000    1.000000+/-0.000000 
+
+  Level-alone is 1.000000 by construction, not by measurement: skew is -q*C, so the level
+  feature is an invertible function of q and nothing can beat it. 'Which carries the
+  predictive weight' is therefore answered before the run. The informative column is
+  velocity-alone: it is what stays readable if a defense freezes the level.
+
+  raw velocity  = skew[t] - skew[t-L]. Contaminated: skew = -q*C and C decays with the
+                  horizon, so the difference mixes inventory change with clock decay --
+                  the same artifact that depressed raw-skew R2 in step 4.
+  norm velocity = skewnorm[t] - skewnorm[t-L], proportional to the inventory change alone.
+
+  Velocity against THE TRUE inventory change dq over the same lag; the quantity Route 2
+  actually names ('he's at 12 and climbing 5/minute'), which is a different question from
+  predicting the level:
+
+  k                         dq over 60s               dq over 300s
+  0.17763      raw   0.4254 / norm   1.0000     raw   0.4159 / norm   1.0000
+  0.16230      raw   0.4195 / norm   1.0000     raw   0.4076 / norm   1.0000
+  0.12429      raw   0.4231 / norm   1.0000     raw   0.4101 / norm   1.0000
+
+  2.7.2: 'If velocity dominates ... the project reorients around hiding rate-of-accumulation
+  rather than level. If level dominates, quantization stays central.' Both readings are
+  about which the damage tracks. This page reports predictive weight only.
