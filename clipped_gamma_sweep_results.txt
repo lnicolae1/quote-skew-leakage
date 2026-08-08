@@ -1,0 +1,99 @@
+================================================================================================================================
+Gamma sweep at the clipped working point; sets the gamma range and the holding period. Nothing is chosen here.
+================================================================================================================================
+Working point: lam=1.8040 p_market=0.0126 mean_lifetime=720s disp=0.0055, JOIN clipping. MM present.
+k=0.17763 (constructor arg; DEFAULT_K never edited). sigma=0.3721. horizon=86400s. 5 seeds x 86400s.
+C_at_t0 = gamma * 1.458e+06 at this horizon. DEFAULT_GAMMA=1e-06 -> C = 1.458.
+The old sweep ran at horizon 8,640,000s, so its gamma grid maps to this one at 100x.
+Its gamma=1e-6 row (the dead MM) is C=146, not the current configuration; that is C=1.458.
+
+  gamma=1.0e-09  C=    0.001  measured in  38s   fills/day=  437.8  MM spread=$11.26
+  gamma=1.0e-08  C=    0.015  measured in  38s   fills/day=  434.6  MM spread=$11.27
+  gamma=1.0e-07  C=    0.146  measured in  39s   fills/day=  420.6  MM spread=$11.33
+  gamma=3.0e-07  C=    0.437  measured in  38s   fills/day=  413.0  MM spread=$11.48
+  gamma=1.0e-06  C=    1.458  measured in  37s   fills/day=  399.4  MM spread=$12.00
+  gamma=3.0e-06  C=    4.374  measured in  35s   fills/day=  355.2  MM spread=$13.47
+  gamma=1.0e-05  C=   14.580  measured in  33s   fills/day=  270.2  MM spread=$18.62
+  gamma=2.0e-05  C=   29.160  measured in  32s   fills/day=  189.8  MM spread=$25.99
+  gamma=4.0e-05  C=   58.320  measured in  32s   fills/day=  120.0  MM spread=$40.71
+  gamma=1.0e-04  C=  145.800  measured in  31s   fills/day=   55.6  MM spread=$84.89
+
+================================================================================================================================
+The sweep, indexed by C (transferable) and gamma (this horizon only)
+================================================================================================================================
+    C_at_t0     gamma   fills/day  vs g->0   MM spread  mkt spread    MM/mkt  vol share   sd(q) BTC
+      0.001   1.0e-09   437.8+-29    100.0%    11.26+-0.00     1.91+-0.14     5.90     17.21%    0.04310
+      0.015   1.0e-08   434.6+-28     99.3%    11.27+-0.00     1.96+-0.18     5.74     17.19%    0.04369
+      0.146   1.0e-07   420.6+-26     96.1%    11.33+-0.00     1.87+-0.12     6.05     16.89%    0.04328
+      0.437   3.0e-07   413.0+-26     94.3%    11.48+-0.00     1.90+-0.17     6.05     16.76%    0.04429
+      1.458   1.0e-06   399.4+-27     91.2%    12.00+-0.01     1.90+-0.17     6.32     16.48%    0.04407
+      4.374   3.0e-06   355.2+-20     81.1%    13.47+-0.03     1.80+-0.13     7.49     15.45%    0.04368
+     14.580   1.0e-05   270.2+-16     61.7%    18.62+-0.11     1.84+-0.18    10.14     13.34%    0.03892
+     29.160   2.0e-05   189.8+-11     43.4%    25.99+-0.22     1.83+-0.14    14.23     11.20%    0.03890
+     58.320   4.0e-05   120.0+-7      27.4%    40.71+-0.44     1.80+-0.15    22.59      8.80%    0.03595
+    145.800   1.0e-04    55.6+-5      12.7%    84.89+-1.10     1.67+-0.12    50.83      5.66%    0.03332
+
+  vs g->0 is the fill rate as a percentage of the gamma=1e-09 anchor (437.8 fills/day).
+
+================================================================================================================================
+The viability criterion; gamma range capped where the MM keeps 50% of its gamma->0 fill rate
+================================================================================================================================
+  The 50% line falls between:
+    C=14.580 (gamma=1.0e-05): 270.2 fills/day = 61.7% of anchor
+    C=29.160 (gamma=2.0e-05): 189.8 fills/day = 43.4% of anchor
+
+  So the pre-registered sweep range is gamma from the bottom of this grid up to
+  somewhere in [1.0e-05, 2.0e-05]. The exact cap needs a finer grid in that interval if
+  it is to be stated to better than a factor of 2.0.
+
+================================================================================================================================
+The leak fraction; does the ~3% ceiling from the old book hold here?
+================================================================================================================================
+    C_at_t0     gamma     skew_sd $   MM spread $  skew_sd/spread  max|q| BTC
+      0.001   1.0e-09   0.0000+-0.0000    11.26+-0.00          0.000%     0.15042
+      0.015   1.0e-08   0.0002+-0.0000    11.27+-0.00          0.002%     0.14882
+      0.146   1.0e-07   0.0024+-0.0004    11.33+-0.00          0.021%     0.14934
+      0.437   3.0e-07   0.0076+-0.0012    11.48+-0.00          0.066%     0.15447
+      1.458   1.0e-06   0.0256+-0.0035    12.00+-0.01          0.213%     0.15318
+      4.374   3.0e-06   0.0816+-0.0192    13.47+-0.03          0.606%     0.14493
+     14.580   1.0e-05   0.2515+-0.0708    18.62+-0.11          1.347%     0.12653
+     29.160   2.0e-05   0.4952+-0.1373    25.99+-0.22          1.900%     0.12056
+     58.320   4.0e-05   0.8692+-0.1475    40.71+-0.44          2.130%     0.12815
+    145.800   1.0e-04   1.5052+-0.1842    84.89+-1.10          1.771%     0.11363
+
+  Peak leak fraction 2.130% at C=58.320 (gamma=4.0e-05), where the MM keeps 27.4% of its fills.
+  Old book (k=0.06747, base spread $29.6) peaked at 3.11% at C=58.3. New base spread is 2/k = $11.26.
+  The MM's whole quoted spread is 1.82 bp of a ~$62,000 mid, so the damage ceiling is that
+  leak fraction times the half-spread; state it in bp before step 7 runs, not after.
+
+================================================================================================================================
+Inventory mean-reversion; this sets the holding period
+================================================================================================================================
+  Sampled every 60s. phi >= 1 is non-stationary and has no half-life; those seeds are counted, not averaged.
+
+    C_at_t0     gamma   phi (full)       half-life (full run)    phi (70%)    half-life (train slice)
+      0.001   1.0e-09     0.995523          17162s (4.8h) n=4     0.993931          11450s (3.2h) n=5
+      0.015   1.0e-08     0.995789          18400s (5.1h) n=4     0.994450          11548s (3.2h) n=5
+      0.146   1.0e-07     0.996602          17964s (5.0h) n=4     0.994260          13414s (3.7h) n=5
+      0.437   3.0e-07     0.996868          20212s (5.6h) n=4     0.994945          12123s (3.4h) n=5
+      1.458   1.0e-06     0.997265          18560s (5.2h) n=4     0.995355          15311s (4.3h) n=5
+      4.374   3.0e-06     0.996825          17171s (4.8h) n=4     0.995671          23885s (6.6h) n=5
+     14.580   1.0e-05     0.996106          24996s (6.9h) n=5     0.995007          22566s (6.3h) n=5
+     29.160   2.0e-05     0.996101         53398s (14.8h) n=5     0.995457          16016s (4.4h) n=5
+     58.320   4.0e-05     0.997356          13680s (3.8h) n=4     0.997162          19972s (5.5h) n=5
+    145.800   1.0e-04     0.997904          13183s (3.7h) n=3     0.996668          31726s (8.8h) n=5
+
+  The full-run column is contaminated: tau decays to zero inside the run, so the MM stops
+  skewing over the tail and inventory random-walks regardless of gamma. The train-slice
+  column is the one to set a holding period from; it is the same 70% the sniffer fits on.
+
+  Old sweep, 100-day horizon, measured 40,000-80,000s (11-22 hours). If that order of
+  magnitude survives here, a 60s or 300s holding period is under 1% of the half-life and
+  would return a null for a reason unrelated to leakage. Read this table before fixing it.
+
+================================================================================================================================
+What this run does not do
+================================================================================================================================
+  It does not choose a gamma. It measures where the viability line falls so the range can be
+  set by the pre-registered rule. Step 7 is not run. No committed default was edited --
+  gamma and k are constructor arguments and DEFAULT_GAMMA=1e-06 is untouched.
