@@ -1,0 +1,68 @@
+============================================================================================================================
+Half-life recomputed from mean phi; corrects d5d134c and 0df879d. No simulation run.
+============================================================================================================================
+Parsed 10 rows from clipped_gamma_sweep_results.txt and 3 from participation_skew_results.txt.
+HL* = 60 * ln(0.5) / ln(mean_phi).  mean(HL) is the already-committed average of per-seed half-lives.
+HL* is the one to cite. mean(HL) averages a quantity with a pole at phi=1 and is unstable.
+Where both use the SAME seeds, convexity gives mean(HL) >= HL* and the ratio is a dispersion
+Factor (never a standard error). Where mean(HL) dropped non-stationary seeds it is computed on
+a different, downward-biased sample and the ratio can fall BELOW 1; flagged inline. No
+Interval is available on HL*; see the header for why.
+
+============================================================================================================================
+A. d5d134c; gamma sweep (train slice is the one to use; full run is contaminated by the tau->0 tail)
+============================================================================================================================
+    C_at_t0     gamma   phi train  HL* train           mean(HL)     disp    phi full   HL* full           mean(HL)     disp
+      0.001   1.0e-09    0.993931      6832s      1.9h     3.2h    1.68     0.995523      9269s      2.6h     4.8h    1.85 
+      0.015   1.0e-08    0.994450      7473s      2.1h     3.2h    1.55     0.995789      9855s      2.7h     5.1h    1.87 
+      0.146   1.0e-07    0.994260      7225s      2.0h     3.7h    1.86     0.996602     12218s      3.4h     5.0h    1.47 
+      0.437   3.0e-07    0.994945      8206s      2.3h     3.4h    1.48     0.996868     13258s      3.7h     5.6h    1.52 
+      1.458   1.0e-06    0.995355      8933s      2.5h     4.3h    1.71     0.997265     15185s      4.2h     5.2h    1.22 
+      4.374   3.0e-06    0.995671      9586s      2.7h     6.6h    2.49     0.996825     13078s      3.6h     4.8h    1.31 
+     14.580   1.0e-05    0.995007      8309s      2.3h     6.3h    2.72     0.996106     10659s      3.0h     6.9h    2.34 
+     29.160   2.0e-05    0.995457      9134s      2.5h     4.4h    1.75     0.996101     10646s      3.0h    14.8h    5.02 
+     58.320   4.0e-05    0.997162     14633s      4.1h     5.5h    1.36     0.997356     15709s      4.4h     3.8h    0.87!
+    145.800   1.0e-04    0.996668     12461s      3.5h     8.8h    2.55     0.997904     19821s      5.5h     3.7h    0.67!
+
+  Corrected train-slice range: 6832-14633s (1.9-4.1h), against the committed 3.2-8.8h.
+
+============================================================================================================================
+B. 0df879d; participation arms (train slice)
+============================================================================================================================
+  quote_size  vol share    phi skew   HL* skew           mean(HL)    disp    phi FLAT   HL* flat           mean(HL)    disp
+       0.005      6.11%    0.996122     10703s     3.0h      3.6h   1.20     0.996942     13579s     3.8h      4.2h   1.12 
+       0.010      8.88%    0.995135      8528s     2.4h      3.3h   1.39     0.995202      8647s     2.4h      4.4h   1.81 
+       0.020     13.33%    0.995982     10330s     2.9h      8.6h   3.00     0.996500     11862s     3.3h      2.9h   0.88!
+
+  quote_size  phi GAMMA0 HL* gamma0
+       0.005    0.997374     15817s     4.4h
+       0.010    0.995401      9022s     2.5h
+       0.020    0.993931      6832s     1.9h
+
+  The ordering inversion is gone. At quote_size 0.020 mean phi_skew sits below mean phi_flat,
+  so the skewing arm reverts faster. The corrected half-lives now say that; the committed
+  averaged half-lives said the opposite (8.6h skew against 2.9h flat).
+
+  Corrected range across both arms: 8528-13579s (2.4-3.8h), against the committed 2.9-8.6h.
+
+============================================================================================================================
+C. Cross-check; the same configuration measured by two independently written scripts
+============================================================================================================================
+  clipped_gamma_sweep gamma=1e-9 anchor, phi (train)   = 0.993931
+  participation_skew GAMMA0 arm at quote_size 0.020    = 0.993931
+  Same gamma, same DEFAULT_QUOTE_SIZE, same 5 seeds, same train-slice convention.
+  |difference| = 0.00e+00   -> agree to all printed digits
+
+============================================================================================================================
+D. What to cite, and what Step 7 should use
+============================================================================================================================
+  A '!' on a dispersion ratio marks a row where mean(HL) dropped non-stationary seeds, so the
+  two columns are not on the same sample and mean(HL) is biased DOWN there. Combined with the
+  pole inflating it elsewhere, mean(HL) errs in both directions depending on the row; which
+  is why it is abandoned rather than corrected.
+
+  Cite HL*. The committed mean(HL) columns are superseded by this file and should not be
+  quoted again; they are printed above only so the size of the correction is visible.
+  The holding period for step 7 should be set off HL*, and it should be set off a range
+  rather than a single row; no interval is available on any of these point estimates, so
+  treating any one of them as precise would be a second version of the same mistake.
