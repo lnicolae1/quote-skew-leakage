@@ -1,0 +1,67 @@
+==============================================================================================================================
+Is quote_size a clean lever for MM participation?; probe only, no participation sweep run
+==============================================================================================================================
+Working point: lam=1.8040 p_market=0.0126 mean_lifetime=720s disp=0.0055, JOIN clipping. MM present.
+k=0.17763. gamma=9.40e-06 (the log-interpolated binding viability cap, C=13.71); a diagnostic
+setting passed as a constructor argument, NOT a choice. DEFAULT_GAMMA=1e-06 and DEFAULT_QUOTE_SIZE=0.02
+are untouched. 3 seeds x 86400s per size, book scanned every 60s.
+
+  quote_size=0.005 BTC  measured in  22s   fill share= 4.98%   vol share= 6.12%
+  quote_size=0.010 BTC  measured in  22s   fill share= 5.19%   vol share= 8.92%
+  quote_size=0.020 BTC  measured in  22s   fill share= 5.59%   vol share=13.83%
+  quote_size=0.050 BTC  measured in  32s   fill share= 6.31%   vol share=22.09%
+  quote_size=0.100 BTC  measured in  34s   fill share= 6.90%   vol share=28.69%
+  quote_size=0.200 BTC  measured in  22s   fill share= 7.36%   vol share=37.40%
+
+==============================================================================================================================
+Does the lever move participation?
+==============================================================================================================================
+   quote_size  vs dflt   fill share %    vol share %  MM fills/day   MM spread $
+        0.005     0.2x     4.98+-0.11     6.12+-0.05         270.0         18.29
+        0.010     0.5x     5.19+-0.08     8.92+-0.17         278.0         18.29
+        0.020     1.0x     5.59+-0.14    13.83+-0.16         289.3         18.29
+        0.050     2.5x     6.31+-0.13    22.09+-0.80         314.0         18.29
+        0.100     5.0x     6.90+-0.28    28.69+-0.67         331.7         18.29
+        0.200    10.0x     7.36+-0.40    37.40+-2.95         338.0         18.29
+
+  Volume share spans 6.12% -> 37.40% over a 40x range in size (6.11x in share).
+  A lever that cannot move participation over a wide range is no more usable than one
+  that moves it by wrecking the book. Both failure modes matter.
+
+==============================================================================================================================
+Does it disturb the book?; against the MM-ABSENT calibrated baselines (clipped_mm_check.ABSENT)
+==============================================================================================================================
+   quote_size    width bp      dev levels/side      dev  aggTrade/s      dev    near BTC      dev
+    MM ABSENT     0.28879       --      551.24       --     0.04464       --      0.1244       --
+        0.005     0.28707    -0.6%      551.18    -0.0%     0.04367    -2.2%      0.1297     4.3%
+        0.010     0.30850     6.8%      550.90    -0.1%     0.04289    -3.9%      0.1277     2.6%
+        0.020     0.30483     5.6%      550.12    -0.2%     0.04139    -7.3%      0.1263     1.5%
+        0.050     0.35051    21.4%      549.98    -0.2%     0.03919   -12.2%      0.1247     0.3%
+        0.100     0.35004    21.2%      549.94    -0.2%     0.03765   -15.7%      0.1218    -2.1%
+        0.200     0.39450    36.6%      549.38    -0.3%     0.03532   -20.9%      0.1142    -8.2%
+
+  All four are non-MM quantities (seed orders excluded, side-averaged), so any movement
+  across rows is the MM perturbing the book indirectly; by absorbing sweeps that would
+  otherwise have consumed resting orders. A clean lever leaves these flat.
+
+==============================================================================================================================
+The near-touch ceiling; the MM sits ~0.91bp from mid, inside the 1bp bucket it is measured in
+==============================================================================================================================
+   quote_size     MM near BTC  MM share of near       non-MM near
+        0.005          0.0005              0.4%            0.1297
+        0.010          0.0010              0.8%            0.1277
+        0.020          0.0020              1.6%            0.1263
+        0.050          0.0057              4.4%            0.1247
+        0.100          0.0125              9.3%            0.1218
+        0.200          0.0275             19.8%            0.1142
+
+  Calibrated non-MM near-touch depth is 0.1244 BTC/side. A quote_size that makes the MM a
+  large fraction of its own measurement bucket is not varying participation into a fixed
+  book; it is rebuilding the near-touch book, which is a different experiment.
+
+==============================================================================================================================
+What this probe does not do
+==============================================================================================================================
+  It does not run the participation sweep and it does not measure skew effectiveness. It
+  only establishes whether quote_size is usable as the lever, and over what range. No
+  committed default changed, no gamma chosen, step 7 not run.

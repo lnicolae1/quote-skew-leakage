@@ -9,14 +9,14 @@ Its gamma=1e-6 row (the dead MM) is C=146, not the current configuration; that i
 
   gamma=1.0e-09  C=    0.001  measured in  38s   fills/day=  437.8  MM spread=$11.26
   gamma=1.0e-08  C=    0.015  measured in  38s   fills/day=  434.6  MM spread=$11.27
-  gamma=1.0e-07  C=    0.146  measured in  39s   fills/day=  420.6  MM spread=$11.33
-  gamma=3.0e-07  C=    0.437  measured in  38s   fills/day=  413.0  MM spread=$11.48
+  gamma=1.0e-07  C=    0.146  measured in  37s   fills/day=  420.6  MM spread=$11.33
+  gamma=3.0e-07  C=    0.437  measured in  37s   fills/day=  413.0  MM spread=$11.48
   gamma=1.0e-06  C=    1.458  measured in  37s   fills/day=  399.4  MM spread=$12.00
-  gamma=3.0e-06  C=    4.374  measured in  35s   fills/day=  355.2  MM spread=$13.47
-  gamma=1.0e-05  C=   14.580  measured in  33s   fills/day=  270.2  MM spread=$18.62
-  gamma=2.0e-05  C=   29.160  measured in  32s   fills/day=  189.8  MM spread=$25.99
-  gamma=4.0e-05  C=   58.320  measured in  32s   fills/day=  120.0  MM spread=$40.71
-  gamma=1.0e-04  C=  145.800  measured in  31s   fills/day=   55.6  MM spread=$84.89
+  gamma=3.0e-06  C=    4.374  measured in  36s   fills/day=  355.2  MM spread=$13.47
+  gamma=1.0e-05  C=   14.580  measured in  35s   fills/day=  270.2  MM spread=$18.62
+  gamma=2.0e-05  C=   29.160  measured in  36s   fills/day=  189.8  MM spread=$25.99
+  gamma=4.0e-05  C=   58.320  measured in  53s   fills/day=  120.0  MM spread=$40.71
+  gamma=1.0e-04  C=  145.800  measured in  32s   fills/day=   55.6  MM spread=$84.89
 
 ================================================================================================================================
 The sweep, indexed by C (transferable) and gamma (this horizon only)
@@ -36,15 +36,27 @@ The sweep, indexed by C (transferable) and gamma (this horizon only)
   vs g->0 is the fill rate as a percentage of the gamma=1e-09 anchor (437.8 fills/day).
 
 ================================================================================================================================
-The viability criterion; gamma range capped where the MM keeps 50% of its gamma->0 fill rate
+The viability gates; both pre-registered, both blind to the damage number
 ================================================================================================================================
-  The 50% line falls between:
-    C=14.580 (gamma=1.0e-05): 270.2 fills/day = 61.7% of anchor
-    C=29.160 (gamma=2.0e-05): 189.8 fills/day = 43.4% of anchor
+  GATE 1  fill rate: MM keeps >= 50% of its gamma->0 fill rate (437.8/day)
+      crosses between C=14.580 (gamma=1.0e-05) and C=29.160 (gamma=2.0e-05)
+      log-interpolated cap:  C = 22.69,  gamma = 1.56e-05   [this horizon only]
 
-  So the pre-registered sweep range is gamma from the bottom of this grid up to
-  somewhere in [1.0e-05, 2.0e-05]. The exact cap needs a finer grid in that interval if
-  it is to be stated to better than a factor of 2.0.
+  GATE 2  spread realism: MM spread / market touch <= 10x
+      crosses between C=4.374 (gamma=3.0e-06) and C=14.580 (gamma=1.0e-05)
+      log-interpolated cap:  C = 13.66,  gamma = 9.37e-06   [this horizon only]
+
+  Binding gate: GATE 2 (spread realism), at C = 13.66 (gamma = 9.37e-06 at this horizon).
+  The other gate would have allowed C = 22.69; a factor of 1.66 looser.
+
+  Gate 1 alone was the original rule and it is silent on spread realism: at its own cap the
+  MM quotes about 12x the market touch. Gate 2 exists because that is not a market maker.
+  Both gates are functions of the MM's own behaviour only. Neither looks at the sniffer,
+  the damage, or any defense, so neither can be called tuned to the result.
+
+  Note on precision: both caps are log-interpolations between adjacent grid points, not
+  measured points. A finer grid inside the bracketing interval would be needed to state
+  either to better than the width of that interval.
 
 ================================================================================================================================
 The leak fraction; does the ~3% ceiling from the old book hold here?

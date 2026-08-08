@@ -1,0 +1,106 @@
+==============================================================================================================================
+Does skewing control inventory?; three paired arms at fixed C, over the clean lever range
+==============================================================================================================================
+Working point: lam=1.8040 p_market=0.0126 mean_lifetime=720s disp=0.0055, JOIN clipping.
+k=0.17763. gamma_cap=9.37e-06 (C=13.66, the binding gate-2 viability cap).
+5 seeds x 86400s, paired on identical seeds. H = 3600s fixed. Train slice = first 70%.
+DEFAULT_GAMMA=1e-06 and DEFAULT_QUOTE_SIZE=0.02 untouched; both are constructor arguments.
+
+  Skew    gamma_cap, normal AS quoting.
+  FLAT    gamma_cap, reservation price forced to the mid. Same width, same flow, no skew.
+          Primary control; R_skew - R_flat is computed against this.
+  GAMMA0  gamma=1e-09, the literal 'set gamma = 0'. Removes the skew and narrows the quote,
+          so it is NOT a valid control. Retained because the FLAT-GAMMA0 gap is the spread
+          confound, measured rather than argued.
+
+Scope: quote_size is clean only to 0.02 BTC, so this spans 6.1% -> 13.8% volume share --
+entirely minority. The minority-vs-majority contrast is unreachable on a calibrated book
+(non-MM liquidity is the calibration) and is dropped as a claim. R_skew - R_flat below is a
+Bound over a 2.3x span, not evidence of a participation gradient in either direction.
+
+  quote_size=0.005   92s   vol share S= 6.11% F= 6.41% G0= 8.69%   phi_flat=0.996942   R_skew-R_flat=+0.0468
+  quote_size=0.010   92s   vol share S= 8.88% F= 9.27% G0=11.94%   phi_flat=0.995202   R_skew-R_flat=+0.0142
+  quote_size=0.020   91s   vol share S=13.33% F=14.01% G0=17.21%   phi_flat=0.996500   R_skew-R_flat=+0.0337
+
+==============================================================================================================================
+0. Control validity; FLAT must match skew on width and flow, and GAMMA0 must not
+==============================================================================================================================
+   quote_size    MM spread $  S / F / G0    vol share %  S / F / G0      fills/day  S / F / G0
+        0.005    18.16    18.16    11.26     6.11     6.41     8.69      266      281      426
+        0.010    18.16    18.16    11.26     8.88     9.27    11.94      270      286      428
+        0.020    18.16    18.16    11.26    13.33    14.01    17.21      274      296      438
+
+  If skew and FLAT agree on spread and volume share, the control isolates the skew and
+  nothing else. If GAMMA0 differs from FLAT, that difference is the spread confound --
+  the reason gamma=0 alone cannot be used as the control.
+
+==============================================================================================================================
+1. Is inventory reverting because of skewing, or because of flow mixing?  -- the load-bearing result
+==============================================================================================================================
+   quote_size   vol share     phi_skew     phi_flat   phi_gamma0      half-life skew      half-life FLAT
+        0.005       6.11%     0.996122     0.996942     0.997374       12834s (3.6h)       15168s (4.2h)
+        0.010       8.88%     0.995135     0.995202     0.995401       11817s (3.3h)       15691s (4.4h)
+        0.020      13.33%     0.995982     0.996500     0.993931       30944s (8.6h)       10440s (2.9h)
+
+  phi_flat is the lag-1 inventory autocorrelation with the MM quoting the same width but
+  not skewing. phi_flat ~ 1 means inventory is a random walk with no restoring force, so
+  whatever reversion the skewing MM shows is attributable to skewing. phi_flat materially
+  below 1 means flow mixing reverts inventory on its own, and the sd(q)-vs-gamma
+  insensitivity reported in d5d134c has nothing to do with participation.
+
+==============================================================================================================================
+2. Skew effectiveness; R_skew - R_flat at H = 3600s, paired across identical seeds
+==============================================================================================================================
+   quote_size   vol share            R_skew            R_flat      R_skew - R_flat
+        0.005       6.11%   0.2768+-0.0577    0.2300+-0.0360      0.0468+-0.0423  
+        0.010       8.88%   0.2906+-0.0662    0.2764+-0.0764      0.0142+-0.0114  
+        0.020      13.33%   0.1983+-0.0509    0.1646+-0.0497      0.0337+-0.0082  
+
+  R_direct = -slope of (q[t+H] - q[t]) on demeaned q[t]. Assumption-free, primary.
+  The difference column is a paired statistic: computed per seed, then averaged, so its
+  standard error is the SE of the paired differences, not of the two levels separately.
+
+  Same quantity via the committed AR(1) convention, R_ar1 = 1 - phi^(H/60s):
+   quote_size      R_skew (ar1)      R_flat (ar1)           difference
+        0.005   0.2038+-0.0403    0.1660+-0.0277      0.0378+-0.0314  
+        0.010   0.2462+-0.0540    0.2411+-0.0619      0.0051+-0.0125  
+        0.020   0.2061+-0.0590    0.1814+-0.0603      0.0247+-0.0119  
+
+  Bound over the clean range: across volume share 6.11% -> 13.33% (a 2.2x span),
+  R_skew - R_flat moves +0.0468 -> +0.0337. A 2.3x span cannot support a general claim about
+  participation in either direction, and none is made.
+
+==============================================================================================================================
+2b. The spread confound, measured; FLAT minus GAMMA0, two arms that both have ZERO skew
+==============================================================================================================================
+   quote_size            R_flat          R_gamma0        FLAT - GAMMA0   naive diff vs G0
+        0.005   0.2300+-0.0360    0.2047+-0.0083      0.0253+-0.0369               0.0721
+        0.010   0.2764+-0.0764    0.2295+-0.0741      0.0469+-0.0727               0.0611
+        0.020   0.1646+-0.0497    0.2723+-0.0711     -0.1077+-0.0502              -0.0740
+
+  Both arms skew by construction ZERO, so any nonzero FLAT-GAMMA0 gap is caused purely by
+  the quoted width and the flow it wins; it is the bias that using gamma=0 as the control
+  would have injected. The last column is what R_skew - R_flat would have been reported as
+  had GAMMA0 been used as the control; compare it against the primary column above.
+
+==============================================================================================================================
+3. THE MM still functions at each level, and sd(q) for completeness only
+==============================================================================================================================
+   quote_size   fill share    fills/day    MM spread  sd(q) skew   sd(q)/qsize      max|q|  max|q|/qsize
+        0.005        4.91%        265.6        18.16     0.01479         2.958     0.04935         9.871
+        0.010        5.06%        270.0        18.16     0.02255         2.255     0.07636         7.636
+        0.020        5.30%        273.8        18.16     0.04129         2.065     0.13746         6.873
+
+  sd(q) scales near-linearly with quote_size by construction; each fill moves inventory
+  by quote_size while fill-count share barely moves. The normalized column is near-flat
+  for that reason and is not evidence of anything. R_skew - R_flat is scale-free.
+
+==============================================================================================================================
+What is dropped, and why it is a result rather than a failure
+==============================================================================================================================
+  The minority-participant claim is withdrawn. Majority participation is unreachable on a
+  calibrated book because non-MM liquidity is the calibration, so the old book's 64% volume
+  share was a symptom of the mis-scaling the clipped recalibration fixed. The 1.3x-vs-7x
+  sd(q) contrast conflates participation with CALIBRATION and no lever decouples them on one
+  book. That is a methodological result about this class of experiment, and it is the honest
+  thing to record in place of the claim it retires.

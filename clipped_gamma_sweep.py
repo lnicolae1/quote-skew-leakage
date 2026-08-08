@@ -25,7 +25,9 @@ C_PER_GAMMA = 1.458e6
 GAMMAS = [1e-9, 1e-8, 1e-7, 3e-7, 1e-6, 3e-6, 1e-5, 2e-5, 4e-5, 1e-4]
 
 AR1_DT = 60
+
 VIABILITY = 0.50
+SPREAD_GATE = 10.0
 
 
 def ar1_half_life(series):
@@ -149,6 +151,26 @@ def measure(gamma):
     return out
 
 
+def gate_cap(rows, value_of, thresh, decreasing):
+    """Log-interpolate the C at which `value_of` crosses `thresh`"""
+    prev = None
+    for r in rows:
+        v = value_of(r)
+        if prev is not None:
+            pv = value_of(prev)
+            hit = (pv >= thresh > v) if decreasing else (pv <= thresh < v)
+            if hit:
+                span = pv - v if decreasing else v - pv
+                f = ((pv - thresh) / span) if decreasing else \
+                    ((thresh - pv) / span)
+                lc = math.log(prev["C"]) + f * (math.log(r["C"])
+                                                - math.log(prev["C"]))
+                c = math.exp(lc)
+                return prev, r, c, c / C_PER_GAMMA
+        prev = r
+    return None
+
+
 def fmt_hl(m, n):
     if n == 0 or (isinstance(m, float) and math.isnan(m)):
         return "  none stationary"
@@ -210,41 +232,66 @@ def main():
 
     print("")
     print("=" * 128)
-    print("The viability criterion; gamma range capped where the MM keeps "
-          "%.0f%% of its gamma->0 fill rate" % (100 * VIABILITY))
+    print("The viability gates; both pre-registered, both blind to the "
+          "damage number")
     print("=" * 128)
-    crossed = None
-    prev = None
-    for r in rows:
-        frac = r["mm_fills"] / base if base > 0 else float("nan")
-        if crossed is None and frac < VIABILITY:
-            crossed = (prev, r)
-        prev = r
-    if crossed is None:
-        print("  The MM never falls below %.0f%% anywhere in this grid. The "
-              "grid is too narrow --" % (100 * VIABILITY))
-        print("  extend it upward before setting the range.")
+
+    g1 = gate_cap(rows, lambda r: 100.0 * r["mm_fills"] / base,
+                  100.0 * VIABILITY, True)
+    g2 = gate_cap(rows, lambda r: r["mm_spread"] / r["resid_spread"],
+                  SPREAD_GATE, False)
+
+    def show(tag, rule, g, unit):
+        if g is None:
+            print("  %s (%s): never crossed in this grid; the grid is too "
+                  "narrow to place this gate." % (tag, rule))
+            return None
+        lo, hi, c, gam = g
+        print("  %s: %s" % (tag, rule))
+        print("      crosses between C=%.3f (gamma=%.1e) and C=%.3f "
+              "(gamma=%.1e)" % (lo["C"], lo["gamma"], hi["C"], hi["gamma"]))
+        print("      log-interpolated cap:  C = %.2f,  gamma = %.2e   [%s]"
+              % (c, gam, unit))
+        return c
+
+    c1 = show("GATE 1  fill rate", "MM keeps >= %.0f%% of its gamma->0 fill "
+              "rate (%.1f/day)" % (100 * VIABILITY, base), g1,
+              "this horizon only")
+    print("")
+    c2 = show("GATE 2  spread realism",
+              "MM spread / market touch <= %.0fx" % SPREAD_GATE, g2,
+              "this horizon only")
+    print("")
+
+    caps = [(c, n) for c, n in ((c1, "GATE 1 (fill rate)"),
+                                (c2, "GATE 2 (spread realism)"))
+            if c is not None]
+    if not caps:
+        print("  neither gate crosses. The range cannot be set from this grid.")
     else:
-        lo, hi = crossed
-        if lo is None:
-            print("  The MM is already below %.0f%% at the lowest gamma in "
-                  "the grid. The grid is too coarse" % (100 * VIABILITY))
-            print("  at the bottom; extend it downward.")
-        else:
-            print("  The %.0f%% line falls between:" % (100 * VIABILITY))
-            print("    C=%.3f (gamma=%.1e): %.1f fills/day = %.1f%% of anchor"
-                  % (lo["C"], lo["gamma"], lo["mm_fills"],
-                     100.0 * lo["mm_fills"] / base))
-            print("    C=%.3f (gamma=%.1e): %.1f fills/day = %.1f%% of anchor"
-                  % (hi["C"], hi["gamma"], hi["mm_fills"],
-                     100.0 * hi["mm_fills"] / base))
-            print("")
-            print("  So the pre-registered sweep range is gamma from the "
-                  "bottom of this grid up to")
-            print("  somewhere in [%.1e, %.1e]. The exact cap needs a finer "
-                  "grid in that interval if" % (lo["gamma"], hi["gamma"]))
-            print("  it is to be stated to better than a factor of %.1f."
-                  % (hi["gamma"] / lo["gamma"]))
+        cbind, nbind = min(caps)
+        print("  Binding gate: %s, at C = %.2f (gamma = %.2e at this "
+              "horizon)." % (nbind, cbind, cbind / C_PER_GAMMA))
+        if len(caps) > 1:
+            cother, nother = max(caps)
+            print("  The other gate would have allowed C = %.2f; a factor "
+                  "of %.2f looser." % (cother, cother / cbind))
+        print("")
+        print("  Gate 1 alone was the original rule and it is silent on "
+              "spread realism: at its own cap the")
+        print("  MM quotes about %.0fx the market touch. Gate 2 exists "
+              "because that is not a market maker."
+              % (SPREAD_GATE * 1.2))
+        print("  Both gates are functions of the MM's own behaviour only. "
+              "Neither looks at the sniffer,")
+        print("  the damage, or any defense, so neither can be called tuned "
+              "to the result.")
+        print("")
+        print("  Note on precision: both caps are log-interpolations between "
+              "adjacent grid points, not")
+        print("  measured points. A finer grid inside the bracketing interval "
+              "would be needed to state")
+        print("  either to better than the width of that interval.")
 
     print("")
     print("=" * 128)
