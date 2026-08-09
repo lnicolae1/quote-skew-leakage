@@ -1,0 +1,60 @@
+==============================================================================================================================
+staleness: is the maker the only participant not tracking V?
+==============================================================================================================================
+control arm, no sniffer. 8 seeds x 604800s (7 days). k=0.17763, C=13.66, gamma=1.3392e-06.
+s = V(t) - mid(t-1); d = -(position sign) * s; d > 0: wrong side of V
+prediction: adverse move rises with d, ~0 where d ~ 0.
+
+  toxicity 0.10 measured in 242s -- 2286 MM fills per run
+
+==============================================================================================================================
+1. adverse move by directional staleness
+==============================================================================================================================
+    octile         mean d ($) adverse h=60 ($/BTC) adverse h=10800 ($/BTC)
+         1          -218.0779              -4.9459            -148.9601
+         2           -33.5857               0.5966             -37.5842
+         3            21.7423              11.8726              23.6074
+         4            62.8970              23.0238              83.4952
+         5           108.1653              33.8485              85.5269
+         6           162.2079              47.1548             116.7526
+         7           232.2041              52.0136             214.6662
+         8           373.4102              72.6649             317.0835
+
+  fills where V and mid agree (|staleness| in bottom 20%, below $40.8723):
+    adverse move h=60 = +6.9282 +/- 0.3074 $/BTC
+    ~0 confirms; comparable to overall $24.81/BTC refutes
+
+  fills on the wrong side of V (d > 0): 75.09% +/- 0.39%
+  50% = no directional selection
+
+==============================================================================================================================
+2. exposure or selection: |V - mid| over all seconds vs at fills
+==============================================================================================================================
+  distribution of |V-mid|        p50 ($)        p90 ($)        p99 ($)
+  all seconds                  101.1077       280.1086       486.0066
+  at MM fills                  121.3998       326.4342       520.9025
+
+  share of MM fills above the all-seconds percentile:
+    above the 80th:  27.54% +/- 0.76%   (20% = no selection)
+    above the 95th:   8.29% +/- 0.44%   ( 5% = no selection)
+
+  above baseline: selected into stale moments, not merely exposed
+
+==============================================================================================================================
+3. cross-check vs 009fc18 toxicity result
+==============================================================================================================================
+  009fc18: less informed flow, larger loss (-608.71 at toxicity 0.001, -466.49 at 0.30)
+  prediction: informed traders post at V, so sd(V - mid) rises as toxicity falls
+
+    toxicity 0.001 measured in 238s
+    toxicity 0.300 measured in 240s
+
+    toxicity      sd(V - mid) ($)   mean |V - mid| ($)      PnL (009fc18)
+       0.001   173.7033 +/- 2.6428    133.1758 +/- 2.0793             -608.71
+       0.100   168.7448 +/- 2.5423    129.1340 +/- 2.0526             -525.18
+       0.300   160.7205 +/- 2.3105    122.5820 +/- 1.9321             -466.49
+
+  sd(V-mid) falls as toxicity rises (173.7033 at 0.001 -> 160.7205 at 0.300): predicted direction
+  consistent with informed posting pulling the book to V (009fc18 PnL ordering)
+
+  no defaults changed; nothing retuned; no sniffer
