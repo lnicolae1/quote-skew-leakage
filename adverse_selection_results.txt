@@ -1,0 +1,139 @@
+==================================================================================================================================
+Adverse selection, measured directly; what does the price do after each MM fill?
+==================================================================================================================================
+Control arm only, no sniffer. 8 seeds x 604800s (7 days). k=0.17763, C=13.66, gamma=1.3392e-06, toxicity=0.10.
+
+adverse move = -(position sign) * (mid[t-1+H] - mid[t-1]), size-weighted, in $/BTC.
+Positive means the price moved against the position the fill created. H=10800s is the
+column that matters: the corrected inventory half-life is 1.9-4.1h (7d87911).
+
+  BASE  2/k, spread ~$18.36     234s   fills   2286   vol   7.24 BTC   adverse@10800s =  +59.240 $/BTC
+  TOUCH  mkt spread ~$1.82      235s   fills   7604   vol  14.34 BTC   adverse@10800s =  +45.278 $/BTC
+
+==================================================================================================================================
+1. The adverse move per fill, by horizon; and is it the same at both widths?
+==================================================================================================================================
+  arm                                       H=60s             H=300s            H=3600s           H=10800s
+  BASE  2/k, spread ~$18.36     24.8100+-0.7670    28.6379+-0.9144    56.5071+-2.5351    59.2398+-3.5937  
+  TOUCH  mkt spread ~$1.82      14.6080+-0.3955    16.7456+-0.4669    38.2780+-2.0243    45.2783+-2.6056  
+
+  Drift control; size-weighted mean raw price change over the same horizons ($/BTC).
+  Should be ~0; if not, any buy/sell asymmetry below is partly the value path, not the maker.
+  BASE  2/k, spread ~$18.36      0.6852            1.4279            9.3850           34.3540
+  TOUCH  mkt spread ~$1.82       0.3764            1.0448           11.0475           35.5837
+
+  Base / touch ratio: 1.308 at H=10800s, 1.698 at H=60s.
+  These are NOT 1, so a selection effect is real and measurable: a quote sitting ~9x
+  outside the touch does catch somewhat more adverse fills. But it is a factor of ~1.3-1.7,
+  nowhere near the ~7x shortfall below, and adverse selection of $14.6-45.3/BTC persists at
+  the touch where there is no selection to speak of. So the selection effect is real but
+  secondary; the dominant fact is that every fill is adverse, at every width tested.
+
+==================================================================================================================================
+1b. The bridge to reality; adverse move as a fraction of an unconditional one-sigma move
+==================================================================================================================================
+  one-sigma over H = sigma * sqrt(H / seconds_per_year) * mid, with sigma = 0.3721 annualised
+  (the Phase 3 measurement) and mid = $62000. In a real venue conditional adverse selection is
+  a few percent of a one-sigma move. This ratio is the number that says whether this
+  simulator's flow is far more informative about the next price move than real flow is.
+
+  arm                             H (s)    1-sigma ($)    adverse ($)      ratio
+  BASE  2/k, spread ~$18.36          60          31.81          24.81      78.0%
+  BASE  2/k, spread ~$18.36         300          71.13          28.64      40.3%
+  BASE  2/k, spread ~$18.36        3600         246.41          56.51      22.9%
+  BASE  2/k, spread ~$18.36       10800         426.79          59.24      13.9%
+  TOUCH  mkt spread ~$1.82           60          31.81          14.61      45.9%
+  TOUCH  mkt spread ~$1.82          300          71.13          16.75      23.5%
+  TOUCH  mkt spread ~$1.82         3600         246.41          38.28      15.5%
+  TOUCH  mkt spread ~$1.82        10800         426.79          45.28      10.6%
+
+  The ratio FALLS with H because the unconditional move grows as sqrt(H) while the adverse
+  move barely grows; which is the same fact section 1c measures from the other side.
+
+==================================================================================================================================
+1c. Diffusion check; does the adverse move grow like sqrt(H)?
+==================================================================================================================================
+  Slow informed drift accumulating would grow as sqrt(H). Immediate repricing that comes
+  with the fill is already there at H=60s and barely grows. 'diffusion fraction' = measured
+  growth / sqrt growth: near 1 means diffusion, near 0 means the move is immediate.
+
+  arm                                horizon pair   sqrt ratio     measured     diff. frac
+  BASE  2/k, spread ~$18.36          60 -> 300            2.236        1.154          0.516
+  BASE  2/k, spread ~$18.36         300 -> 3600           3.464        1.973          0.570
+  BASE  2/k, spread ~$18.36        3600 -> 10800          1.732        1.048          0.605
+  BASE  2/k, spread ~$18.36          60 -> 10800         13.416        2.388          0.178
+  TOUCH  mkt spread ~$1.82           60 -> 300            2.236        1.146          0.513
+  TOUCH  mkt spread ~$1.82          300 -> 3600           3.464        2.286          0.660
+  TOUCH  mkt spread ~$1.82         3600 -> 10800          1.732        1.183          0.683
+  TOUCH  mkt spread ~$1.82           60 -> 10800         13.416        3.100          0.231
+
+==================================================================================================================================
+2. What half-spread would cover it?
+==================================================================================================================================
+  Earned per BTC is computed per arm from 009fc18's committed spread totals divided by this
+  run's measured volume; the two arms differ by ~10x and reusing one rate for both would
+  understate the TOUCH shortfall by an order of magnitude.
+
+  arm                              spread ($)   volume (BTC)   earned $/BTC        shortfall
+  BASE  2/k, spread ~$18.36             63.83           7.24          8.820            6.7x
+  TOUCH  mkt spread ~$1.82              12.89          14.34          0.899           50.4x
+
+  A shortfall factor near the ~9x implied by the PnL decomposition (needs ~$81, earns ~$8.83)
+  confirms the mechanism and makes the finding quotable as a factor, not a direction.
+
+  Quantitative bridge; total (adverse move x size) over all fills, against the |INV| each
+  arm actually lost (2eb46f1 / 009fc18). If a horizon reproduces it, the mechanism is
+  sufficient, not merely present.
+  arm                               |INV|        H=60s       H=300s      H=3600s     H=10800s
+  BASE  2/k, spread ~$18.36        589.01       179.45       207.08       404.81       417.01
+  TOUCH  mkt spread ~$1.82         556.44       209.52       240.01       544.44       635.06
+    as % of |INV|                                                                            
+  BASE  2/k, spread ~$18.36                        30%          35%          69%          71%
+  TOUCH  mkt spread ~$1.82                         38%          43%          98%         114%
+
+==================================================================================================================================
+3. Is it symmetric in q's sign, or is the maker caught long into falls?
+==================================================================================================================================
+  Split by the side of the fill (which direction it pushed the maker's position):
+  arm                          MM bought (now longer)  MM sold (now shorter)      asymmetry
+  BASE  2/k, spread ~$18.36       23.9780+-21.3879       92.7716+-26.5337          -68.7935
+  TOUCH  mkt spread ~$1.82         9.5892+-21.7039       80.9336+-20.1786          -71.3444
+
+  THE SAME split, drift-adjusted. A common drift D over the horizon contributes -D to buy
+  fills and +D to sell fills, so it cancels in the overall mean but dominates the split.
+  These columns add D back to the buy side and remove it from the sell side; they are the
+  ones that answer the symmetry question at the holding horizon.
+  arm                            MM bought (adjusted)     MM sold (adjusted)      asymmetry
+  BASE  2/k, spread ~$18.36                   58.3320                58.4176        -0.0856
+  TOUCH  mkt spread ~$1.82                    45.1728                45.3499        -0.1771
+
+  H=60s, where the raw drift is already ~0, as an independent read on the same question:
+  arm                                       MM bought                MM sold      asymmetry
+  BASE  2/k, spread ~$18.36       24.1101+-0.8933        25.4778+-1.5037            -1.3677
+  TOUCH  mkt spread ~$1.82        14.2185+-0.7390        14.9924+-0.8723            -0.7739
+
+  Split by the maker's inventory sign at the moment of the fill (NOT drift-adjustable --
+  this split mixes both fill sides, so read it with the drift row in section 1 in view):
+  arm                              already long (q>0)    already short (q<0)      asymmetry
+  BASE  2/k, spread ~$18.36       59.1856+-10.0308       64.7152+-7.0180            -5.5296
+  TOUCH  mkt spread ~$1.82        45.5501+-4.9294        46.6347+-5.0986            -1.0846
+
+  Both columns positive and close = symmetric adverse selection: every fill is adverse and
+  the maker is picked off in both directions equally. One column much larger = a directional
+  mechanism, and the write-up has to say which. These are different findings.
+
+==================================================================================================================================
+4. Population-level check; corr(q_t, mid[t+H] - mid[t]), sampled every 60s
+==================================================================================================================================
+  arm                                       H=60s             H=300s            H=3600s           H=10800s
+  BASE  2/k, spread ~$18.36     -0.0175+-0.0070    -0.0284+-0.0131    -0.0106+-0.0287     0.0125+-0.0434  
+  TOUCH  mkt spread ~$1.82      -0.0659+-0.0051    -0.1192+-0.0095    -0.1118+-0.0213    -0.0115+-0.0366  
+
+  Negative means the maker is long before the price falls. This does not depend on the
+  fill-level bookkeeping above being right, so agreement between the two is a check on
+  both. Fills whose horizon ran past the end of the run were dropped, not clamped:
+    BASE  2/k, spread ~$18.36    dropped 68 of 2286 fills at H=10800s
+    TOUCH  mkt spread ~$1.82     dropped 141 of 7604 fills at H=10800s
+
+  No committed default changed. gamma, k and quote_size are constructor arguments; gamma
+  is derived from C. No sniffer anywhere in this file.
