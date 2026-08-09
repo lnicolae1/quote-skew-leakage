@@ -1,0 +1,45 @@
+==========================================================================================================================
+Realised mid volatility, measured in-sample; does the simulator reproduce the sigma it was given?
+==========================================================================================================================
+Control arm, BASE MM, no sniffer. 8 seeds x 604800s (7 days). k=0.17763, C=13.66, gamma=1.3392e-06, toxicity=0.10.
+sigma input = 0.3721 annualised (sim_run.SIGMA = market_maker.DEFAULT_SIGMA, both feed the value path).
+sd taken over non-overlapping windows of each horizon.
+
+  8 runs in 235s.  realised mean mid = $63370.69 (reference 62000)
+
+==========================================================================================================================
+A. Realised vs sigma-implied
+==========================================================================================================================
+     H (s)   windows    realised sd ($)   implied @62000    implied @mean      ratio implied annual
+        60     10079    11.76+-0.29                31.81            32.51      0.370        0.1346
+       300      2015    32.20+-0.73                71.13            72.70      0.453        0.1648
+      3600       167   196.20+-4.76               246.41           251.85      0.796        0.2899
+     10800        55   384.05+-12.95              426.79           436.22      0.900        0.3276
+
+  implied annual = realised sd / mean mid * sqrt(year / H). Compare against the 0.3721 input.
+  A ratio near 1 means the mid inherits the value path's volatility; below 1 means the book
+  is smoother than V (staleness), above 1 means microstructure noise adds to it.
+
+==========================================================================================================================
+B. d526241 Section 1b, recomputed against the realised denominator
+==========================================================================================================================
+  Adverse moves are the committed figures from d526241 section 1; only the denominator changes.
+
+  arm         H (s)    adverse ($)    old denom ($)      old ratio   realised denom    new ratio
+  BASE           60          24.81            31.81          78.0%            11.76       211.0%
+  BASE          300          28.64            71.13          40.3%            32.20        88.9%
+  BASE         3600          56.51           246.41          22.9%           196.20        28.8%
+  BASE        10800          59.24           426.79          13.9%           384.05        15.4%
+  TOUCH          60          14.61            31.81          45.9%            11.76       124.2%
+  TOUCH         300          16.75            71.13          23.5%            32.20        52.0%
+  TOUCH        3600          38.28           246.41          15.5%           196.20        19.5%
+  TOUCH       10800          45.28           426.79          10.6%           384.05        11.8%
+
+  If the new ratios differ materially from the old, the new ones are the headline and
+  d526241's section 1b is superseded by this file. If they agree, 78%/46% stands as
+  measured rather than as an artefact of using the input sigma.
+
+  Either way the comparison to reality is unchanged in kind: in a real venue conditional
+  adverse selection is a few percent of an unconditional move over the same horizon.
+
+  No committed default changed. No sniffer. gamma derived from C.
