@@ -1,0 +1,58 @@
+============================================================================================================================
+Near-touch level density; simulator against the real book. The discriminating measurement.
+============================================================================================================================
+Sim: clipped working point lam=1.8040 p_market=0.0126 mean_lifetime=720s disp=0.0055, JOIN clipping.
+     3 seeds x 86400s, sampled every 60s, seed-book orders excluded. k=0.17763, C=13.66 -> gamma=9.369e-06 at this horizon.
+Real: cloud chain 07-11+07-12+07-13, streamed line by line through the committed reconstruction, sampled every 2000 events.
+Measured tick = $0.01 (Verified Facts). The 1000-level snapshot cap cannot bite: everything
+here is within 1bp of the mid, nowhere near rank 1000.
+
+  SIM, MM-absent        6s   levels/1bp = 3.28   median spacing = $0.7233
+  SIM, MM-present      11s   levels/1bp = 3.19   median spacing = $0.7733
+  REAL chain            3s   levels/1bp = 1.57   median spacing = $1.2000
+    (523355 events streamed, 3 snapshots, 523352 diffs, 261 samples, 2 gaps)
+
+============================================================================================================================
+A. Levels within 1bp per side, and the actual spacing between them
+============================================================================================================================
+  book                      levels /1bp   median spacing $   spacing / tick   total levels
+  SIM, MM-absent                   3.28             0.7233             72.3          549.6
+  SIM, MM-present                  3.19             0.7733             77.3          551.4
+  REAL, cloud 07-11+07-12+07-13           1.57             1.2000            120.0          844.0
+
+  For reference, the old committed figure this replaces: clipped_mm_check.ABSENT near_lvl = 3.1668
+  (MM-absent, old working point). One bp is $6.20 at a $62,000 mid.
+
+============================================================================================================================
+B. THE SAME within 5bp, as a check that the 1bp result is not a small-sample artefact
+============================================================================================================================
+  book                      levels /5bp   median spacing $   spacing / tick  gaps measured
+  SIM, MM-absent                  18.52             0.8667             86.7          50487
+  SIM, MM-present                 20.52             0.7845             78.5          56219
+  REAL, cloud 07-11+07-12+07-13           8.21             2.4300            243.0           3764
+
+============================================================================================================================
+C. Concentration; what share of the book sits within 1bp of the mid?
+============================================================================================================================
+  book                        levels /1bp     total levels share within 1bp
+  SIM, MM-absent                     3.28            549.6          0.60%
+  SIM, MM-present                    3.19            551.4          0.58%
+  REAL, cloud 07-11+07-12+07-13             1.57            844.0          0.19%
+
+============================================================================================================================
+D. The verdict
+============================================================================================================================
+  Real book has 0.5x the levels within 1bp that the sim does (1.57 against 3.28).
+  Sim level spacing is 0.6x the real book's ($0.7233 against $1.2000).
+  Real spacing is 120.0 ticks; sim spacing is 72.3 ticks.
+
+  Diagnosis REFUTED, and in the opposite direction. The SIM is the denser book near the
+  touch; 3.28 levels/1bp against the real 1.57, at $0.7233 spacing against $1.2000. Near-touch
+  sparsity therefore cannot explain impact that is worse in the sim than in reality, and
+  the mechanism paragraph in 0860f69 is wrong. The real Binance.US book genuinely carries
+  only ~1.6 price levels per side within $6.20, spaced ~120 ticks apart: it is a very thin
+  venue, and an intuition that a small trade should not move it was calibrated to a dense
+  equity book rather than to this one.
+  Limits: one real day, not eleven; level density is far more stable than volatility but
+  this is a single day. Crossed-book samples skipped. Nothing retuned, no committed
+  default changed; this measures the gap, it does not close it.
