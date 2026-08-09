@@ -1,0 +1,93 @@
+==================================================================================================================================
+Toxicity sweep; is the Phase 5 item 3 failure caused by informed flow, or by the AS spread formula?
+==================================================================================================================================
+Control arm only, no sniffer. 8 seeds x 604800s (7 days). k=0.17763, C=13.66, derived gamma=1.3392e-06.
+Working point lam=1.8040 p_market=0.0126 mean_lifetime=720s disp=0.0055, JOIN clipping.
+
+The current ratio is 0.10, NOT 2.4. '2.4' in the plan's 'the toxicity ratio (2.4) is too high'
+is a section cross-reference. Presets are low=0.02 medium=0.10 high=0.30, and every run
+committed so far sat at medium = 0.10. The sweep brackets that.
+lam_informed <= 0 raises, so 'nearly absent' is ratio=0.001: about 27 informed arrivals in
+the whole run, against ~390/day at the current default.
+
+  ratio=0.001   338s   PnL =   -608.71 +/- 193.05     INV =   -671.01  spread =  +62.30   fills/day 270
+  ratio=0.005   338s   PnL =   -602.38 +/- 183.51     INV =   -664.37  spread =  +61.99   fills/day 272
+  ratio=0.010   337s   PnL =   -579.31 +/- 181.72     INV =   -641.48  spread =  +62.18   fills/day 274
+  ratio=0.020   338s   PnL =   -514.36 +/- 177.31     INV =   -576.54  spread =  +62.18   fills/day 278
+  ratio=0.050   339s   PnL =   -517.90 +/- 190.56     INV =   -580.93  spread =  +63.02   fills/day 296
+  ratio=0.100   339s   PnL =   -525.18 +/- 162.43     INV =   -589.01  spread =  +63.83   fills/day 327
+  ratio=0.200   339s   PnL =   -483.44 +/- 147.63     INV =   -549.22  spread =  +65.77   fills/day 380
+  ratio=0.300   340s   PnL =   -466.49 +/- 167.43     INV =   -534.39  spread =  +67.91   fills/day 436
+
+==================================================================================================================================
+Cross-check; ratio=0.10 with the base MM must reproduce 2eb46f1's control arm
+==================================================================================================================================
+  2eb46f1 control-arm PnL :   -525.18 +/- 162.43
+  this file, ratio=0.10   :   -525.18 +/- 162.43
+  |difference| = 0.0015  ->  reproduces; the world built here matches make_world
+
+==================================================================================================================================
+A. The sweep; does control-arm PnL cross zero at any achievable toxicity?
+==================================================================================================================================
+     ratio           MM PnL ($)      spread         INV    INV %      signs   fills/day   vol share   spread $
+     0.001   -608.71 +/- 193.05        62.30     -671.01    91.5%     7/8            270      15.11%      18.36
+     0.005   -602.38 +/- 183.51        61.99     -664.37    91.5%     7/8            272      15.02%      18.36
+     0.010   -579.31 +/- 181.72        62.18     -641.48    91.2%     7/8            274      15.07%      18.36
+     0.020   -514.36 +/- 177.31        62.18     -576.54    90.3%     7/8            278      15.00%      18.36
+     0.050   -517.90 +/- 190.56        63.02     -580.93    90.2%     7/8            296      15.01%      18.36
+     0.100   -525.18 +/- 162.43        63.83     -589.01    90.2%     8/8            327      14.92%      18.36
+     0.200   -483.44 +/- 147.63        65.77     -549.22    89.3%     8/8            380      14.78%      18.36
+     0.300   -466.49 +/- 167.43        67.91     -534.39    88.7%     8/8            436      14.72%      18.36
+
+  signs = how many of the 8 seeds were negative.
+
+     ratio  MM fills from inf    MM vol from inf         Sharpe
+     0.001              0.24%              0.03%         -12.41
+     0.005              1.17%              0.16%         -12.55
+     0.010              2.28%              0.30%         -12.11
+     0.020              4.42%              0.62%         -11.79
+     0.050              9.99%              1.44%         -10.70
+     0.100             17.73%              2.77%         -12.43
+     0.200             29.31%              5.28%         -12.53
+     0.300             37.98%              7.77%         -12.54
+
+==================================================================================================================================
+B. The verdict
+==================================================================================================================================
+  mean PnL crosses zero at ratio         : never in this grid (0.001 to 0.30)
+  lower 2-SE bound clears zero at ratio  : never in this grid (0.001 to 0.30)
+  Only the second is a PASS by the gate's own rule; a mean above zero whose interval
+  straddles it does not demonstrate profitability.
+
+  Outcome (b): toxicity is not the cause. PnL stays negative even with informed flow
+  essentially switched off, so the informed:noise ratio does not explain the Phase 5
+  failure and lowering it will not fix the maker. The remaining candidate is the as
+  spread formula against the measured k = 0.17763. See section C.
+
+==================================================================================================================================
+C. The discriminating comparison; same decomposition for an MM quoting at the market touch
+==================================================================================================================================
+  Skew (reservation_price) unchanged in both variants; only the width moves. market_spread
+  = 0.2873bp of mid, the Phase 3 median the book is calibrated to.
+  Run at the current toxicity ratio 0.10 so the only thing changing is the MM's width.
+
+  BASE  2/k = $11.26 (as committed)   PnL =   -525.18 +/- 162.43    measured
+  TOUCH+INV  gamma*sig^2*tau + mkt    PnL =   -449.14 +/- 62.57     measured
+  TOUCH  mkt spread only              PnL =   -543.55 +/- 26.23     measured
+
+  variant                                      MM PnL ($)      spread         INV    INV %      signs   fills/day   spread $
+  BASE  2/k = $11.26 (as committed)    -525.18 +/- 162.43        63.83     -589.01    90.2%     8/8            327      18.36
+  TOUCH+INV  gamma*sig^2*tau + mkt     -449.14 +/- 62.57         42.31     -491.45    92.1%     8/8            673       8.92
+  TOUCH  mkt spread only               -543.55 +/- 26.23         12.89     -556.44    97.7%     8/8           1086       1.82
+
+  If THE INV bleed largely disappears when the MM quotes competitively, the Phase 5 failure is
+  a selection effect of quoting ~9x outside the touch; the maker fills only when price
+  sweeps out to it, which is adverse by construction; and it implicates the k mismatch,
+  not toxicity. If the bleed persists at the touch too, neither candidate explains it and
+  the cause is elsewhere.
+
+  Note: TOUCH+INV still carries the as inventory term, which at C=13.66 leaves it several
+  times wider than the market. TOUCH removes that too. The pair brackets the answer.
+
+  No committed default changed. gamma, k and quote_size are constructor arguments; gamma
+  is derived from C. No sniffer anywhere in this file.
