@@ -1,0 +1,71 @@
+==================================================================================================================================
+mean_lifetime sweep; is tracking error a free parameter, or welded to the calibrated book structure?
+==================================================================================================================================
+Control arm, no sniffer. 8 seeds x 604800s (7 days). k=0.17763, C=13.66, gamma=1.3392e-06.
+lam=1.8040 p_market=0.0126 disp=0.0055, JOIN clipping. Only mean_lifetime varies.
+sigma_$ per sqrt(s) = 4.1068, so implied lag tau = (sd / 4.1068)^2.
+Book structure measured non-MM and seed-excluded every 600s, the calibration's own convention.
+
+  life=    60s    75s   sd(V-mid)=   46.17   tau=     130s   PnL=   +14.91   width=2.7100bp
+  life=   180s   105s   sd(V-mid)=   78.12   tau=     363s   PnL=  -244.36   width=1.1463bp
+  life=   360s   151s   sd(V-mid)=  114.38   tau=     777s   PnL=  -391.65   width=0.6506bp
+  life=   720s   238s   sd(V-mid)=  168.74   tau=    1691s   PnL=  -525.18   width=0.3976bp
+  life=  1440s   405s   sd(V-mid)=  246.25   tau=    3606s   PnL=  -571.21   width=0.2284bp
+  life=  2880s   723s   sd(V-mid)=  351.89   tau=    7377s   PnL=  -803.67   width=0.1159bp
+
+==================================================================================================================================
+A. Does tracking error scale with mean_lifetime?
+==================================================================================================================================
+    life (s)          sd(V-mid) $       mean |V-mid| $  implied tau s   tau / life
+          60     46.17 +/- 3.02         29.77 +/- 0.53                130         2.17
+         180     78.12 +/- 2.02         56.58 +/- 0.78                363         2.02
+         360    114.38 +/- 1.40         85.75 +/- 1.02                777         2.16
+         720    168.74 +/- 2.54        129.13 +/- 2.05               1691         2.35
+        1440    246.25 +/- 5.09        190.81 +/- 3.92               3606         2.50
+        2880    351.89 +/- 9.22        275.70 +/- 7.95               7377         2.56
+
+  A roughly constant tau/life column means the lag is the order lifetime up to a constant,
+  and mean_lifetime is the lever. A tau that barely moves means the lag comes from somewhere
+  else and this parameter is not it.
+
+==================================================================================================================================
+B. Does the maker become viable?
+==================================================================================================================================
+    life (s)             MM PnL $       spread          INV      INV %   adverse h=60      agree-bin    wrong %
+          60     14.91 +/- 193.95         178.43      -163.52      47.8%           6.66           3.18     58.81%
+         180   -244.36 +/- 168.01         122.75      -367.10      74.9%          14.36           5.56     66.28%
+         360   -391.65 +/- 168.15          91.35      -483.00      84.1%          19.87           6.16     71.11%
+         720   -525.18 +/- 162.43          63.83      -589.01      90.2%          24.81           6.93     75.09%
+        1440   -571.21 +/- 184.13          43.03      -614.24      93.5%          27.03           9.74     76.60%
+        2880   -803.67 +/- 239.96          30.16      -833.83      96.5%          30.38          16.54     75.05%
+
+  wrong %% is the share of fills taken on the wrong side of V; 50%% is no directional
+  selection. agree-bin is the residual adverse move where V and the mid agree; the ~28%%
+  of the bleed that staleness does NOT explain (00b1773).
+
+==================================================================================================================================
+C. What it costs the calibration; 847a7fa's own three targets
+==================================================================================================================================
+  targets: width 0.2873bp +/-20%, levels/side 666.34 +/-20%, aggTrade 0.0451/s +/-10%
+
+    life (s)     width bp       verdict  levels/side       verdict   aggTrade/s       verdict   levels/1bp
+          60       2.7100   OUT-OF-BAND         52.2   OUT-OF-BAND      0.04525       in-band         0.44
+         180       1.1463   OUT-OF-BAND        151.4   OUT-OF-BAND      0.04935       in-band         1.18
+         360       0.6506   OUT-OF-BAND        292.5   OUT-OF-BAND      0.04669       in-band         1.86
+         720       0.3976   OUT-OF-BAND        556.9       in-band      0.04286       in-band         2.96
+        1440       0.2284   OUT-OF-BAND       1043.3   OUT-OF-BAND      0.03895   OUT-OF-BAND         4.92
+        2880       0.1159   OUT-OF-BAND       1932.9   OUT-OF-BAND      0.03620   OUT-OF-BAND         8.97
+
+==================================================================================================================================
+D. The verdict
+==================================================================================================================================
+  Levels passing all three calibration targets: none
+
+  Outcome (b), strongest form: no lifetime in this grid keeps all three targets in band,
+  including the committed 720s. That would itself be a finding about the calibration.
+
+  Whether the maker becomes viable is a separate question from whether tracking error moves;
+  section B answers the first and section A the second. A lever that improves tracking
+  without making PnL positive is still only a partial fix.
+
+  No committed default changed. Nothing retuned. No sniffer.
