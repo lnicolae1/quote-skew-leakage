@@ -1,0 +1,381 @@
+====================================================================================================
+Emergent book; the working point without sim_run._seed_book
+====================================================================================================
+lam=1.8040 p_market=0.0126 mean_lifetime=720s disp=0.0055 JOIN clipping. Nothing retuned.
+W=3600s warm-up, measured window starts after it, all rates over T.
+MM arm: k=0.17763 gamma=1.33918e-06, horizon=W+T so tau runs T->0 across the measured window.
+
+!! 847a7fa's bands were fitted MM-ABSENT. The MM-present arm below is scored against bands never
+!! fitted to it. Pre-existing (8ddf8e8 did the same); stated here so it is on the page.
+!! k=0.17763 and clipped_mm_check.ABSENT were both measured through make_world on a seeded book
+!! and are used as-is, not re-derived here.
+
+====================================================================================================
+Self-test; every detector and counter shown firing on a constructed positive and negative case
+====================================================================================================
+  1. empty-book builder      : orders at t=0 = 0   (expect 0)
+     seeded builder (control): orders at t=0 = 10   (expect 10)
+  2. path-length assertion   : fires on undersized path = True   (expect True)
+  3. classify(); channel only; noise/market and informed/take must stay separate channels
+     -> noise/limit       expect noise/limit       ok
+     -> noise/limit       expect noise/limit       ok
+     -> noise/market      expect noise/market      ok
+     -> informed/take     expect informed/take     ok
+     -> informed/post     expect informed/post     ok
+     -> informed/None     expect informed/None     ok
+  4. aggression counter      : totals={'noise/limit': 1, 'noise/market': 2, 'informed/take': 1}
+     fill-bearing={'noise/market': 1, 'informed/take': 1} n_fill=2 before_two_sided=2  -> ok
+     expect totals {'noise/limit':1,'noise/market':2,'informed/take':1}, fill-bearing {'noise/market':1,'informed/take':1}
+     negative (one non-filling limit): fill-bearing={} n_fill=0 totals={'noise/limit': 1}  -> ok
+  5. book scan               : levels 2/1  btc 1.00/0.50  near levels 1/1  near btc 0.30/0.50  -> ok
+     expect levels 2/1, btc 1.00/0.50, near levels 1/1, near btc 0.30/0.50  (61990 is $10 out, past the $6.20 1bp edge)
+  6. prefix comparison       : identical -> True (expect True), perturbed -> False (expect False)
+  7. daily blocking          : 3 blocks, sizes [86400, 86400, 86400]  (expect 3 x 86400)
+  8. MM API probe            : sigma_absolute(62000)=23070.2000  tau(first measured)=0.00273969  tau(last measured)=0.00000000
+     C = gamma*sigma$^2*tau : first measured 1.952743, last 0.000000  (tau must run T->0 across the measured window)
+  9. aggregate() guard       : n=1 se=0.0000 (expect 0.0), n=2 mean=2.0000 se=1.0000 (expect 2.0, 1.0)  -> ok
+
+  Self-test: all PASS
+
+====================================================================================================
+Harness validation; this module's builder + Observer + run_measure must reproduce committed run() on all 15 seeds
+====================================================================================================
+  seed  0  dict equal = True   median=0.2306441011  
+  seed  1  dict equal = True   median=0.2419364594  
+  seed  2  dict equal = True   median=0.3303687284  
+  seed  3  dict equal = True   median=0.2285444999  
+  seed  4  dict equal = True   median=0.2677368830  
+  seed  5  dict equal = True   median=0.3169996982  
+  seed  6  dict equal = True   median=0.2839895534  
+  seed  7  dict equal = True   median=0.3502425669  
+  seed  8  dict equal = True   median=0.3745254236  
+  seed  9  dict equal = True   median=0.2629782155  
+  seed 10  dict equal = True   median=0.2925592432  
+  seed 11  dict equal = True   median=0.2067930205  
+  seed 12  dict equal = True   median=0.3250365344  
+  seed 13  dict equal = True   median=0.2846133655  
+  seed 14  dict equal = True   median=0.3348108895  
+
+  aggregation check; must reproduce Gate B:
+    median width bp           0.28879 +/- 0.01276   
+    levels/side             551.23755 +/- 2.53988   
+    aggTrades/s               0.04464 +/- 0.00073   
+    mean/median shape         2.49631 +/- 0.08231   
+    expect (15 seeds)      0.28879 +/- 0.01276 | 551.23755 +/- 2.53988 | 0.04464 +/- 0.00073 | 2.49631 +/- 0.08231
+
+  Seeded-book BASELINE for the not-scored diagnostics (15 seeds, 1 day, MM-absent, warmup=0):
+    near_btc     0.12441 +/- 0.00482     (clipped_mm_check.ABSENT records 0.1244)
+    near_lvl      3.1668 +/- 0.0532      (records 3.1668)
+    touch_age     395.93 +/- 11.22       (records 395.93)
+
+  Harness validation: all 15 cells equal
+
+  ran 1d MM-ABSENT seed 0 (4s elapsed)
+  ran 1d MM-ABSENT seed 1 (8s elapsed)
+  ran 1d MM-ABSENT seed 2 (12s elapsed)
+  ran 1d MM-ABSENT seed 3 (16s elapsed)
+  ran 1d MM-ABSENT seed 4 (20s elapsed)
+  ran 1d MM-ABSENT seed 5 (24s elapsed)
+  ran 1d MM-ABSENT seed 6 (28s elapsed)
+  ran 1d MM-ABSENT seed 7 (32s elapsed)
+  ran 1d MM-ABSENT seed 8 (36s elapsed)
+  ran 1d MM-ABSENT seed 9 (40s elapsed)
+  ran 1d MM-ABSENT seed 10 (44s elapsed)
+  ran 1d MM-ABSENT seed 11 (48s elapsed)
+  ran 1d MM-ABSENT seed 12 (52s elapsed)
+  ran 1d MM-ABSENT seed 13 (57s elapsed)
+  ran 1d MM-ABSENT seed 14 (61s elapsed)
+  ran 1d MM-PRESENT seed 0 (8s elapsed)
+  ran 1d MM-PRESENT seed 1 (15s elapsed)
+  ran 1d MM-PRESENT seed 2 (22s elapsed)
+  ran 1d MM-PRESENT seed 3 (29s elapsed)
+  ran 1d MM-PRESENT seed 4 (36s elapsed)
+  ran 1d MM-PRESENT seed 5 (44s elapsed)
+  ran 1d MM-PRESENT seed 6 (51s elapsed)
+  ran 1d MM-PRESENT seed 7 (59s elapsed)
+  ran 1d MM-PRESENT seed 8 (67s elapsed)
+  ran 1d MM-PRESENT seed 9 (75s elapsed)
+  ran 1d MM-PRESENT seed 10 (83s elapsed)
+  ran 1d MM-PRESENT seed 11 (91s elapsed)
+  ran 1d MM-PRESENT seed 12 (100s elapsed)
+  ran 1d MM-PRESENT seed 13 (108s elapsed)
+  ran 1d MM-PRESENT seed 14 (116s elapsed)
+  ran 7d MM-ABSENT seed 0 (28s elapsed)
+  ran 7d MM-ABSENT seed 1 (57s elapsed)
+  ran 7d MM-ABSENT seed 2 (85s elapsed)
+  ran 7d MM-ABSENT seed 3 (113s elapsed)
+  ran 7d MM-ABSENT seed 4 (142s elapsed)
+  ran 7d MM-ABSENT seed 5 (170s elapsed)
+  ran 7d MM-ABSENT seed 6 (199s elapsed)
+  ran 7d MM-ABSENT seed 7 (227s elapsed)
+  ran 7d MM-ABSENT seed 8 (257s elapsed)
+  ran 7d MM-ABSENT seed 9 (286s elapsed)
+  ran 7d MM-ABSENT seed 10 (314s elapsed)
+  ran 7d MM-ABSENT seed 11 (342s elapsed)
+  ran 7d MM-ABSENT seed 12 (370s elapsed)
+  ran 7d MM-ABSENT seed 13 (399s elapsed)
+  ran 7d MM-ABSENT seed 14 (428s elapsed)
+  ran 7d MM-PRESENT seed 0 (48s elapsed)
+  ran 7d MM-PRESENT seed 1 (96s elapsed)
+  ran 7d MM-PRESENT seed 2 (145s elapsed)
+  ran 7d MM-PRESENT seed 3 (194s elapsed)
+  ran 7d MM-PRESENT seed 4 (241s elapsed)
+  ran 7d MM-PRESENT seed 5 (289s elapsed)
+  ran 7d MM-PRESENT seed 6 (336s elapsed)
+  ran 7d MM-PRESENT seed 7 (384s elapsed)
+  ran 7d MM-PRESENT seed 8 (432s elapsed)
+  ran 7d MM-PRESENT seed 9 (478s elapsed)
+  ran 7d MM-PRESENT seed 10 (525s elapsed)
+  ran 7d MM-PRESENT seed 11 (572s elapsed)
+  ran 7d MM-PRESENT seed 12 (618s elapsed)
+  ran 7d MM-PRESENT seed 13 (663s elapsed)
+  ran 7d MM-PRESENT seed 14 (712s elapsed)
+
+====================================================================================================
+1d  MM-ABSENT
+====================================================================================================
+  [1d MM-ABSENT] warm-up verification; single seed (seed 0), not an aggregate
+    first fill-bearing record at t = 59.0 s
+    first noise market order at t  = 66.0 s   (analytic mean gap 1/0.0227304 = 44.0 s)
+    noise market orders total      = 2084   vs analytic 2046 over 90000s  (+1.9%, +0.85 sigma)
+    informed takes total           = 191   (separate stream, NOT covered by lam*p_market)
+    book first two-sided at t      = 2.0 s
+    fill-bearing records before that = 0
+      note: reported, not asserted. A marketable order can cross a one-sided book, so a nonzero
+      count here is possible in principle and is informative rather than automatically a bug.
+    observer series == run_measure spreads_bp : True   (proves the daily blocking uses the committed metric at the committed instants, not a parallel reimplementation)
+    records by (order_type, action); all / fill-bearing:
+      informed/None            10 / 0         first at t=8.0
+      informed/post           198 / 198       first at t=59.0
+      informed/take           191 / 191       first at t=104.0
+      noise/limit          160529 / 0         first at t=1.0
+      noise/market           2084 / 2084      first at t=66.0
+    snapshot at t=W=3600; single instant, single seed. Same book convention as the measurement
+    scans, reported per side. An instantaneous book statistic is a draw, NOT A state: the near-touch
+    region holds only one or two orders per side, so a single arrival swings these by orders of
+    magnitude. Measured across 3 seeds x 7 times, the ask/bid near-touch ratio ranged 0.0 to 429
+    in both directions with no consistent side. Read near_btc in the verdict block, not this.
+      touch width            0.0919 bp   (bid 62001.89 / ask 62002.46)
+      levels    bid/ask      637 / 451
+      levels within 1bp      2 / 9
+      resting BTC bid/ask    2.63119 / 2.16817
+      near-touch BTC bid/ask 0.00301 / 1.29224   (real Binance.US 1bp bucket: bid 0.0452 / ask 0.0247)
+    observer/run_measure series agreement across all 15 seeds: all match
+  [1d MM-ABSENT] verdicts; committed clipped_window.verdict, Z=1.96, full-book width, 15 seeds
+    median width bp           0.34399 +/- 0.01199     95% [    0.32049,     0.36748]  band [    0.22984,     0.34476]  UNRESOLVED margin   0.06 SE
+    levels/side             557.21741 +/- 2.34072     95% [  552.62959,   561.80523]  band [  533.07200,   799.60800]  MET        margin  10.32 SE
+    aggTrades/s               0.04569 +/- 0.00075     95% [    0.04421,     0.04717]  band [    0.04059,     0.04961]  MET        margin   5.20 SE
+    mean/median shape         2.20447 +/- 0.04734     95% [    2.11169,     2.29726]  band [    0.94605,     2.83815]  MET        margin  13.39 SE
+    -> 3/4 MET
+    diagnostic, not scored (no band was ever fitted to these):
+      near_btc  (side-avg BTC within 1bp)     0.10717 +/- 0.00258  
+        vs real Binance.US side-avg 0.03495  (bid 0.0452 / ask 0.0247, spread_depth_results 0-1bp)  ratio 3.07x
+        vs sim seeded book 0.12440  (clipped_mm_check.ABSENT, 847a7fa; a sim number, NOT a target)  ratio 0.86x
+        note: near_btc excludes seed orders, so the seeded book's 0.10 BTC/side never entered
+        the 0.1244 either. Any move here is second-order through the dynamics, not direct removal.
+      near_lvl  (side-avg levels within 1bp)   3.0574 +/- 0.0641     vs real 2.05 (ratio 1.49x), vs sim seeded 3.1668 (ratio 0.97x)
+      touch_age (median s at the touch)        358.40 +/- 6.78       vs sim seeded 395.93 (ratio 0.91x)
+    secondary (never scored): median resid_bp (MM-excluded) = 0.34394 across 15 seeds
+
+====================================================================================================
+1d  MM-PRESENT
+====================================================================================================
+  [1d MM-PRESENT] warm-up verification; single seed (seed 0), not an aggregate
+    first fill-bearing record at t = 59.0 s
+    first noise market order at t  = 66.0 s   (analytic mean gap 1/0.0227304 = 44.0 s)
+    noise market orders total      = 2084   vs analytic 2046 over 90000s  (+1.9%, +0.85 sigma)
+    informed takes total           = 196   (separate stream, NOT covered by lam*p_market)
+    book first two-sided at t      = 2.0 s
+    fill-bearing records before that = 0
+      note: reported, not asserted. A marketable order can cross a one-sided book, so a nonzero
+      count here is possible in principle and is informative rather than automatically a bug.
+    observer series == run_measure spreads_bp : True   (proves the daily blocking uses the committed metric at the committed instants, not a parallel reimplementation)
+    records by (order_type, action); all / fill-bearing:
+      informed/None             5 / 0         first at t=8.0
+      informed/post           198 / 198       first at t=59.0
+      informed/take           196 / 196       first at t=104.0
+      noise/limit          160529 / 0         first at t=1.0
+      noise/market           2084 / 2084      first at t=66.0
+    snapshot at t=W=3600; single instant, single seed. Same book convention as the measurement
+    scans, reported per side. An instantaneous book statistic is a draw, NOT A state: the near-touch
+    region holds only one or two orders per side, so a single arrival swings these by orders of
+    magnitude. Measured across 3 seeds x 7 times, the ask/bid near-touch ratio ranged 0.0 to 429
+    in both directions with no consistent side. Read near_btc in the verdict block, not this.
+      touch width            0.0919 bp   (bid 62001.89 / ask 62002.46)
+      levels    bid/ask      637 / 451
+      levels within 1bp      2 / 9
+      resting BTC bid/ask    2.63119 / 2.16817
+      near-touch BTC bid/ask 0.00301 / 1.29224   (real Binance.US 1bp bucket: bid 0.0452 / ask 0.0247)
+    observer/run_measure series agreement across all 15 seeds: all match
+  [1d MM-PRESENT] verdicts; committed clipped_window.verdict, Z=1.96, full-book width, 15 seeds
+    median width bp           0.39346 +/- 0.01461     95% [    0.36482,     0.42210]  band [    0.22984,     0.34476]  MISSED     margin  -3.33 SE  ABOVE ceiling, ratio 1.1413
+    levels/side             562.28225 +/- 2.14920     95% [  558.06982,   566.49468]  band [  533.07200,   799.60800]  MET        margin  13.59 SE
+    aggTrades/s               0.04151 +/- 0.00057     95% [    0.04039,     0.04264]  band [    0.04059,     0.04961]  UNRESOLVED margin   1.61 SE
+    mean/median shape         1.65695 +/- 0.03311     95% [    1.59205,     1.72185]  band [    0.94605,     2.83815]  MET        margin  21.47 SE
+    -> 2/4 MET
+    diagnostic, not scored (no band was ever fitted to these):
+      near_btc  (side-avg BTC within 1bp)     0.11262 +/- 0.00335  
+        vs real Binance.US side-avg 0.03495  (bid 0.0452 / ask 0.0247, spread_depth_results 0-1bp)  ratio 3.22x
+        vs sim seeded book 0.12440  (clipped_mm_check.ABSENT, 847a7fa; a sim number, NOT a target)  ratio 0.91x
+        note: near_btc excludes seed orders, so the seeded book's 0.10 BTC/side never entered
+        the 0.1244 either. Any move here is second-order through the dynamics, not direct removal.
+      near_lvl  (side-avg levels within 1bp)   3.6509 +/- 0.0901     vs real 2.05 (ratio 1.78x), vs sim seeded 3.1668 (ratio 1.15x)
+      touch_age (median s at the touch)        289.67 +/- 7.97       vs sim seeded 395.93 (ratio 0.73x)
+    secondary (never scored): median resid_bp (MM-excluded) = 0.39346 across 15 seeds
+
+====================================================================================================
+7d  MM-ABSENT
+====================================================================================================
+  [7d MM-ABSENT] warm-up verification; single seed (seed 0), not an aggregate
+    first fill-bearing record at t = 59.0 s
+    first noise market order at t  = 66.0 s   (analytic mean gap 1/0.0227304 = 44.0 s)
+    noise market orders total      = 13921   vs analytic 13829 over 608400s  (+0.7%, +0.78 sigma)
+    informed takes total           = 1383   (separate stream, NOT covered by lam*p_market)
+    book first two-sided at t      = 2.0 s
+    fill-bearing records before that = 0
+      note: reported, not asserted. A marketable order can cross a one-sided book, so a nonzero
+      count here is possible in principle and is informative rather than automatically a bug.
+    observer series == run_measure spreads_bp : True   (proves the daily blocking uses the committed metric at the committed instants, not a parallel reimplementation)
+    records by (order_type, action); all / fill-bearing:
+      informed/None            40 / 0         first at t=8.0
+      informed/post          1378 / 1378      first at t=59.0
+      informed/take          1383 / 1383      first at t=104.0
+      noise/limit         1083830 / 0         first at t=1.0
+      noise/market          13921 / 13921     first at t=66.0
+    snapshot at t=W=3600; single instant, single seed. Same book convention as the measurement
+    scans, reported per side. An instantaneous book statistic is a draw, NOT A state: the near-touch
+    region holds only one or two orders per side, so a single arrival swings these by orders of
+    magnitude. Measured across 3 seeds x 7 times, the ask/bid near-touch ratio ranged 0.0 to 429
+    in both directions with no consistent side. Read near_btc in the verdict block, not this.
+      touch width            0.0919 bp   (bid 62001.89 / ask 62002.46)
+      levels    bid/ask      637 / 451
+      levels within 1bp      2 / 9
+      resting BTC bid/ask    2.63119 / 2.16817
+      near-touch BTC bid/ask 0.00301 / 1.29224   (real Binance.US 1bp bucket: bid 0.0452 / ask 0.0247)
+    observer/run_measure series agreement across all 15 seeds: all match
+  [7d MM-ABSENT] verdicts; committed clipped_window.verdict, Z=1.96, full-book width, 15 seeds
+    median width bp           0.35210 +/- 0.00458     95% [    0.34313,     0.36107]  band [    0.22984,     0.34476]  UNRESOLVED margin  -1.60 SE
+    levels/side             557.02227 +/- 0.94017     95% [  555.17954,   558.86501]  band [  533.07200,   799.60800]  MET        margin  25.47 SE
+    aggTrades/s               0.04711 +/- 0.00040     95% [    0.04633,     0.04789]  band [    0.04059,     0.04961]  MET        margin   6.31 SE
+    mean/median shape         2.15309 +/- 0.01799     95% [    2.11783,     2.18836]  band [    0.94605,     2.83815]  MET        margin  38.08 SE
+    -> 3/4 MET
+    diagnostic, not scored (no band was ever fitted to these):
+      near_btc  (side-avg BTC within 1bp)     0.10278 +/- 0.00163  
+        vs real Binance.US side-avg 0.03495  (bid 0.0452 / ask 0.0247, spread_depth_results 0-1bp)  ratio 2.94x
+        vs sim seeded book 0.12440  (clipped_mm_check.ABSENT, 847a7fa; a sim number, NOT a target)  ratio 0.83x
+        note: near_btc excludes seed orders, so the seeded book's 0.10 BTC/side never entered
+        the 0.1244 either. Any move here is second-order through the dynamics, not direct removal.
+      near_lvl  (side-avg levels within 1bp)   3.0404 +/- 0.0228     vs real 2.05 (ratio 1.48x), vs sim seeded 3.1668 (ratio 0.96x)
+      touch_age (median s at the touch)        350.13 +/- 4.75       vs sim seeded 395.93 (ratio 0.88x)
+    secondary (never scored): median resid_bp (MM-excluded) = 0.35210 across 15 seeds
+
+====================================================================================================
+7d  MM-PRESENT
+====================================================================================================
+  [7d MM-PRESENT] warm-up verification; single seed (seed 0), not an aggregate
+    first fill-bearing record at t = 59.0 s
+    first noise market order at t  = 66.0 s   (analytic mean gap 1/0.0227304 = 44.0 s)
+    noise market orders total      = 13921   vs analytic 13829 over 608400s  (+0.7%, +0.78 sigma)
+    informed takes total           = 1380   (separate stream, NOT covered by lam*p_market)
+    book first two-sided at t      = 2.0 s
+    fill-bearing records before that = 0
+      note: reported, not asserted. A marketable order can cross a one-sided book, so a nonzero
+      count here is possible in principle and is informative rather than automatically a bug.
+    observer series == run_measure spreads_bp : True   (proves the daily blocking uses the committed metric at the committed instants, not a parallel reimplementation)
+    records by (order_type, action); all / fill-bearing:
+      informed/None            36 / 0         first at t=8.0
+      informed/post          1385 / 1385      first at t=59.0
+      informed/take          1380 / 1380      first at t=104.0
+      noise/limit         1083830 / 0         first at t=1.0
+      noise/market          13921 / 13921     first at t=66.0
+    snapshot at t=W=3600; single instant, single seed. Same book convention as the measurement
+    scans, reported per side. An instantaneous book statistic is a draw, NOT A state: the near-touch
+    region holds only one or two orders per side, so a single arrival swings these by orders of
+    magnitude. Measured across 3 seeds x 7 times, the ask/bid near-touch ratio ranged 0.0 to 429
+    in both directions with no consistent side. Read near_btc in the verdict block, not this.
+      touch width            0.0919 bp   (bid 62001.89 / ask 62002.46)
+      levels    bid/ask      637 / 451
+      levels within 1bp      2 / 9
+      resting BTC bid/ask    2.63119 / 2.16817
+      near-touch BTC bid/ask 0.00301 / 1.29224   (real Binance.US 1bp bucket: bid 0.0452 / ask 0.0247)
+    observer/run_measure series agreement across all 15 seeds: all match
+  [7d MM-PRESENT] verdicts; committed clipped_window.verdict, Z=1.96, full-book width, 15 seeds
+    median width bp           0.39203 +/- 0.00487     95% [    0.38248,     0.40157]  band [    0.22984,     0.34476]  MISSED     margin  -9.70 SE  ABOVE ceiling, ratio 1.1371
+    levels/side             559.87421 +/- 0.95488     95% [  558.00264,   561.74578]  band [  533.07200,   799.60800]  MET        margin  28.07 SE
+    aggTrades/s               0.04323 +/- 0.00032     95% [    0.04261,     0.04385]  band [    0.04059,     0.04961]  MET        margin   8.33 SE
+    mean/median shape         1.79618 +/- 0.01225     95% [    1.77217,     1.82019]  band [    0.94605,     2.83815]  MET        margin  69.40 SE
+    -> 3/4 MET
+    diagnostic, not scored (no band was ever fitted to these):
+      near_btc  (side-avg BTC within 1bp)     0.10005 +/- 0.00160  
+        vs real Binance.US side-avg 0.03495  (bid 0.0452 / ask 0.0247, spread_depth_results 0-1bp)  ratio 2.86x
+        vs sim seeded book 0.12440  (clipped_mm_check.ABSENT, 847a7fa; a sim number, NOT a target)  ratio 0.80x
+        note: near_btc excludes seed orders, so the seeded book's 0.10 BTC/side never entered
+        the 0.1244 either. Any move here is second-order through the dynamics, not direct removal.
+      near_lvl  (side-avg levels within 1bp)   3.0537 +/- 0.0319     vs real 2.05 (ratio 1.49x), vs sim seeded 3.1668 (ratio 0.96x)
+      touch_age (median s at the touch)        312.67 +/- 3.65       vs sim seeded 395.93 (ratio 0.79x)
+    secondary (never scored): median resid_bp (MM-excluded) = 0.39203 across 15 seeds
+
+====================================================================================================
+T-independence gate; MM-ABSENT only (tau genuinely differs with the MM, so it does not apply there)
+====================================================================================================
+  seed  0  1d reproduces day 1 of 7d exactly: True   (n=86400 vs prefix 86400)
+  seed  1  1d reproduces day 1 of 7d exactly: True   (n=86400 vs prefix 86400)
+  seed  2  1d reproduces day 1 of 7d exactly: True   (n=86400 vs prefix 86400)
+  seed  3  1d reproduces day 1 of 7d exactly: True   (n=86400 vs prefix 86400)
+  seed  4  1d reproduces day 1 of 7d exactly: True   (n=86400 vs prefix 86400)
+  seed  5  1d reproduces day 1 of 7d exactly: True   (n=86400 vs prefix 86400)
+  seed  6  1d reproduces day 1 of 7d exactly: True   (n=86400 vs prefix 86400)
+  seed  7  1d reproduces day 1 of 7d exactly: True   (n=86400 vs prefix 86400)
+  seed  8  1d reproduces day 1 of 7d exactly: True   (n=86400 vs prefix 86400)
+  seed  9  1d reproduces day 1 of 7d exactly: True   (n=86400 vs prefix 86400)
+  seed 10  1d reproduces day 1 of 7d exactly: True   (n=86400 vs prefix 86400)
+  seed 11  1d reproduces day 1 of 7d exactly: True   (n=86400 vs prefix 86400)
+  seed 12  1d reproduces day 1 of 7d exactly: True   (n=86400 vs prefix 86400)
+  seed 13  1d reproduces day 1 of 7d exactly: True   (n=86400 vs prefix 86400)
+  seed 14  1d reproduces day 1 of 7d exactly: True   (n=86400 vs prefix 86400)
+  gate: PASS
+  negative control: element 43200 of the 7d prefix perturbed by +1.0 -> comparison returns False (expect False)
+  Gate including negative control: PASS
+
+====================================================================================================
+Convergence; primary: per-day blocks within the 7-day run
+====================================================================================================
+  MM-ABSENT
+    day 1  median width 0.34399 +/- 0.01199 bp  (15 seeds)
+    day 2  median width 0.37093 +/- 0.01370 bp  (15 seeds)
+    day 3  median width 0.35309 +/- 0.01467 bp  (15 seeds)
+    day 4  median width 0.34371 +/- 0.01774 bp  (15 seeds)
+    day 5  median width 0.33494 +/- 0.01531 bp  (15 seeds)
+    day 6  median width 0.37230 +/- 0.01203 bp  (15 seeds)
+    day 7  median width 0.34893 +/- 0.01171 bp  (15 seeds)
+
+  MM-PRESENT
+    day 1  median width 0.36982 +/- 0.01370 bp  (15 seeds)
+    day 2  median width 0.37914 +/- 0.01790 bp  (15 seeds)
+    day 3  median width 0.39883 +/- 0.01375 bp  (15 seeds)
+    day 4  median width 0.37802 +/- 0.01490 bp  (15 seeds)
+    day 5  median width 0.38979 +/- 0.01706 bp  (15 seeds)
+    day 6  median width 0.40893 +/- 0.01214 bp  (15 seeds)
+    day 7  median width 0.41806 +/- 0.01558 bp  (15 seeds)
+
+  Seeded-book context for this drift: 0.2798bp at 1 day against 0.3835bp at 7 days (78701e4 header).
+  Origin unidentified; no committed file computes those numbers, and reconstruction gave 0.3267
+  and 0.4195 with the ratio wrong too, so they are quoted as context and NOT as a comparison target.
+
+====================================================================================================
+Convergence; secondary: separate 1d vs 7d runs, in SE units
+====================================================================================================
+  MM-ABSENT
+    median width bp      1d      0.34399   7d      0.35210   diff    +0.00812  =  +0.63 pooled SE
+    levels/side          1d    557.21741   7d    557.02227   diff    -0.19514  =  -0.08 pooled SE
+    aggTrades/s          1d      0.04569   7d      0.04711   diff    +0.00142  =  +1.67 pooled SE
+    mean/median shape    1d      2.20447   7d      2.15309   diff    -0.05138  =  -1.01 pooled SE
+
+  MM-PRESENT
+    median width bp      1d      0.39346   7d      0.39203   diff    -0.00144  =  -0.09 pooled SE
+    levels/side          1d    562.28225   7d    559.87421   diff    -2.40803  =  -1.02 pooled SE
+    aggTrades/s          1d      0.04151   7d      0.04323   diff    +0.00171  =  +2.62 pooled SE
+    mean/median shape    1d      1.65695   7d      1.79618   diff    +0.13923  =  +3.94 pooled SE
+
+  No committed default changed. Nothing retuned. No sniffer.
+exit=0

@@ -37,6 +37,11 @@ TOL_WIDTH, TOL_LEVELS, TOL_RATE = 0.20, 0.20, 0.10
 def run(seed, lam, p_market, life, disp):
     _p, vf, eng, noise, informed = make_world(seed, T, lam, p_market, life,
                                               disp, "join")
+    return run_measure(vf, eng, noise, informed, T, SAMPLE_EVERY)
+
+
+def run_measure(vf, eng, noise, informed, T, SAMPLE_EVERY, warmup=0.0):
+    """The measurement half of run(), on a world the caller built"""
     seed_ids = set(eng.orders.keys())
     birth = {oid: 0.0 for oid in seed_ids}
 
@@ -56,7 +61,15 @@ def run(seed, lam, p_market, life, disp):
     n_two_sided = 0
 
     t = 0.0
-    while t < T:
+    while t < warmup:
+        t += 1.0
+        clock[0] = t
+        noise.run_until(eng, t)
+        informed.run_until(eng, t, vf)
+    clip0 = getattr(noise, "n_clipped", 0)
+
+    t_end = warmup + T
+    while t < t_end:
         t += 1.0
         clock[0] = t
         for r in noise.run_until(eng, t):
@@ -129,7 +142,8 @@ def run(seed, lam, p_market, life, disp):
         "all_age": statistics.mean(all_ages) if all_ages else float("nan"),
         "ev_per_s": n_event / T, "agg_per_s": n_agg / T,
         "n_agg": n_agg, "n_fill": n_fill,
-        "clipped_pct": 100.0 * getattr(noise, "n_clipped", 0) / max(1, n_limit),
+        "clipped_pct": (100.0 * (getattr(noise, "n_clipped", 0) - clip0)
+                        / max(1, n_limit)),
         "two_sided_pct": 100.0 * n_two_sided / T,
     }
 
