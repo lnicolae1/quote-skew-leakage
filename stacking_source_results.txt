@@ -1,0 +1,120 @@
+====================================================================================================
+Stacking and source: follow-ups to resting_size.py
+====================================================================================================
+Emergent book (no seed book), W=3600s, MM-ABSENT, 1 day, 15 seeds, scan every 60s
+lam=1.8040 p_market=0.0126 mean_lifetime=720s disp=0.0055 JOIN clipping (rule unchanged)
+
+Clip flag recovered by pairing the n_clipped delta across noise.limit_price() with the
+order_id of the add_limit_order() that immediately follows it; pairing tested in the self-test.
+
+====================================================================================================
+Self-test: clip-flag pairing, clipping forced on and off
+====================================================================================================
+  0. agent-id guard          : prefix='noise', a real id 'noise_1' matches -> True ; 'informed' matches -> False
+  1. clipping FORCED ON      : n_clipped after 60 buy draws = 60 (expect ~60)
+  2. clipping FORCED OFF     : n_clipped after 60 buy draws = 0 (expect 0)
+  3. pairing, forced on      : buys n=20 clipped=20 (expect all) ; sells n=20 clipped=0 (expect none)
+     flow counter n_clipped=20, tracker n_clipped_sub=20
+     every buy clipped, every sell unclipped, tracker == flow counter -> ok
+  4. pairing, forced off     : recovered clipped=0 unclipped=40, flow counter n_clipped=0
+     no order flagged clipped -> ok
+  5. informed post isolation : pending flag before=True after=True (must be unchanged), tags written=0 -> ok
+  6. submission collectors   : forced-on run drew 40 limit orders, 40 rested, 40 sizes recorded -> ok
+  7. empty book              : scan returned False (expect False), n_scans=0 (expect 0) -> ok
+     populated book          : scan returned True, n_scans=1, untagged counted as unknown=2 (expect 2) -> ok
+  8. trade_sizes.bin         : n=39184 median=0.00076 mean=0.00347 (Phase 3: 39184 / 0.00076 / 0.00347) -> ok
+
+  self-test: PASS
+
+  ran seed 0 (160529 limit orders, 19515 clipped, 80068 near-touch tagged, 3s)
+  ran seed 1 (159994 limit orders, 18821 clipped, 78287 near-touch tagged, 6s)
+  ran seed 2 (160643 limit orders, 23441 clipped, 75219 near-touch tagged, 10s)
+  ran seed 3 (160092 limit orders, 17793 clipped, 83518 near-touch tagged, 13s)
+  ran seed 4 (159832 limit orders, 19627 clipped, 80604 near-touch tagged, 16s)
+  ran seed 5 (160610 limit orders, 23203 clipped, 84144 near-touch tagged, 19s)
+  ran seed 6 (160447 limit orders, 20088 clipped, 78281 near-touch tagged, 23s)
+  ran seed 7 (160615 limit orders, 20679 clipped, 89626 near-touch tagged, 26s)
+  ran seed 8 (160860 limit orders, 17395 clipped, 63510 near-touch tagged, 29s)
+  ran seed 9 (160417 limit orders, 16282 clipped, 73911 near-touch tagged, 33s)
+  ran seed 10 (160263 limit orders, 16540 clipped, 62900 near-touch tagged, 36s)
+  ran seed 11 (160028 limit orders, 22304 clipped, 91569 near-touch tagged, 39s)
+  ran seed 12 (159949 limit orders, 20473 clipped, 80037 near-touch tagged, 43s)
+  ran seed 13 (161153 limit orders, 19028 clipped, 76691 near-touch tagged, 46s)
+  ran seed 14 (161046 limit orders, 23582 clipped, 79359 near-touch tagged, 49s)
+
+====================================================================================================
+A. Broken draw, or size-selected near-touch sample?
+====================================================================================================
+                                                 n        p25     median        p75        p95       mean
+  trade_sizes.bin (39,184 TAKER)             39184    0.00048    0.00076    0.00161    0.00473    0.00347
+  1. SUBMITTED: every limit drawn          2406478    0.00048    0.00076    0.00161    0.00474    0.00347
+  2. SUBMITTED: those that rested          2406478    0.00048    0.00076    0.00161    0.00474    0.00347
+  3. the size that actually RESTED         2406478    0.00048    0.00076    0.00161    0.00474    0.00347
+  4. NEAR-TOUCH resting, periodic scan     1177724    0.00048    0.00077    0.00166    0.00799    0.00393
+
+  ratios vs source                              p25     median        p75        p95       mean
+  1. submitted / source                        1.00       1.00       1.00       1.00       1.00
+  2. rested, drawn size / source               1.00       1.00       1.00       1.00       1.00
+  3. rested size / source                      1.00       1.00       1.00       1.00       1.00
+  4. near-touch scan / source                  1.00       1.01       1.03       1.69       1.13
+
+  stage 1 ~1.00 => faithful draw, excess is survivorship (b); else draw_size() bug (a)
+  first departure from 1.00: 1->2 rest-vs-execute, 2->3 partial fill on arrival, 3->4 survival
+
+  stages 1/2/3 sample counts: 2406478 / 2406478 / 2406478; identical: True
+  under JOIN a crossing limit rests at its own near touch; the only aggressive noise flow is
+  the p_market branch, so nothing happens between submission and resting: departure is all 3->4
+
+====================================================================================================
+B. Stacking due to JOIN clipping
+====================================================================================================
+  limit orders submitted              2406478
+  of those, CLIPPED at submission      298771   (12.42%)
+  near-touch RESTING observations     1177724   (clipped 1079265 = 91.64%, unclipped 98459 = 8.36%)
+  untagged near-touch orders               36   (informed posts etc.; excluded from the split)
+  side-tag mismatches                       0   (buy resting on ask book or vice versa; must be 0)
+
+  by side (clipping is directional):
+                            submitted      clipped       clip % near-touch clp near-touch unc
+  buy (rests on bid)          1202939       150409       12.50%         545377          49672
+  sell (rests on ask)         1203539       148362       12.33%         533888          48787
+
+  orders/level BY SIDE              n       median         mean
+  bid CLIPPED                   24729      8.00000     22.05415
+  bid UNCLIPPED                 49543      1.00000      1.00260
+  ask CLIPPED                   26041      7.00000     20.50182
+  ask UNCLIPPED                 48704      1.00000      1.00170
+
+  near-touch clipped share >> submission share => clipped orders concentrate at the touch
+
+                                                 n        p25     median        p75        p95       mean
+  near-touch size, CLIPPED orders          1079265    0.00048    0.00077    0.00163    0.00585    0.00371
+  near-touch size, UNCLIPPED orders          98459    0.00047    0.00077    0.00212    0.02855    0.00640
+
+                                                 n        p25     median        p75        p95       mean
+  orders/level, ALL (resting_size C)        132081    1.00000    1.00000    4.00000   44.00000    8.91695
+  orders/level, CLIPPED only                 50770    2.00000    8.00000   22.00000   87.00000   21.25793
+  orders/level, UNCLIPPED only               98247    1.00000    1.00000    1.00000    1.00000    1.00216
+
+  clipped/unclipped counts are per level and category (sum to the total only on levels with both); total also includes untagged orders
+
+  caveats:
+   - clipped orders (aggressively priced draws) are a selected population, not a random half
+   - clipping -> stacking is near-definitional; the finding is the magnitude, and that unclipped never stack
+   - 12.42% vs 91.64%: submission counters include the warm-up hour, scans do not (clip rate stationary)
+
+====================================================================================================
+C. Population carrying the 1.69x
+====================================================================================================
+  ratio vs source                               p25     median        p75        p95       mean
+  near-touch CLIPPED / source                  1.00       1.01       1.01       1.24       1.07
+  near-touch UNCLIPPED / source                0.98       1.01       1.32       6.04       1.85
+  near-touch POOLED / source                   1.00       1.01       1.03       1.69       1.13
+
+  unclipped share of near-touch observations: 8.36%
+
+  size selection sits in the UNCLIPPED minority, via survival:
+  CLIPPED orders are replaced by a constant stream of fresh arrivals; sizes stay near the draw
+  UNCLIPPED orders stay only if they survive: small ones consumed whole, large ones keep a remainder
+
+  wall clock 54s

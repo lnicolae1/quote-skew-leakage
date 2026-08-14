@@ -1,0 +1,137 @@
+====================================================================================================
+Resting size; is the sim's per-level depth uniformly ~2x real, or is the shape wrong?
+====================================================================================================
+Sim: emergent book (no seed book), W=3600s, MM-ABSENT, 1 day, 15 seeds, sampled every 60s.
+     lam=1.8040 p_market=0.0126 mean_lifetime=720s disp=0.0055 JOIN clipping. Nothing retuned.
+Real: cloud chain 07-11+07-12+07-13, every 2000 applied events, crossed and one-sided samples skipped.
+Both: within 1bp of mid, mid*(1 +/- 0.0001); run_measure's own convention.
+
+!! Binance publishes [price, AGGREGATE_QUANTITY]; two fields. Verified at the raw feed.
+!! Size per order and orders per level therefore have no real counterpart and never will;
+!! the information was never transmitted. They are reported sim-only and are never scored
+!! or ratioed against anything real. A real level aggregates an unknown number of makers
+!! while a sim level aggregates a known number of orders, so per-level is apples-to-apples
+!! and per-order is not comparable even in principle.
+
+!! Sides are never pooled in Section A. The real book is 1.83:1 asymmetric near the touch
+!! (bid 0.0452 / ask 0.0247 BTC), so pooling the sim and ratioing it against each real side
+!! separately would manufacture a ~1.8x spread between the two ratio rows out of the
+!! asymmetry alone. Bid is compared to bid, ask to ask.
+
+!! n counts level observations, not distinct levels. A level persisting across many scans
+!! is counted once per scan, on both sides equally; a consistent time-weighted convention.
+
+!! Percentiles: sorted[int(p*(n-1))], no interpolation, applied identically to both sides.
+!! Real figures are pooled over samples and carry no error bar; there is one real book,
+!! not fifteen draws of one. Do not read their digits as precision.
+
+====================================================================================================
+Self-test; constructed positive and negative cases for every extractor
+====================================================================================================
+  1. pct()                  : [3, 5, 7, 9]  expect [3, 5, 7, 9]  -> ok
+     negative (empty)       : nan, is nan -> True
+  2. describe()             : n=4 mean=2.50 median=2.00  expect n=4 mean=2.50 median=2.00  -> ok
+     negative (empty)       : n=0, median is nan -> True
+  3. Sim scan (sides split) : bid levels=[0.05, 0.4] ask levels=[0.2]
+     bid orders/level=[1, 2] ask orders/level=[1]  bid order sizes=[0.05, 0.1, 0.3]
+     expect bid [0.05,0.4] / ask [0.2] / bid [1,2] / ask [1] / bid [0.05,0.1,0.3]  -> ok
+     negative: the 9.90 BTC out-of-band level is absent from every population -> True
+     negative: sides did NOT get pooled; bid n=2, ask n=1, distinct -> True
+  4. Real scan              : bid=[0.05, 0.4] ask=[0.2]  expect [0.05,0.4] / [0.2]  -> ok
+     negative (crossed book): real_scan returned False and collected 0 values -> ok
+     negative (one-sided)   : real_scan returned False (expect False)
+  5. window convention      : sim mid 62000.0000 -> [61993.8000, 62006.2000], real mid 62000.0000 -> [61993.8000, 62006.2000]  -> ok
+  6. trade_sizes.bin        : n=39184 (expect 39184)  median=0.00076 (Phase 3 records 0.00076)  mean=0.00347 (records 0.00347)  -> ok
+  7. safe_ratio             : 1/0 -> nan is nan -> True
+
+  Self-test: all PASS
+
+  ran sim seed 0 (1440 scans, 4508 bid / 4484 ask levels, 3s elapsed)
+  ran sim seed 1 (1440 scans, 4454 bid / 5010 ask levels, 6s elapsed)
+  ran sim seed 2 (1440 scans, 4273 bid / 4208 ask levels, 9s elapsed)
+  ran sim seed 3 (1440 scans, 5533 bid / 5269 ask levels, 13s elapsed)
+  ran sim seed 4 (1440 scans, 4183 bid / 4501 ask levels, 16s elapsed)
+  ran sim seed 5 (1440 scans, 3730 bid / 3955 ask levels, 19s elapsed)
+  ran sim seed 6 (1440 scans, 4293 bid / 4163 ask levels, 22s elapsed)
+  ran sim seed 7 (1440 scans, 4317 bid / 4216 ask levels, 25s elapsed)
+  ran sim seed 8 (1440 scans, 4360 bid / 4448 ask levels, 29s elapsed)
+  ran sim seed 9 (1440 scans, 5054 bid / 4217 ask levels, 32s elapsed)
+  ran sim seed 10 (1440 scans, 4261 bid / 4125 ask levels, 35s elapsed)
+  ran sim seed 11 (1440 scans, 4193 bid / 4018 ask levels, 38s elapsed)
+  ran sim seed 12 (1440 scans, 4427 bid / 4567 ask levels, 42s elapsed)
+  ran sim seed 13 (1440 scans, 4471 bid / 4579 ask levels, 45s elapsed)
+  ran sim seed 14 (1440 scans, 4114 bid / 4150 ask levels, 48s elapsed)
+
+  streaming the real chain ...
+  real: 523355 events, 261 samples, 3 snapshots, 523352 diffs, 2 gaps (51s total)
+
+====================================================================================================
+A. Size per level within 1bp; the headline. Bid to bid, ask to ask, nothing pooled.
+====================================================================================================
+                                             n        p25     median        p75        p95       mean
+  sim bid                                66171    0.00048    0.00164    0.01273    0.19436    0.03472
+  sim ask                                65910    0.00048    0.00180    0.01394    0.20319    0.03538
+  real bid                                 391    0.00160    0.00171    0.03083    0.07800    0.02278
+  real ask                                 430    0.00105    0.00174    0.00634    0.04672    0.01777
+
+  Ratio sim/real at each percentile; this is the discriminator:
+                                            p25     median        p75        p95       mean
+  bid  sim/real                            0.30       0.96       0.41       2.49       1.52
+  ask  sim/real                            0.46       1.03       2.20       4.35       1.99
+
+  A roughly FLAT ratio row = scale error: the sizes drawn are simply too big.
+  A ratio row that climbs with percentile = shape error: the typical level is about right
+  and the right tail is too heavy. These point at different fixes and nothing else here
+  distinguishes them.
+
+  Side asymmetry, reported because pooling would have hidden it:
+    real ask/bid median ratio = 1.018     sim ask/bid median ratio = 1.098
+    A sim near 1.000 against a real ratio far from it is a finding in its own right:
+    the simulator has no mechanism that would make one side systematically heavier.
+
+  per-seed spread on the sim median (SE across 15 seeds, the only error bar available):
+    bid  0.00173 +/- 0.00007
+    ask  0.00191 +/- 0.00008
+
+====================================================================================================
+B. Where the size comes from; sim per-resting-order against the bootstrap source
+====================================================================================================
+  Amended after stacking_source.py: this is the near-touch resting population, not what is
+  drawn. The drawn population was measured separately and matches the source 1.00 at every
+  percentile over 2,406,478 orders. The 1.69x below is survivorship in what rests.
+
+  Pooled across sides here on purpose: trade_sizes.bin is an unsigned population (Verified
+  Facts), so the comparable sim quantity is also unsided. Section A's rule is the opposite
+  for the same reason; match the convention of the thing being compared against.
+
+                                             n        p25     median        p75        p95       mean
+  trade_sizes.bin (39,184 taker)         39184    0.00048    0.00076    0.00161    0.00473    0.00347
+  sim order sizes resting within 1bp   1177760    0.00048    0.00077    0.00166    0.00799    0.00393
+
+                                            p25     median        p75        p95       mean
+  sim/source                               1.00       1.01       1.03       1.69       1.13
+
+  Branch 1; confirmed by stacking_source.py. The sizes drawn are faithful and the excess is
+    orders stacking on levels, which points at the JOIN clipping rule. That rule is recorded
+    as measured but not adopted; nothing in the collected data validates it as what the real
+    venue does. It was chosen because it made the book behave. Measured split: unclipped
+    orders rest median 1 / mean 1.00216 / p95 1 per level; clipped orders median 8 / mean 21.3
+    / p95 87. Every multi-order level in this book is a clipped level.
+  Branch 2; dead. per-order does NOT run high at the draw: submitted/source is 1.00 at
+    every percentile over 2,406,478 orders. trade_sizes.bin is not implicated by this number.
+    (Open limitation #3; taker sizes standing in for maker sizes with no maker-size data
+    anywhere behind them; is untouched by this and still stands.)
+
+====================================================================================================
+C. Orders per level; sim only. No real counterpart exists.
+====================================================================================================
+                                             n        p25     median        p75        p95       mean
+  sim orders per level, bid              66171    1.00000    1.00000    4.00000   44.00000    8.99279
+  sim orders per level, ask              65910    1.00000    1.00000    5.00000   44.00000    8.84081
+
+  Never scored and never ratioed against real: Binance published no per-order detail, so
+  there is nothing to compare this to. It locates the defect inside the simulator. If orders
+  per level runs materially above 1, levels are being shared, which is branch 1's stacking.
+
+  Nothing fixed, swept or retuned. No committed default changed.
+  wall clock 51s
