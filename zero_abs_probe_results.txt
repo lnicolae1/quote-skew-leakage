@@ -1,0 +1,149 @@
+====================================================================================================
+ZERO_ABS PROBE; are they re-deletes of removed levels, or prices
+                  the book never held?
+====================================================================================================
+Cloud chain 07-11 + 07-12 + 07-13. Committed reconstruction path, instance
+wrappers only. Ages lag by one depth event (see header timing note).
+
+****************************************************************************************************
+Correction; read before the numbers. Added after zero_abs_timeline.py.
+
+  THE RE_DELETE / NEVER_SEEN split is not a mechanistic distinction.
+  It measures elapsed price-grid coverage. ever_seen and last_removed
+  accumulate monotonically and are never pruned, so once a price has
+  been visited any later zero for it scores RE_DELETE by
+  construction. NEVER_SEEN can only come from a price this run has
+  not yet reached.
+
+  Evidence: NEVER_SEEN per diff across 07-12, one day at roughly
+  constant CREATED/diff; 0.2046 at 00:00 falling to 0.0005 by
+  17:00, nearly three orders of magnitude, then bursting back to
+  0.4800 and 0.8518 on 07-13 02:00 and 03:00 as the price moved into
+  unvisited territory. No market quantity behaves like that; a
+  coverage counter filling up does.
+
+  So: section A's split is a property of this WINDOW's length and
+  price path, not of the venue; a longer run pushes it toward 100%
+  RE_DELETE. Section B's ages are time since that price last saw
+  activity, not time since a causally related removal, and they do
+  not bear on the mechanism. Section D's repeat counts likewise.
+
+  What survives uncontaminated: the total ZERO_ABS count and rate
+  (bucket-independent); SEEN_GONE = 8 of 394,287, an independent
+  check that snapshot re-anchors replace the book cleanly; and
+  section C's near-touch distances, which hold whatever the bucket.
+
+  Settled elsewhere: zero_abs_timeline.py rules out the collector
+  artifact; the three reconnect-adjacent hours on 07-13 sit BELOW
+  that day's own average. That eliminates a rival; it does not
+  establish the fleeting-order explanation.
+****************************************************************************************************
+
+Self-test
+  [PASS] T1 create->remove->zero scores RE_DELETE with correct age   counts={'RE_DELETE': 1, 'SEEN_GONE': 0, 'NEVER_SEEN': 0} ages_s=[7.5] ages_uid=[20]
+  [PASS] T2 negative: unseen price scores NEVER_SEEN, no age recorded   counts={'RE_DELETE': 0, 'SEEN_GONE': 0, 'NEVER_SEEN': 1}
+  [PASS] T3 negative: a present-price delete is REMOVED, not ZERO_ABS   zero_abs=0 removed=1
+  [PASS] T4 snapshot levels count as seen; SEEN_GONE is reachable   counts={'RE_DELETE': 0, 'SEEN_GONE': 1, 'NEVER_SEEN': 1} removed=1
+  [PASS] T5 wrapper does not perturb reconstruction (book and best)   plain={'099.00': '1.0', '101.00': '2.0', '103.00': '0.5'} instr={'099.00': '1.0', '101.00': '2.0', '103.00': '0.5'}
+  [PASS] T6 negative: no recorded age is negative
+  [PASS] T7 completeness: ZERO_ABS count equals bucket total   buckets=2 zero_abs=2
+  all PASS
+
+Streaming
+  market_data_cloud\btcusd_2026-07-11.jsonl: 45790 diffs, 23334 ZERO_ABS
+  market_data_cloud\btcusd_2026-07-12.jsonl: 201090 diffs, 101360 ZERO_ABS
+  market_data_cloud\btcusd_2026-07-13.jsonl: 276472 diffs, 269593 ZERO_ABS
+
+====================================================================================================
+A. What the ZERO_ABS entries actually were
+====================================================================================================
+  Contaminated; this split measures elapsed price-grid coverage,
+  not two mechanisms. See the correction block above.
+  total ZERO_ABS   394287      (real REMOVED for comparison: 1246386)
+  distinct prices tracked: seen 257212, with a recorded removal 255706
+
+  state                   all      share      within 50bp      share
+  RE_DELETE            307448   77.9757%           299613   77.9309%
+  SEEN_GONE                 8    0.0020%                6    0.0016%
+  NEVER_SEEN            86831   22.0223%            84841   22.0676%
+  total                394287                       384460
+
+====================================================================================================
+B. How long ago was the level removed?  (RE_DELETE only)
+====================================================================================================
+  Contaminated; these are time since that price last saw activity,
+  a property of how often the mid revisits a tick. They do NOT bear
+  on the mechanism. See the correction block above.
+  n = 307448
+  seconds since that price was REMOVED:
+      min              0.0000 s
+      p25            503.0239 s
+      median        2477.4475 s
+      p75           9819.1559 s
+      p95          36746.2982 s
+      p99          73167.7656 s
+      max         147229.2763 s
+      mean          8256.7372 s
+
+  cumulative share removed within:
+      <=       1 s         4300    1.3986%
+      <=      10 s        10717    3.4858%
+      <=      60 s        24932    8.1093%
+      <=     600 s        83904   27.2905%
+      <=    3600 s       174725   56.8307%
+
+  update IDs since removal:  median 41318   p95 413613   max 2155140
+
+====================================================================================================
+C. The alarming case; NEVER_SEEN
+====================================================================================================
+  The count here is contaminated (it tracks unvisited price
+  territory). The distances are not; those entries were near the
+  touch whatever bucket they fell in.
+  count 86831  (22.0223% of ZERO_ABS)
+  distance from mid, bp:  median 3.59   p95 15.29   max 16395.10
+  within 50bp of mid: 84841 (99.6769%); the 1000-level cap cannot
+  explain these, so a large number here is a reconstruction
+  problem, not a coverage artifact.
+  first 10 examples (price, bp from mid):
+      64295.26000000         0.44 bp
+      64294.26000000         0.60 bp
+      64299.63000000         0.24 bp
+      64296.07000000         0.27 bp
+      64295.26000000         0.40 bp
+      64293.32000000         0.70 bp
+      64291.80000000         0.93 bp
+      64290.90000000         1.07 bp
+      64288.16000000         1.50 bp
+      64285.93000000         1.85 bp
+
+====================================================================================================
+D. Repeats; is one price deleted over and over?
+====================================================================================================
+  Contaminated for the same reason as a and B.
+  distinct prices producing a ZERO_ABS: 177255
+  ZERO_ABS per such price: median 2   p95 5   max 17
+  worst offenders:
+      62242.91000000         17
+      62235.73000000         16
+      64326.10000000         15
+      64273.16000000         14
+      64327.08000000         13
+      64018.43000000         13
+      62541.94000000         13
+      62246.66000000         13
+      62236.51000000         13
+      63784.68000000         12
+
+====================================================================================================
+E. Verdict on the hypothesis
+====================================================================================================
+  hypothesis: 'ZERO_ABS are zero-quantity republishes for levels
+  already removed'
+  RE_DELETE share = 307448 / 394287 = 0.779757
+  -> mixed. Neither state dominates; read sections A-D and do
+     not summarise this as a single verdict.
+
+  Nothing retuned, swept or simulated. The clipping rule is
+  untouched. No committed file was modified.
+====================================================================================================

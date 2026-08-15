@@ -1,0 +1,326 @@
+====================================================================================================
+1. Lifetime grid behind the PnL series
+====================================================================================================
+  from lifetime_sweep_results.txt sections B and C:
+    60s  180s  360s  720s  1440s  2880s
+  claimed grid:
+    60s  180s  360s  720s  1440s  2880s
+  match: YES
+
+  PnL series (section B, MM PnL $ +/- se):
+    life=    60s   PnL =   +14.91 +/- 193.95  <-- straddles zero
+    life=   180s   PnL =  -244.36 +/- 168.01
+    life=   360s   PnL =  -391.65 +/- 168.15
+    life=   720s   PnL =  -525.18 +/- 162.43
+    life=  1440s   PnL =  -571.21 +/- 184.13
+    life=  2880s   PnL =  -803.67 +/- 239.96
+
+  +14.91 +/- 193.95 at 60s: not distinguishable from zero or from -244.36 at 180s;
+  reaching 60s buys not-significantly-negative, not profitable
+
+====================================================================================================
+2. levels/side vs mean_lifetime: proportional or sublinear?
+====================================================================================================
+  N ~ lam*(1-p_market)*life exactly => levels/life constant
+
+    life (s)   levels/side   levels/life   ratio to life=720 row
+          60          52.2      0.870000   +0.0937
+         180         151.4      0.841111   +0.2719
+         360         292.5      0.812500   +0.5252
+         720         556.9      0.773472   +1.0000
+        1440        1043.3      0.724514   +1.8734
+        2880        1932.9      0.671146   +3.4708
+
+  over the full grid: life x48.0000  ->  levels x37.0287
+  log-log slope = ln(37.0287)/ln(48.0000) = 0.9330
+  sublinear (slope < 1): YES
+
+  pairwise local slopes:
+        60 ->    180 s   slope = 0.9693
+       180 ->    360 s   slope = 0.9501
+       360 ->    720 s   slope = 0.9290
+       720 ->   1440 s   slope = 0.9057
+      1440 ->   2880 s   slope = 0.8896
+
+  claimed x12 = 720/60; a lam multiplier must undo the measured levels ratio:
+    720s row / 60s row  =  556.9 / 52.2  =  10.6686x
+    the naive lifetime ratio 720/60                = 12.0000x
+  so the required multiplier is below x12 (claim conservative here)
+
+====================================================================================================
+3. Provenance of the 3.09 IDs/sec ceiling
+====================================================================================================
+  provenance (git log -S, grep):
+    first appearance   clipped_lam_sweep.py:36, commit f9293d8
+    stated as          bare figure in a comment, no results file
+    absent from        every *_results.txt, research_log.md and the
+                       Phase 1-3 calibration scripts
+    later uses         clipped_depth_sweep.py, clipped_pmarket_grid.py
+                       (inherited, not re-derived)
+    verdict            unsourced constant
+
+  (a) 07-13 reboot window: 2257 update IDs in ~108s
+      2257 / 108 = 20.8981 IDs/sec
+  (b) 2-day span between two recorded IDs:
+      4494915679 - 4491244963 = 3670716 update IDs
+      over 172909.963036 s  ->  21.2291 IDs/sec
+
+  (c) measured over the cloud chain 07-11..07-13, 2.25 days
+      (book_change_mix.py, section A -- run 2026-08-15):
+      2795579 observed update IDs over 194813.671 s  ->  14.3500 IDs/sec
+
+      the three figures disagree:
+        (a)  20.8981 IDs/s   a 108-SECOND window, between two reconnects
+        (b)  21.2291 IDs/s   07-09 -> 07-11, ~2 days, LOCAL chain
+        (c)  14.3500 IDs/s   07-11 -> 07-13, 2.25 days, CLOUD chain
+
+      (a) and (b) cover adjacent periods (not independent); (a) is a burst
+      (c), the longest clean window, sits 32.40% below (b) on the immediately adjacent days
+
+      update rate is not a scalar: varies ~48% across adjacent multi-day windows
+
+      every '% of ceiling' figure below is a point estimate with ~50% spread;
+      a verdict turning on less than that spread is not decided
+      3.09 is below all three
+      spread_depth_profile.py:26 says '~20 events/sec' independently.
+
+  quoted ceiling too low by:
+      20.8981 / 3.0900 = 6.7632x   (vs the NOTES.md figure)
+      21.2291 / 3.0900 = 6.8702x   (vs the 2-day derivation)
+
+  an update ID is any book change; submissions are a fraction of it:
+  each submitted order is eventually removed by cancel or trade,
+  so in steady state submissions are at most half the update stream
+
+  divide-by-2 measured:
+  book_change_mix.py classified 2,921,638 level entries over the cloud chain
+  and found the addition share, within 50bp of the mid, to be 0.501132
+  against the assumed 0.500000 -- a ratio of 1.0023x.
+
+  1,246,383 level creations vs 1,246,386 removals over 2.25 days: additions are half of book changes
+
+  candidate ceilings:
+    QUOTED 3.09, unsourced                       3.0900 /s   (lam=1.8040 is  58.38% of it)
+    NOTES.md rate, raw                         20.8981 /s   (lam=1.8040 is   8.63% of it)
+    NOTES.md rate, half (submissions only)     10.4491 /s   (lam=1.8040 is  17.26% of it)
+    2-day rate, half (submissions only)         10.6145 /s   (lam=1.8040 is  17.00% of it)
+    MEASURED additions/s, Route 2 (share x IDs)   7.1913 /s   (lam=1.8040 is  25.09% of it)
+    MEASURED additions/s, Route 1 (direct count)   6.3235 /s   (lam=1.8040 is  28.53% of it)
+
+====================================================================================================
+4. lam holding levels/side at the life=720 value (556.9), per life
+====================================================================================================
+  model: levels ~ lam*(1-p_market)*life; at fixed p_market
+  lam needed at lifetime L = lam_held * (target_levels / levels(L))  (lam_lin)
+
+  lam_sub (speculative bound, not conservative) applies
+  section 2's LIFETIME exponent (0.9330) to lam: lam_needed =
+  lam_held * (target/levels)**(1/0.9330); assumes lam and lifetime saturate alike
+  untested: lifetime saturates as orders are consumed or expire before the book fills,
+  lam adds fresh orders, so lam may be closer to linear than lifetime; direction unknown
+
+    life(s)   levels    lam_lin    lam_sub    QUOTED 3.09  NOTES.md r  NOTES.md r  2-day rate   MEASURED ad  MEASURED ad
+                                              % of 3.090   % of 20.898  % of 10.449  % of 10.615  % of 7.191   % of 6.324 
+         60     52.2    19.2461    22.8147    623%         92%          184%         181%         268%         304%       
+        180    151.4     6.6357     7.2867    215%         32%          64%          63%          92%          105%       
+        360    292.5     3.4347     3.5973    111%         16%          33%          32%          48%          54%        
+        720    556.9     1.8040     1.8040    58%          9%           17%          17%          25%          29%        
+       1440   1043.3     0.9630     0.9205    31%          5%           9%           9%           13%          15%        
+       2880   1932.9     0.5198     0.4753    17%          2%           5%           5%           7%           8%         
+
+  (% columns use lam_lin)
+
+  claimed lam x12 = 21.6/s at life=60; from measured levels instead:
+    linear    lam = 1.8040 * 10.6686 = 19.2461 /s  (x10.6686)
+    sublinear lam = 22.8147 /s  (x12.6467)
+    user's    lam = 21.6480 /s  (x12.0000)
+  modest correction; direction unchanged
+
+====================================================================================================
+5. Reverse: lifetime and PnL reachable at maximum defensible lam, fixed book size
+====================================================================================================
+  max defensible lam = 90% of a ceiling; fixed levels hold lam*life:
+  life_reachable = 720 * lam_held / lam_max
+
+  ceiling QUOTED 3.09, unsourced                       3.0900 /s
+    lam_max = 2.7810, life reachable = 467.1 s
+    -> PnL interpolated (log-life) = -441.80
+       bracketed by  life=360s PnL=-391.65   and  life=720s PnL=-525.18
+       distance still to the 60s row: 407.1 s of lifetime, and a
+       further lam factor of x7.7843 on top of lam_max.
+
+  ceiling NOTES.md rate, raw                         20.8981 /s
+    lam_max = 18.8083, life reachable = 69.1 s
+    -> PnL interpolated (log-life) = -18.27
+       bracketed by  life=60s PnL=+14.91   and  life=180s PnL=-244.36
+       distance still to the 60s row: 9.1 s of lifetime, and a
+       further lam factor of x1.1510 on top of lam_max.
+
+  ceiling NOTES.md rate, half (submissions only)     10.4491 /s
+    lam_max = 9.4042, life reachable = 138.1 s
+    -> PnL interpolated (log-life) = -181.86
+       bracketed by  life=60s PnL=+14.91   and  life=180s PnL=-244.36
+       distance still to the 60s row: 78.1 s of lifetime, and a
+       further lam factor of x2.3020 on top of lam_max.
+
+  ceiling 2-day rate, half (submissions only)         10.6145 /s
+    lam_max = 9.5531, life reachable = 136.0 s
+    -> PnL interpolated (log-life) = -178.15
+       bracketed by  life=60s PnL=+14.91   and  life=180s PnL=-244.36
+       distance still to the 60s row: 76.0 s of lifetime, and a
+       further lam factor of x2.2661 on top of lam_max.
+
+  ceiling MEASURED additions/s, Route 2 (share x IDs)   7.1913 /s
+    lam_max = 6.4722, life reachable = 200.7 s
+    -> PnL interpolated (log-life) = -267.48
+       bracketed by  life=180s PnL=-244.36   and  life=360s PnL=-391.65
+       distance still to the 60s row: 140.7 s of lifetime, and a
+       further lam factor of x3.3448 on top of lam_max.
+
+  ceiling MEASURED additions/s, Route 1 (direct count)   6.3235 /s
+    lam_max = 5.6912, life reachable = 228.2 s
+    -> PnL interpolated (log-life) = -294.80
+       bracketed by  life=180s PnL=-244.36   and  life=360s PnL=-391.65
+       distance still to the 60s row: 168.2 s of lifetime, and a
+       further lam factor of x3.8038 on top of lam_max.
+
+====================================================================================================
+6. Verdict: can the (lam, life) lever reach life=60 at fixed book size?
+====================================================================================================
+  ceiling QUOTED 3.09, unsourced                      need 19.2461 vs lam_max 2.7810  ->  NOT REACHABLE
+      required lam is 6.2285x the full ceiling, 6.9206x the 90% bound
+  ceiling NOTES.md rate, raw                         need 19.2461 vs lam_max 18.8083  ->  NOT REACHABLE
+      required lam is 0.9209x the full ceiling, 1.0233x the 90% bound
+  ceiling NOTES.md rate, half (submissions only)     need 19.2461 vs lam_max 9.4042  ->  NOT REACHABLE
+      required lam is 1.8419x the full ceiling, 2.0466x the 90% bound
+  ceiling 2-day rate, half (submissions only)         need 19.2461 vs lam_max 9.5531  ->  NOT REACHABLE
+      required lam is 1.8132x the full ceiling, 2.0147x the 90% bound
+  ceiling MEASURED additions/s, Route 2 (share x IDs)  need 19.2461 vs lam_max 6.4722  ->  NOT REACHABLE
+      required lam is 2.6763x the full ceiling, 2.9737x the 90% bound
+  ceiling MEASURED additions/s, Route 1 (direct count)  need 19.2461 vs lam_max 5.6912  ->  NOT REACHABLE
+      required lam is 3.0436x the full ceiling, 3.3818x the 90% bound
+
+  NOT REACHABLE on every candidate ceiling; margins differ widely:
+    widest  QUOTED 3.09, unsourced                     fails by 6.92x
+    tightest NOTES.md rate, raw                       fails by 1.02x
+  tightest row misses by 2%: a near miss, not a structural margin
+
+  measured addition rates harden the verdict:
+  cloud-chain addition rate 6.3235/s (Route 1,
+  direct count) to 7.1913/s (Route 2), both below the assumed 10.4491/s;
+  the life=60 requirement of 19.2461/s
+  misses by more:
+      assumed half-rate   10.4491 /s   ->  short by 2.05x
+      measured Route 2     7.1913 /s   ->  short by 2.97x
+      measured Route 1     6.3235 /s   ->  short by 3.38x
+
+  the 1.02x near-miss exists only on the raw update rate,
+  the one row that counts cancels and trades as submissions;
+  they are about half the stream, so that row is not a lam ceiling
+
+====================================================================================================
+7. Consequences for COMMITTED results
+====================================================================================================
+
+  (a) recorded bound in NOTES.md (verbatim):
+
+        "the real book updates at ~3.09 IDs/sec, and that count includes
+         submissions AND cancels AND trades, so lam must be a FRACTION of
+         3.09, not a multiple. lam=1.804 is already at 58% of that
+         ceiling. DEPTH CANNOT BE BOUGHT WITH lam ALONE."
+
+      58% recomputed per candidate ceiling:
+
+        ceiling                                        IDs/s  lam share  reading
+        QUOTED 3.09, unsourced                        3.0900     58.38%  at/over half the ceiling -- bound BITES
+        NOTES.md rate, raw                          20.8981      8.63%  a small fraction -- bound DOES NOT BITE
+        NOTES.md rate, half (submissions only)      10.4491     17.26%  a small fraction -- bound DOES NOT BITE
+        2-day rate, half (submissions only)          10.6145     17.00%  a small fraction -- bound DOES NOT BITE
+        MEASURED additions/s, Route 2 (share x IDs)    7.1913     25.09%  a quarter to a half -- bound SOFTENS
+        MEASURED additions/s, Route 1 (direct count)    6.3235     28.53%  a quarter to a half -- bound SOFTENS
+
+      clause by clause:
+
+        'the real book updates at ~3.09 IDs/sec'
+            FALSE: recorded rates are near 20.9 IDs/sec
+            (section 3), and 3.09 has no measuring artifact at all.
+
+        'that count includes submissions AND cancels AND trades'
+            TRUE: makes a submission ceiling a fraction of the update rate
+
+        'lam=1.804 is already at 58% of that ceiling'
+            correct against 3.09 (58.38%); wrong
+            against every sourced figure: 8.63% of the raw measured
+            rate, 17.26% of the half-rate submission bound.
+
+        'DEPTH CANNOT BE BOUGHT WITH lam ALONE'
+            not established by this argument; rests on the divide-by-2 step, since measured (see (c))
+
+      separately: the
+      fixed book size, 556.9 levels/side at life=720, is
+      itself only 83.58% of the real 666.34 target (lifetime_sweep_results
+      .txt:49). It passes the +/-20% band and it is the calibration's own
+      working point; reaching the target too would need a
+      further lam factor of x1.1965 on everything in section 4.
+
+  (b) COMMITTED sites using 3.09 as a live constant (flag only):
+      prints the figure, or constrains a search?
+
+      SITE 1  clipped_lam_sweep.py (Phase 3, f9293d8)
+        line 67   REAL_UPDATE_RATE = 3.09   -- the ORIGIN of the figure
+        line 216  used to set first_309 when lam >= REAL_UPDATE_RATE
+        line 242  printed as 'lam crosses the real ~3.09 IDs/s ...'
+        verdict: reports only; top row lam=4.5100 is above 3.09, so the sweep went past it
+
+      SITE 2  clipped_depth_sweep.py (Phase 4)
+        line 76   LAM_CEILING = 3.09
+        line 294  printed as 'lam is 58% of the ~3.09 IDs/s ... ceiling'
+        header reasons from it to 'lam cannot be the depth knob'
+        line 74   LAM = 1.804 pinned; LIVES and DISPS swept
+        verdict: constrains the search, worst case:
+        lam REMOVED from the search space; Phase 4 swept (life, disp) only
+        on an unsourced number
+
+      SITE 3  clipped_pmarket_grid.py (Phase 5)
+        line 50   imports LAM and LAM_CEILING from clipped_depth_sweep
+        line 141  prints the ceiling text
+        header line 37  'lam = 1.804 held throughout'
+        verdict: inherits Site 2's pin
+
+      SITE 4  lifetime_sweep.py (78701e4) -- INHERITS THE CONSEQUENCE
+        without naming the constant
+        line 87   LAM, P_MARKET, DISP = 1.804, 0.0126, 0.0055 hardcoded
+        verdict: lam held at Site 2's pinned value
+
+      summary: 1 site reports, 1 removed an axis from the search, 2 inherited the removal
+
+  (c) claim REFUTED in its premise
+
+      the (lam, mean_lifetime) lever arithmetic is right, but the ceiling is an
+      unsourced constant, never measured, cited by three later files
+
+      right by accident, not vindicated: 'arithmetically dead' relied on a ~7x gap;
+      against the raw measured update rate the gap is 2%
+      the verdict survives only via the divide-by-2 step
+
+      durable: an update ID is any
+      book change, lam counts submissions only, so lam is bounded by
+      some fraction of the update rate
+
+      divide-by-2 measured (book_change_mix.py): 0.501132 against the assumed
+      0.500000; the verdict no longer rests on an unmeasured step
+
+      the add-vs-non-add split is measurable from depth (level quantity UP or DOWN);
+      only the add / cancel / trade split needs more than depth
+
+      remaining soft spot: update rate spans 14.3500 to 21.2291 IDs/s (~48% apart on adjacent
+      multi-day windows); addition rate inherits it:
+      the ceiling is a distribution; a verdict decided by less than ~50% spread is not decided
+
+      the life=60 verdict is short by
+      2.97x even on the most generous measured row, well
+      outside the spread; that verdict survives. A verdict turning on
+      the difference between, say, 6.3 and 7.2 would not.
+
+      not attempted: the aggTrade stream could split DOWN and REMOVED into cancels vs trades
+====================================================================================================

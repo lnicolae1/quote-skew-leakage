@@ -1,0 +1,116 @@
+====================================================================================================
+Book change mix; what share of real book changes are additions?
+====================================================================================================
+Cloud chain 07-11 + 07-12 + 07-13, committed reconstruction path (State,
+stream_reconstruct, build_cloud_path from compute_volatility).
+Side.apply wrapped on the instance; no committed module modified.
+Near-mid band: 50bp. Read the header limitations.
+
+Self-test
+  [PASS] T1 classifier truth table, all 6 branches
+  [PASS] T2 negative: down+remove stream gives share exactly 0.0   adds=0 denom=2 share=0.0
+  [PASS] T2b negative: all-add stream gives share exactly 1.0   adds=3 denom=3 share=1.0
+  [PASS] T3 wrapper does not perturb reconstruction (book and best)   plain={'100.00': '3.0', '099.50': '0.7'} instr={'100.00': '3.0', '099.50': '0.7'} best '100.00' vs '100.00'
+  [PASS] T4 completeness: every entry classified exactly once   buckets=7 entries=7 fed=7
+  [PASS] T5 negative: snapshot load contributes 0 classified entries   entries=0 book=3
+  [PASS] T6 negative: SAME and ZERO_ABS excluded from denominator   SAME=1 ZERO_ABS=1 denom=1
+  [PASS] T7 negative: 50bp band excludes a far level, keeps a near one   all=2 near=1
+  all PASS
+
+Streaming (line by line; files are never loaded whole)
+  market_data_cloud\btcusd_2026-07-11.jsonl: 1 snapshots, 45790 diffs applied, 227638 level entries, 0 crossed samples
+  market_data_cloud\btcusd_2026-07-12.jsonl: 0 snapshots, 201090 diffs applied, 989998 level entries, 0 crossed samples
+  market_data_cloud\btcusd_2026-07-13.jsonl: 2 snapshots, 276472 diffs applied, 1704002 level entries, 0 crossed samples
+
+====================================================================================================
+A. Coverage
+====================================================================================================
+  first event      2026-07-11T17:53:04.828600+00:00  uid=4495452846
+  last  event      2026-07-13T23:59:58.499432+00:00  uid=4498248645
+  wall span        194813.671 s  (2.2548 days)
+  snapshots        3   diffs applied 523352   depth events 523355
+  gaps recorded    2   update IDs lost 220
+      invisible_span   lost     17   2026-07-13T22:31:05.214118+00:00 -> 2026-07-13T22:31:15.843315+00:00
+      invisible_span   lost    203   2026-07-13T22:33:04.594669+00:00 -> 2026-07-13T22:33:24.314144+00:00
+  update ID span   4498248645 - 4495452846 = 2795799
+  observed IDs     2795799 - 220 = 2795579
+  -> update rate   2795579 / 194813.671 = 14.3500 IDs/sec
+     (NOTES.md verified facts state 20.9 IDs/sec independently)
+  level entries    2921638
+  -> entry rate    2921638 / 194813.671 = 14.9971 entries/sec
+  entries per ID   2921638 / 2795579 = 1.0451
+     limitation (5) predicted this would be < 1, on the reasoning
+     that netting inside each 100ms window collapses several update
+     IDs into one published entry. The data contradicts that
+     prediction: the ratio measured above is > 1, so entries exceed
+     update IDs and the netting model is wrong in its direction.
+     What the ratio being near 1 does establish is that entries and
+     IDs are close to interchangeable in practice, which is why
+     Route 1 and Route 2 in section D land close together. The
+     mechanism behind a ratio above 1 is NOT explained here.
+
+====================================================================================================
+B. What the changes were
+====================================================================================================
+  category      all entries      share      within 50bp      share
+  CREATED           1246383   42.6604%          1218162   42.7908%
+  UP                  14580    0.4990%            13735    0.4825%
+  DOWN                15884    0.5437%            15083    0.5298%
+  SAME                 4118    0.1409%             4099    0.1440%
+  REMOVED           1246386   42.6605%          1211247   42.5479%
+  ZERO_ABS           394287   13.4954%           384460   13.5051%
+  total             2921638                      2846786
+  entries with no usable mid (missing or crossed book): 47113
+
+====================================================================================================
+C. The addition share; what replaces the divide-by-2
+====================================================================================================
+  share = (CREATED + UP) / (CREATED + UP + DOWN + REMOVED)
+  SAME and ZERO_ABS are excluded from the denominator (they are not
+  changes to apportion); both counts are printed above so the
+  denominator can be rebuilt by hand.
+
+  All levels      (1246383 + 14580) / 2523233 = 1260963 / 2523233 = 0.499741
+  within 50bp    (1218162 + 13735) / 2458227 = 1231897 / 2458227 = 0.501132
+
+  The assumed value was 0.500000 (the divide-by-2).
+  measured all   / assumed = 0.499741 / 0.5 = 0.9995x
+  measured near  / assumed = 0.501132 / 0.5 = 1.0023x
+
+  The near figure is the one to quote: the 1000-level snapshot cap
+  cannot bind inside 50bp, so limitation (4); the only one that
+  inflates additions; does not apply there. Limitations (1) and (3)
+  still deflate it, so near is a lower bound on the addition share.
+
+====================================================================================================
+D. The implied submission ceiling
+====================================================================================================
+  Two routes, and they answer different questions. Both are printed
+  because multiplying a share by the wrong rate is exactly the error
+  limitation (5) warns about.
+
+  Route 1; directly measured, and this is the defensible one.
+  Count the addition entries and divide by the wall span. No share,
+  no assumed rate, nothing multiplied.
+      All   1260963 additions / 194813.671 s = 6.4727 additions/sec
+      near  1231897 additions / 194813.671 s = 6.3235 additions/sec
+
+  Route 2; share x update-ID rate. Assumes additions and
+  non-additions are netted at the SAME rate inside the 100ms window,
+  which is NOT established. Reported for comparison only.
+      All   0.499741 x 14.3500 IDs/s = 7.1713 /sec
+      near  0.501132 x 14.3500 IDs/s = 7.1913 /sec
+
+  For comparison, the numbers this replaces:
+      assumed half-rate ceiling (lam_ceiling_arithmetic.py)  10.4491 /s
+      the unsourced 3.09 constant                             3.0900 /s
+      committed lam                                           1.8040 /s
+
+  What this does and does not settle. Route 1 near is a measured
+  lower bound on the real book's order-addition rate. A lower bound
+  on the ceiling can only raise the ceiling relative to a bound that
+  sits below it; it cannot lower one. Whether that flips the
+  life=60 verdict is arithmetic on this number and is NOT done here:
+  this script measures, it does not re-verdict. Nothing is retuned,
+  swept or simulated, and the clipping rule is untouched.
+====================================================================================================
