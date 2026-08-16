@@ -1,0 +1,169 @@
+========================================================================================================================
+Task 1; PnL decomposition re-benchmarked against V
+========================================================================================================================
+Committed convention: SPREAD = sum v_j*(p_j - S_j) direct, INV = PnL - spread residual,
+PnL = cash_T + q_T*S_final. v_j = sgn*size, sgn=+1 when the MM sold.
+8 seeds x 604800s (7.00 days), MM present, k=0.17763 C=13.66 gamma=1.3392e-06.
+lam=1.8040 p_market=0.0126 disp=0.0055, JOIN clipping. Arms this run: life=720
+
+With INV as a residual, INV verifies nothing; every error in the
+computation lands there by construction.
+
+Gate 2 and Gate 3 are both near-tautological. Gate 2 holds because
+cash is benchmark-independent; Gate 3 holds because p cancels:
+SPREAD(V) - SPREAD(lag) = sum sgn*sz*(S_lag - V) identically, so it
+passes unless a field name is mistyped. Neither is evidence the legs
+Are right. The two genuinely independent checks here are:
+  (i)  Self-test T4, against the committed lifetime_sweep.run()
+  (ii) The wrong-side fraction against staleness.py's committed
+       75.09% +/- 0.39%; a different script, different
+       bookkeeping, same population. This one halts on failure.
+
+What T4 does not cover: it compares only lagged-benchmark
+quantities, so the mid[] array feeding SPREAD(now) is unvalidated by
+it. mid[ti] = last is unconditional in lifetime_sweep.py:147 (the
+continue at :151 gates the book-stats block, not the mid array) and
+the transcription here matches. Read from the file, not assumed.
+
+Self-test
+  [PASS] T1 NEGATIVE: V==mid gives SPREAD(V)==SPREAD(mid), Gate3 RHS==0   spread_lag=1.1 spread_V=1.1 rhs=0.0
+  [PASS] T2 NEGATIVE: displaced V gives the hand-computed RHS, not 0   rhs=-7.0 want=-7.0 wrong%=100.0
+  [PASS] T3 NEGATIVE: favourable V gives wrong-side 0%   wrong%=0.0
+  ... T4 runs the committed lifetime_sweep.run(seed=0, life=720) for comparison; this takes a minute.
+  [PASS] T4 mirrored loop == committed lifetime_sweep.run()   pnl -442.3449183128 vs -442.3449183128 | spread 66.7481996970 vs 66.7481996970 | fills 2382 vs 2382 | 60s
+  [PASS] T5 retained fills reproduce the inline SPREAD   66.7481996970 vs 66.7481996970
+  all PASS
+
+========================================================================================================================
+ARM life=720s
+========================================================================================================================
+  seed 0 done (2382 fills, 7.4 BTC) 29s
+  seed 1 done (2170 fills, 7.3 BTC) 61s
+  seed 2 done (2389 fills, 7.4 BTC) 91s
+  seed 3 done (2408 fills, 7.0 BTC) 122s
+  seed 4 done (2204 fills, 7.3 BTC) 152s
+  seed 5 done (2317 fills, 7.2 BTC) 182s
+  seed 6 done (2203 fills, 6.7 BTC) 212s
+  seed 7 done (2217 fills, 7.5 BTC) 243s
+
+  Per seed
+  seed   PnL(mid)     PnL(V)   SPR(lag)   SPR(now)     SPR(V)   INV(lag)  vol BTC   fills
+     0    -442.34    -466.22      66.75     -83.94    -520.54    -509.09    7.395    2382
+     1    -593.89    -621.23      64.48     -61.86    -376.52    -658.37    7.329    2170
+     2   -1499.43   -1517.85      66.17     -72.54    -351.51   -1565.60    7.441    2389
+     3    -815.78    -838.76      63.20     -69.19    -365.67    -878.98    7.034    2408
+     4    -154.06    -147.38      63.00     -57.91    -378.92    -217.06    7.331    2204
+     5     -75.57     -70.14      62.12     -63.78    -386.13    -137.70    7.209    2317
+     6    -309.28    -311.64      60.04     -62.62    -393.40    -369.32    6.668    2203
+     7    -311.07    -313.07      64.86     -60.71    -385.40    -375.92    7.492    2217
+
+  Aggregate (mean +/- SE over 8 seeds)
+    volume               7.2373 +/- 0.0958    BTC   fills 2286.2
+    PnL   S=mid         -525.18 +/- 162.43   
+    PnL   S=V           -535.79 +/- 165.61   
+
+    benchmark            SPREAD           SE        $/BTC  INV share %
+    mid (lagged)          63.83         0.78       8.8192         90.2
+    mid (contemp)        -66.57         2.99      -9.1978         87.3
+    mid (post-fill)       -59.84         2.89      -8.2681         88.6
+    V                   -394.76        18.56     -54.5452         26.3
+
+    benchmark               INV           SE   note
+    mid (lagged)        -589.01       162.83   
+    mid (contemp)       -458.61       161.20   DIAGNOSTIC ONLY; not a decomposition
+    mid (post-fill)      -465.34       161.44   DIAGNOSTIC ONLY; not a decomposition
+    V                   -141.03       171.82   
+
+    Why inv_now and inv_post are diagnostics and not benchmarks
+    on equal footing with lag and V: they subtract a
+    contemporaneous-mid SPREAD from a PnL marked at the final
+    lagged mid. The two halves use different price series, so
+    the sum is not an internally consistent decomposition of
+    anything. Only the lag row and the V row are.
+
+    S_post fallback: 0 of 18290 fills (0.0000%) were read on a
+    one-sided book and fell back to S_lag.
+    Below 1.0%, so the post column is clean enough to read.
+
+  Gate 1; reproduction of the committed figures
+    tolerances are absolute, set by the committed figures'
+    printing precision: 0.005 on 2dp values, 0.050 on the 1dp
+    INV share. Not relative.
+    PnL          got    -525.1785   committed    -525.18   |d|=0.0015  tol 0.005  OK
+    SPREAD       got      63.8277   committed      63.83   |d|=0.0023  tol 0.005  OK
+    INV          got    -589.0063   committed    -589.01   |d|=0.0037  tol 0.005  OK
+    INV share %  got      90.2230   committed      90.20   |d|=0.0230  tol 0.050  OK
+    Gate 1: PASS
+
+  Gate 2; PnL(V) - PnL(mid) == q_final*(V_final - mid_final)
+    tolerance 1.0e-06 dollars, absolute
+      seed 0  lhs     -23.876005  rhs     -23.876005  |d| 6.395e-13  q_f   +0.1664
+      seed 1  lhs     -27.333444  rhs     -27.333444  |d| 4.228e-13  q_f   -0.3510
+      seed 2  lhs     -18.412361  rhs     -18.412361  |d| 1.787e-12  q_f   -0.3151
+      seed 3  lhs     -22.985405  rhs     -22.985405  |d| 1.741e-13  q_f   +0.0525
+      seed 4  lhs       6.677382  rhs       6.677382  |d| 1.146e-13  q_f   +0.1225
+      seed 5  lhs       5.429312  rhs       5.429312  |d| 4.601e-13  q_f   +0.1611
+      seed 6  lhs      -2.358399  rhs      -2.358399  |d| 8.304e-14  q_f   +0.0394
+      seed 7  lhs      -2.005250  rhs      -2.005250  |d| 5.995e-14  q_f   +0.0829
+    worst |d| = 1.787e-12  -> PASS
+    note: cash is benchmark-independent, so this identity is
+    near-automatic. It confirms cash was not disturbed; it is
+    NOT evidence that the legs are right.
+
+  Gate 3; SPREAD(V) - SPREAD(lag) == -sum_j v_j*(V_j - S_j)
+    RHS computed independently in gate3_rhs().
+      seed 0  lhs      -587.2915  rhs      -587.2915  |d| 4.547e-13  wrong-side  75.44%
+      seed 1  lhs      -441.0015  rhs      -441.0015  |d| 5.116e-13  wrong-side  75.85%
+      seed 2  lhs      -417.6744  rhs      -417.6744  |d| 7.390e-13  wrong-side  73.88%
+      seed 3  lhs      -428.8768  rhs      -428.8768  |d| 2.274e-13  wrong-side  73.30%
+      seed 4  lhs      -441.9264  rhs      -441.9264  |d| 3.411e-13  wrong-side  74.77%
+      seed 5  lhs      -448.2560  rhs      -448.2560  |d| 0.000e+00  wrong-side  76.82%
+      seed 6  lhs      -453.4320  rhs      -453.4320  |d| 2.274e-13  wrong-side  75.22%
+      seed 7  lhs      -450.2524  rhs      -450.2524  |d| 6.253e-13  wrong-side  75.42%
+    worst |d| = 7.390e-13  -> PASS
+    Gate 3 RHS total      -458.59 +/- 18.86     dollars
+    wrong-side frac         75.09% +/- 0.39    %   [sign(v_j)*(V_j - S_j) > 0]
+
+    Cross-script check (ii); the one that halts.
+    This is one of only two genuinely independent checks in
+    this file: staleness.py (00b1773) computes the same
+    fraction over the same population with different
+    bookkeeping. Gates 2 and 3 cannot fail informatively;
+    this can.
+      committed staleness.py :  75.09% +/- 0.39%
+      measured here          :  75.09% +/- 0.39%
+      |d| = 0.00 pts, tolerance 1.20 pts (3 SE)
+      -> PASS
+
+  How much of Gate 3 is the one-second bookkeeping lag?
+    SPREAD(lag) - SPREAD(now)  =    +130.39   <- pure 1s lag
+    SPREAD(now) - SPREAD(V)    =    +328.19   <- genuine V-mid gap
+    SPREAD(lag) - SPREAD(V)    =    +458.59   <- total, = -Gate3
+    lag share of the total     =     28.43%
+    SPREAD(now) - SPREAD(post) =      -6.73   <- the MM's own fill
+    Gate 3 RHS vs contemporaneous mid:    -328.19 +/- 16.62    
+    wrong-side vs contemporaneous mid:     73.92% +/- 0.43    %
+
+========================================================================================================================
+Cross-arm; is spread inflated more in the stale arm?
+========================================================================================================================
+  Only one arm was run (life=720). The cross-arm comparison is the
+  point of Task 1 and it is NOT answered by this run. The table
+  below carries the single arm only; do not read a comparison
+  into it.
+  The pre-registered prediction: SPREAD falls under S=V on both
+  arms, and falls more on life=720 than life=60.
+
+  arm          SPR(lag)       SPR(V)         fall     fall % SPR(lag)/BTC   SPR(V)/BTC
+  life=720        63.83      -394.76       458.59     718.5%       8.8192     -54.5452
+
+  Spread per BTC is the column that decides how to read this:
+  lifetime_sweep_results.txt section B shows SPREAD going 63.83 ->
+  178.43 as lifetime shortens, and totals alone cannot say whether
+  the per-BTC edge moved at all.
+
+  Does not overturn: this says nothing about whether quote width can
+  fix the loss. 009fc18 settled that independently; 10x tighter
+  quoting left INV at -556.44 against -589.01. Task 1 is about which
+  column the loss is booked in, not whether the loss is real.
+========================================================================================================================
