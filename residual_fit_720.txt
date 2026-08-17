@@ -1,0 +1,228 @@
+==============================================================================================================================
+Task 2; is the unexplained residual a separate mechanism, or THE SAME staleness inside a bucket
+           defined on |d| instead of d?
+==============================================================================================================================
+Control arm, no sniffer. 8 seeds x 604800s (7 days). k=0.17763, C=13.66, gamma=1.3392e-06.
+d = -(position sign)*(V - benchmark); d > 0 is the wrong side. Adverse move at h=60 seconds,
+measured on the mid. Size-weighted is primary; unweighted is reported as robustness.
+Analysis only; no committed module modified, nothing retuned, clipping rule untouched.
+
+==============================================================================================================================
+Self-tests. Single-seed figures below are plumbing checks and are not reported as results.
+==============================================================================================================================
+  NC1 synthetic y = 2x exactly      a=+0.000000000000 b=+2.000000000000 R2=1.000000000000 n=5
+  NC2 y independent of x            a=+6.000000000000 b=+0.000000000000 R2=0.000000000000 mean(y)=6.0000
+  NC3 weights bite                  unweighted a=+0.000000000000 b=+2.000000000000  | weighted a=+0.000000000000 b=+2.500000000000
+  NC4 bucket thr=inf -> 5 of 5 ; thr=-1 -> 0 ; thr=0 -> 1 (records with |st| exactly 0: 1)
+  T5  determinism (horizon=86400s, 405 fills, 86402 mid entries)   identical: True
+      2835 record fields compared individually across 405 fills, all equal (ti, ps, size, m0, s_post, v, st).
+  T4  running committed lifetime_sweep.run(0, 720) and the mirror ...
+      field                     committed                   mirror      equal
+      n_fills           2382.000000000000        2382.000000000000       True
+      adv60               28.842286040047          28.842286040047       True
+      agree60              8.054927860431           8.054927860431       True
+      wrong               75.440806045340          75.440806045340       True
+      pnl               -442.344918312810        -442.344918312810       True
+      spread              66.748199697003          66.748199697003       True
+  T4  PASS; the mirrored loop is bit-equal to the committed one on all six fields.
+
+Running arms: 720
+  arm life=720 (own thresholds) ...
+      seed 0 done (29s elapsed)
+      seed 1 done (58s elapsed)
+      seed 2 done (87s elapsed)
+      seed 3 done (117s elapsed)
+      seed 4 done (146s elapsed)
+      seed 5 done (175s elapsed)
+      seed 6 done (204s elapsed)
+      seed 7 done (233s elapsed)
+  arm life=720 done in 233s
+
+==============================================================================================================================
+Gate 1. Reproduce the committed figures before reporting anything new. Any failure halts.
+==============================================================================================================================
+  quantity                                          committed       measured     abs diff  verdict
+  adverse h=60, all fills   (lifetime_sweep:38)        24.8100        24.8100     0.000030       OK
+  agree-bin h=60            (lifetime_sweep:38)         6.9300         6.9282     0.001813       OK
+  wrong-side pct            (lifetime_sweep:38)        75.0900        75.0876     0.002446       OK
+  agree-bin h=60, 4dp       (staleness_results)         6.9282         6.9282     0.000013       OK
+  bucket threshold, dollars (staleness_results)        40.8723        40.8723     0.000031       OK
+
+  The full committed octile table (staleness_results.txt section 1), all 8 rows:
+  octile    d committed     d measured        diff   a60 committed    a60 measured        diff  verdict
+       1      -218.0779      -218.0779    0.000041         -4.9459         -4.9459    0.000004       OK
+       2       -33.5857       -33.5857    0.000028          0.5966          0.5966    0.000005       OK
+       3        21.7423        21.7423    0.000040         11.8726         11.8726    0.000029       OK
+       4        62.8970        62.8970    0.000025         23.0238         23.0238    0.000034       OK
+       5       108.1653       108.1653    0.000040         33.8485         33.8485    0.000002       OK
+       6       162.2079       162.2079    0.000022         47.1548         47.1548    0.000048       OK
+       7       232.2041       232.2041    0.000035         52.0136         52.0136    0.000029       OK
+       8       373.4102       373.4102    0.000040         72.6649         72.6649    0.000001       OK
+
+  Gate 1 PASS. Thirteen committed figures reproduced; 24.81 / 6.93 / 75.09, the 4dp agree
+  figure, the bucket threshold, and all 8 octile rows on both axes. That also confirms
+  staleness.py's arm and lifetime_sweep.py's life=720 row are the same world, which is what
+  licenses comparing a figure from one artifact against a figure from the other.
+
+==============================================================================================================================
+1. THE 72/28 split, computed from unrounded per-seed values. It does not exist anywhere in the
+   committed artifacts: lifetime_sweep_results.txt:43-44 asserts it in prose without computing
+   it, and the only other route is 6.93/24.81, a ratio of two rounded display figures drawn
+   from two different files.
+==============================================================================================================================
+  overall adverse move h=60                    24.8100 +/- 0.7670 $/BTC  (seeds=8)
+  agree-bucket adverse move                     6.9282 +/- 0.3074 $/BTC
+  residual share,  mean of per-seed ratios     28.0308 +/- 1.2654 pct
+  explained share, mean of per-seed ratios     71.9692 +/- 1.2654 pct
+  residual share,  ratio of the means          27.9250 pct  (a different quantity; no SE)
+
+  n_fills   2286.25 +/- 34.72    n_with_a60   2286.12 +/- 34.76    n_in_bucket   457.75 +/- 7.03
+  (n_bucket_all 457.75; bucket membership before the j<=n restriction.)
+
+==============================================================================================================================
+2. The regression that replaces the bucket. adverse_move = a + b*d over all fills.
+   a is the answer: the adverse move at ZERO directional staleness.
+==============================================================================================================================
+   Per-seed fits, 8 seeds. The SE is across seeds, not from within-seed residuals, because
+   fills inside a seed are not independent.
+
+  construction                             a  intercept ($)               b  slope                   R2
+  d from m0,   SIZE-WEIGHTED (primary)    15.3858 +/- 0.5322     0.148459 +/- 0.006117     0.277839 +/- 0.008434
+  d from m0,   unweighted                  6.1616 +/- 0.1664     0.062827 +/- 0.001921     0.173676 +/- 0.006350
+  d from S_now, SIZE-WEIGHTED             19.5008 +/- 0.5888     0.117335 +/- 0.004612     0.160095 +/- 0.006458
+  d from S_now, unweighted                 7.1656 +/- 0.1489     0.055516 +/- 0.001678     0.132498 +/- 0.006178
+
+  m0    = the committed benchmark, the mid at the end of the previous second. Shares its
+          error with the outcome, so the intercept here is biased DOWN toward zero.
+  S_now = the mid at the end of the SAME second. Removes the shared error but adds the
+          maker's own fill impact, which biases the intercept UP. Opposite signs, so under
+          the header's argument these bracket the truth in sign, not in magnitude. Section 5
+          measures the contamination and section 6 gates the conclusion on it.
+
+==============================================================================================================================
+3. The diagnostic that tests the pre-registered hypothesis directly
+==============================================================================================================================
+   If mean signed d inside the bottom-20-pct-of-|d| bucket is near zero, the hypothesis is
+   dead. If it is clearly positive, the bucket inherits the same directional selection.
+
+  mean signed d in bucket, size-weighted        1.5457 +/- 0.9349 $
+  mean signed d in bucket, unweighted           5.4663 +/- 0.5798 $
+  median signed d in bucket (unweighted)        8.2152 +/- 0.8402 $
+  wrong-side share inside the bucket           60.4251 +/- 0.8807 pct
+  wrong-side share overall                     75.0876 +/- 0.3921 pct  (committed 75.09 +/- 0.39)
+
+  mean adverse move in bucket (measured)        6.9282 +/- 0.3074 $/BTC
+  predicted from the primary fit,
+      a + b*mean(d | bucket)                   15.6086 +/- 0.5306 $/BTC
+  paired per-seed gap, predicted - measured     8.6804 +/- 0.6136 $/BTC
+
+==============================================================================================================================
+4. Linearity. Checked, not assumed.
+==============================================================================================================================
+   Residuals of the primary fit, binned by the committed octile split of d. A line that fits
+   leaves residuals with no pattern in d; curvature shows up as a systematic arc.
+
+  octile           mean d ($)   adverse h=60 ($/BTC)     fit residual ($/BTC)
+       1   -218.0779+/-10.1388       -4.9459+/-0.3480           8.0742+/-1.3119 
+       2    -33.5857+/-3.1875         0.5966+/-0.5015          -9.6617+/-0.5505 
+       3     21.7423+/-1.5211        11.8726+/-0.7753          -6.5653+/-0.9671 
+       4     62.8970+/-2.5093        23.0238+/-1.1378          -1.6502+/-0.7923 
+       5    108.1653+/-3.3406        33.8485+/-1.0492           2.5902+/-1.4228 
+       6    162.2079+/-4.0066        47.1548+/-2.5742           7.8608+/-2.3773 
+       7    232.2041+/-5.2473        52.0136+/-3.0645           2.3104+/-2.3755 
+       8    373.4102+/-9.1258        72.6649+/-3.2102           3.3530+/-1.7551 
+
+  Refits on interior octiles only. If the slope moves materially, the global intercept is an
+  extrapolation from the tails and is labelled as one.
+  fit window                           a  intercept ($)               b  slope                   R2    n fills
+  all 8 octiles (primary)             15.3858 +/- 0.5322     0.148459 +/- 0.006117     0.277839 +/- 0.008434     2286.1
+  octiles 2-7 (drop extremes)          9.2363 +/- 0.2261     0.205038 +/- 0.005641     0.259623 +/- 0.011248     1714.5
+  octiles 3-6 (middle half)            7.9233 +/- 1.1361     0.239571 +/- 0.016316     0.165122 +/- 0.018166     1142.9
+
+==============================================================================================================================
+5. Errors in variables, and the contamination of the S_now check. Measured, not asserted.
+==============================================================================================================================
+  sd of the 1-second mid change         1.0627 +/- 0.0254 $   upper bound on sd(e0): the fill lands
+                                                      inside the second, not at its end
+  sd(d) at fill moments               174.4335 +/- 4.9113 $
+  var(e0)/var(d)                        0.00003763 +/- 0.00000215        (upper bound)
+  implied slope bias (1-b)*ratio        0.00003196 +/- 0.00000163        (upward on b)
+  mean d, size-weighted                63.3800 +/- 2.5719 $
+  implied intercept bias               -0.002031 +/- 0.000153 $/BTC  (negative = biased DOWN)
+  intercept with that bias removed     15.3878 +/- 0.5322 $/BTC
+
+  The own-impact channel, which decides whether the S_now construction is worth anything:
+  E[-ps*(S_post - m0)], size-weighted      17.0940 +/- 0.4426 $   the mid move across the maker's own fill
+  |own impact| / sd(d)                      0.098436 +/- 0.003279       vs thresholds 0.05 (strong) / 0.20 (useless)
+  Fills where the book was one-sided when S_post was read: 0.00 of 2286.25
+
+==============================================================================================================================
+6. The decision rule. It is asymmetric, because the bias is.
+==============================================================================================================================
+  intercept a (primary, d from m0)   +15.3858 +/- 0.5322   -> |a| > 2SE ? True
+  intercept a (d from S_now)         +19.5008 +/- 0.5888   -> |a| > 2SE ? True
+  predicted-minus-measured bucket    +8.6804 +/- 0.6136   -> within 2SE ? False
+  |implied intercept bias|            0.0020   vs SE(a) 0.5322   -> immaterial ? True
+  |own impact| / sd(d)                0.0984   -> the S_now check is WEAKENED
+      the own-impact is a non-trivial fraction of sd(d), so condition (ii) is weakened and cannot be leaned on.
+
+  Branch 1 fires; the residual is real. This is the STRONG branch: the shared-m0 bias
+  pushes the intercept DOWN, so it works against this finding and the estimate is a
+  lower bound on the residual.
+    a = +15.3858 +/- 0.5322 $/BTC
+    as a share of the unrounded overall adverse move (24.8100 $/BTC): 62.01 pct
+    debiased lower bound: +15.3878 $/BTC
+
+
+==============================================================================================================================
+7. Task 2B; the cross-arm common threshold. A different question, kept as a cross-check.
+==============================================================================================================================
+   The committed agree-bin is a per-arm quantile, so a shrinking bucket mean across arms may
+   only mean the bucket got narrower. Here every arm uses seed s's own life=720 threshold --
+   an absolute dollar cut; so life=720 reproduces its 6.93 exactly as a control.
+
+   Carried thresholds by seed (from the life=720 arm):
+     s0=40.7636  s1=33.5225  s2=40.5225  s3=39.3266  s4=47.1788  s5=45.3988  s6=45.0645  s7=35.2013
+
+    life  threshold ($)     occupancy    n_fills      n_a60   n_bucket      conditional adv          overall adv
+     720        40.8723     20.02 pct     2286.2     2286.1      457.8     6.9282 +/- 0.3074    24.8100 +/- 0.7670
+
+    life   ratio cond/overall pct  mean signed d in bucket      wrong pct in bucket
+     720       28.0308 +/- 1.2654        1.5457 +/- 0.9349       60.4251 +/- 0.8807
+
+  SEs added to committed Section B, which prints these as point values with none
+  (lifetime_sweep_results.txt:35-40). These use each arm's own quantile threshold, so they are
+  the committed quantities, NOT the common-threshold ones above.
+    life             adverse h=60 agree-bin (own quantile)                wrong pct
+     720       24.8100 +/- 0.7670        6.9282 +/- 0.3074       75.0876 +/- 0.3921
+
+  Per-arm intercepts. If the residual is a property of the maker rather than of the bucket,
+  these should agree across arms even where the bucket means do not.
+    life         a  intercept ($)                 b  slope                   R2
+     720       15.3858 +/- 0.5322     0.148459 +/- 0.006117     0.277839 +/- 0.008434
+
+==============================================================================================================================
+8. Limitations
+==============================================================================================================================
+  L1 The adverse move is a mid-to-mid change (staleness.py:156). V enters only through d, so
+     an intercept is a residual in mid-drift terms, not in V terms.
+  L2 The bucket threshold is per seed. The 40.8723 figure in staleness_results.txt is the
+     across-seed mean of eight different thresholds; using it as a single scalar would not
+     reproduce 6.93. Task 2B carries seed s's own life=720 threshold to seed s.
+  L3 e0 is not observed. It is proxied by the sd of the full 1-second mid change, an upper
+     bound, so var(e0)/var(d) and the implied bias are upper bounds.
+  L4 Neither construction is unbiased. m0 shares its error with the outcome (intercept biased
+     DOWN); S_now removes that but carries the maker's own fill impact (intercept biased UP).
+     The bracketing claim is about sign only. The S_now arm is gated on the measured
+     contamination in section 6 rather than trusted.
+  L5 The octile x-axis is unweighted while the y-axis is SIZE-WEIGHTED. That is the committed
+     convention (staleness.py:168 vs :173-176), preserved so the table reproduces; it is NOT
+     the convention the primary fit uses.
+  L6 No instance wrapper is used, so no wrapper-inertness claim is made. The guarantee is T4
+     against the committed lifetime_sweep.run(), plus Gate 1's thirteen reproduced figures.
+  L7 Task 2B's arms differ in book structure as well as in staleness (lifetime_sweep_results
+     section C: 52.2 levels/side at life=60 against 556.9 at life=720, and only life=720 is
+     in-band on levels). A cross-arm comparison is therefore NOT ceteris paribus.
+
+  No committed default changed. Nothing retuned. No sweep. No repricing. JOIN clipping rule
+  untouched. No sniffer.
