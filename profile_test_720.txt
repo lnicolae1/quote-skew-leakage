@@ -1,0 +1,200 @@
+==============================================================================================================================
+Self-test
+==============================================================================================================================
+  T_ID  run_arm is RF.run_arm: True   wls: True   wmean: True   keeps: True
+  NC_CONST  constant mid -> a(h) over 54 cases: worst |a| = 0.000e+00 (must be exactly 0)
+  NC_LIN    linear mid (slope 0.037) -> a(h) vs -ps*slope*h over 54 cases: worst error 4.947e-12
+  NC_OFFEND j == n -> -62000.0 (must be a number)   j == n+1 -> None (must be None)
+  NC_ARGMAX planted peak at h=2 -> argmax_h returns h=2 value=9.0
+  NC_SPOST  not applicable (s_post unused)
+  NC_SUBSET 405 fills at horizon=86400, common subset (ti-1+300 <= 86400) holds 399
+  T_DET     determinism (horizon=86400s, 405 fills, 86402 mid entries)   identical: True
+            2835 per-field comparisons, all equal
+  NC_KEEPS  keeps(thr,thr)=True  keeps(-thr,thr)=True  keeps(thr+eps,thr)=False
+  Self-test PASS.
+
+running life=720, 8 seeds, horizons 1,2,5,10,20,30,60,120,300 ...
+    seed 0 done (29s elapsed)  n_fills 2382, common subset 2382 (100.00 pct), carry-forward UB 92.27 pct
+    seed 1 done (58s elapsed)  n_fills 2170, common subset 2170 (100.00 pct), carry-forward UB 93.15 pct
+    seed 2 done (87s elapsed)  n_fills 2389, common subset 2389 (100.00 pct), carry-forward UB 91.58 pct
+    seed 3 done (116s elapsed)  n_fills 2408, common subset 2408 (100.00 pct), carry-forward UB 92.48 pct
+    seed 4 done (145s elapsed)  n_fills 2204, common subset 2195 (99.59 pct), carry-forward UB 93.11 pct
+    seed 5 done (174s elapsed)  n_fills 2317, common subset 2317 (100.00 pct), carry-forward UB 93.03 pct
+    seed 6 done (203s elapsed)  n_fills 2203, common subset 2202 (99.95 pct), carry-forward UB 92.73 pct
+    seed 7 done (232s elapsed)  n_fills 2217, common subset 2214 (99.86 pct), carry-forward UB 93.17 pct
+  arm done in 232s
+
+  n_fills 2286.25 +/- 34.72   n_with_a60 2286.12 +/- 34.76   n_in_bucket 457.75 +/- 7.03   common subset 2284.62 +/- 35.26
+
+==============================================================================================================================
+GATE 1: reproduce COMMITTED figures (own sample, h=60)
+==============================================================================================================================
+
+  adverse move h=60                  got      24.8100   want      24.8100   diff   0.000030   OK    lifetime_sweep_results.txt:38
+  agree-bucket h=60 (2dp)            got       6.9282   want       6.9300   diff   0.001813   OK    lifetime_sweep_results.txt:38
+  agree-bucket h=60 (4dp)            got       6.9282   want       6.9282   diff   0.000013   OK    staleness_results.txt
+  wrong-side pct                     got      75.0876   want      75.0900   diff   0.002446   OK    lifetime_sweep_results.txt:38
+  bucket threshold $                 got      40.8723   want      40.8723   diff   0.000031   OK    staleness_results.txt
+  local |d|<=10 a60 (sw)             got       6.2896   want       6.2900   diff   0.000363   OK    anchor_test_720.txt Test B
+  octile 1 mean d                    got    -218.0779   want    -218.0779   diff   0.000041   OK    staleness_results.txt sec.1
+  octile 1 adverse h=60              got      -4.9459   want      -4.9459   diff   0.000004   OK    staleness_results.txt sec.1
+  octile 2 mean d                    got     -33.5857   want     -33.5857   diff   0.000028   OK    staleness_results.txt sec.1
+  octile 2 adverse h=60              got       0.5966   want       0.5966   diff   0.000005   OK    staleness_results.txt sec.1
+  octile 3 mean d                    got      21.7423   want      21.7423   diff   0.000040   OK    staleness_results.txt sec.1
+  octile 3 adverse h=60              got      11.8726   want      11.8726   diff   0.000029   OK    staleness_results.txt sec.1
+  octile 4 mean d                    got      62.8970   want      62.8970   diff   0.000025   OK    staleness_results.txt sec.1
+  octile 4 adverse h=60              got      23.0238   want      23.0238   diff   0.000034   OK    staleness_results.txt sec.1
+  octile 5 mean d                    got     108.1653   want     108.1653   diff   0.000040   OK    staleness_results.txt sec.1
+  octile 5 adverse h=60              got      33.8485   want      33.8485   diff   0.000002   OK    staleness_results.txt sec.1
+  octile 6 mean d                    got     162.2079   want     162.2079   diff   0.000022   OK    staleness_results.txt sec.1
+  octile 6 adverse h=60              got      47.1548   want      47.1548   diff   0.000048   OK    staleness_results.txt sec.1
+  octile 7 mean d                    got     232.2041   want     232.2041   diff   0.000035   OK    staleness_results.txt sec.1
+  octile 7 adverse h=60              got      52.0136   want      52.0136   diff   0.000029   OK    staleness_results.txt sec.1
+  octile 8 mean d                    got     373.4102   want     373.4102   diff   0.000040   OK    staleness_results.txt sec.1
+  octile 8 adverse h=60              got      72.6649   want      72.6649   diff   0.000001   OK    staleness_results.txt sec.1
+
+  GATE 1 PASS. 22 checks reproduced.
+  FLAGGED: residual_fit.py prints 'thirteen'; anchor_test.py computes 21.
+
+==============================================================================================================================
+A. overall a(h)
+==============================================================================================================================
+   common subset: ti-1+300 <= n
+   subset size 2284.6 +/- 35.3 of 2286.2 +/- 34.7 fills per seed (99.93 +/- 0.05 pct)
+
+  a(h) size-weighted                   h=1           h=2           h=5          h=10          h=20          h=30          h=60         h=120         h=300
+  COMMON SUBSET                     18.035        18.987        20.796        22.452        23.539        23.971        24.821        26.188        28.638
+    +/- SE                           0.449         0.545         0.641         0.743         0.739         0.757         0.763         0.819         0.914
+  own sample (secondary)            18.024        18.975        20.783        22.438        23.525        23.958        24.810        26.174        28.638
+    +/- SE                           0.454         0.550         0.646         0.749         0.744         0.762         0.767         0.824         0.914
+  own-sample n per seed           2286.250      2286.250      2286.250      2286.250      2286.250      2286.250      2286.125      2286.000      2284.625
+
+  max common-vs-own gap: 0.0148 $/BTC
+
+==============================================================================================================================
+B. local a(h), windows on signed d
+==============================================================================================================================
+   size-weighted vs unweighted in anchor_test:
+   diverge by 7.77 SE at h=60, so both are reported.
+
+  |d| <= 5      n = 57.2 +/- 1.9 per seed   mean d (u) = -0.004 +/- 0.084
+      size-weighted                    h=1           h=2           h=5          h=10          h=20          h=30          h=60         h=120         h=300
+      a(h) sw                       14.505        13.828        11.519         9.492         7.671         6.925         5.613         5.722         4.731
+        +/- SE                       2.390         2.347         1.547         1.179         0.934         0.795         0.807         0.816         1.361
+      a(h) unweighted                5.026         4.803         4.247         3.569         2.997         2.765         2.618         2.479         1.876
+        +/- SE                       0.497         0.481         0.387         0.270         0.197         0.229         0.376         0.352         0.322
+
+  |d| <= 10     n = 119.8 +/- 5.5 per seed   mean d (u) = 0.368 +/- 0.145
+      size-weighted                    h=1           h=2           h=5          h=10          h=20          h=30          h=60         h=120         h=300
+      a(h) sw                       13.138        12.516        10.741         9.332         8.256         7.285         6.290         6.567         7.312
+        +/- SE                       1.260         1.121         0.643         0.570         0.572         0.501         0.598         0.358         0.642
+      a(h) unweighted                4.803         4.583         4.191         3.718         3.347         3.089         2.819         2.824         3.026
+        +/- SE                       0.202         0.157         0.146         0.136         0.123         0.158         0.232         0.281         0.333
+
+  |d| <= 20     n = 238.8 +/- 8.5 per seed   mean d (u) = 2.090 +/- 0.150
+      size-weighted                    h=1           h=2           h=5          h=10          h=20          h=30          h=60         h=120         h=300
+      a(h) sw                       11.885        11.526        10.231         8.940         7.670         6.779         6.075         6.284         7.547
+        +/- SE                       0.480         0.511         0.390         0.408         0.279         0.217         0.210         0.226         0.567
+      a(h) unweighted                4.405         4.326         4.151         3.812         3.497         3.313         3.308         3.228         3.413
+        +/- SE                       0.110         0.117         0.118         0.150         0.118         0.153         0.086         0.216         0.267
+
+  |d| <= 40     n = 456.6 +/- 18.2 per seed   mean d (u) = 5.570 +/- 0.567
+      size-weighted                    h=1           h=2           h=5          h=10          h=20          h=30          h=60         h=120         h=300
+      a(h) sw                       11.869        11.651        10.578         9.587         8.270         7.620         7.049         7.152         7.563
+        +/- SE                       0.254         0.254         0.216         0.251         0.253         0.243         0.294         0.288         0.533
+      a(h) unweighted                4.441         4.411         4.333         4.164         4.031         3.978         4.106         4.358         4.797
+        +/- SE                       0.066         0.064         0.056         0.081         0.129         0.148         0.142         0.257         0.333
+
+==============================================================================================================================
+C. agree-bucket a(h) and share of overall
+==============================================================================================================================
+   bucket: bottom 20 pct of |staleness| per seed
+   bucket holds 457.6 +/- 7.1 fills per seed on the common subset
+
+  agree-bucket a(h) sw                 h=1           h=2           h=5          h=10          h=20          h=30          h=60         h=120         h=300
+  agree a(h)                        12.144        11.881        10.858         9.801         8.454         7.747         6.928         6.955         7.217
+    +/- SE                           0.304         0.311         0.254         0.264         0.216         0.234         0.307         0.322         0.574
+  share of overall pct              67.529        62.826        52.478        43.913        36.089        32.564        28.018        26.638        25.224
+    +/- SE                           1.984         1.986         1.724         1.632         1.186         1.510         1.264         1.208         1.876
+
+  share = mean of per-seed ratios
+
+==============================================================================================================================
+D. local |d| <= 10 a(h) by fill-size quartile
+==============================================================================================================================
+
+  a(h) sw by size quartile             h=1           h=2           h=5          h=10          h=20          h=30          h=60         h=120         h=300
+  Q1  n=30 size=0.000209             2.845         2.667         2.490         2.140         2.207         2.444         2.542         2.492         2.561
+  Q2  n=30 size=0.000621             2.061         1.879         1.753         1.913         1.446         1.442         1.105         0.900         1.058
+  Q3  n=30 size=0.001626             2.829         2.773         2.641         1.971         1.847         1.698         1.414         1.612         1.310
+  Q4  n=30 size=0.014154            14.952        14.244        12.182        10.607         9.378         8.247         7.127         7.429         8.307
+
+  Q1 +/- SE                          0.247         0.200         0.196         0.218         0.223         0.347         0.397         0.886         0.929
+  Q2 +/- SE                          0.179         0.250         0.224         0.301         0.417         0.483         0.515         0.599         0.770
+  Q3 +/- SE                          0.302         0.272         0.298         0.222         0.302         0.462         0.502         0.593         0.996
+  Q4 +/- SE                          1.500         1.348         0.796         0.715         0.711         0.626         0.717         0.369         0.714
+
+==============================================================================================================================
+Pre-registered predictions
+==============================================================================================================================
+  P1  overall a(h) rises monotonically (plumbing check)
+      a(h) = 18.035, 18.987, 20.796, 22.452, 23.539, 23.971, 24.821, 26.188, 28.638
+      monotonically non-decreasing over all 9 horizons ? True
+      P1: HELD
+
+  P2  THE REAL PREDICTION. LOCAL |d| <= 10 a(h) peaks at or near h=1 near 12.7, then DECAYS to
+      about 6.29 at h=60
+      a(h) = 13.138, 12.516, 10.741, 9.332, 8.256, 7.285, 6.290, 6.567, 7.312
+      peak at h=1, value 13.1378;  a(60) = 6.2904
+      P2: HELD
+
+  P3  decay steeper in Q4 than Q1
+      decay from h=1 to h=60
+      per-seed argmax mean 1.25 +/- 0.16
+      (Q4 decay) - (Q1 decay), paired per seed = 7.5220 +/- 0.7538, needs > 1.5076
+      P3: HELD
+
+  P4  local a(h) keeps decaying beyond h=60 (low confidence)
+      a(h) for h >= 60 = 6.290, 6.567, 7.312
+      non-increasing beyond h=60 ? False
+      P4: REFUTED
+
+==============================================================================================================================
+Reading rule
+==============================================================================================================================
+  window |d| <= 10: 119.8 +/- 5.5 fills per seed (THIN < 30)
+  peak h=1, value 13.1378; per-seed peak h mean 1.25 +/- 0.16
+
+  TRANSIENT requires all three:
+    (a) peak exceeds a(60) by more than 2 SE, paired per seed
+          6.8523 +/- 0.9783   needs > 1.9566   -> (a) True
+    (b) the peak occurs at h <= 5
+          mean-profile peak h = 1   -> (b) True
+    (c) top-quartile decay exceeds bottom-quartile decay by more than 2 SE, paired per seed
+          7.5220 +/- 0.7538   needs > 1.5076   -> (c) True
+
+  PERMANENT requires both:
+    mean profile non-decreasing h=1..60
+          a(h) for h <= 60 = 13.138, 12.516, 10.741, 9.332, 8.256, 7.285, 6.290
+          mean profile non-decreasing ? -> False
+          diagnostic: 0.0 of 8 seeds monotone
+    a(60) - a(1) clears 2 SE above zero, paired per seed
+          -6.8474 +/- 0.9798   needs > 1.9597   -> False
+
+  branch TRANSIENT fires: local component reverts (60 s loss is mark-to-market)
+    local a(h) peak  h=1 : 13.1378 $/BTC
+    local a(60)            : 6.2904 +/- 0.5984 $/BTC
+    local a(300)           : 7.3121 +/- 0.6420 $/BTC
+
+==============================================================================================================================
+Limitations
+==============================================================================================================================
+  L1 common subset excludes last 299 s: 2284.6 +/- 35.3 of 2286.2 +/- 34.7 per seed (99.93 +/- 0.05 pct)
+  L2 sd(d) = 174.43 +/- 4.91; local windows are narrow
+     THIN below 30 fills per seed
+  L3 quartiles cut per seed
+  L4 SEs across seeds; differences paired per seed
+  L5 one arm, life=720, 8 seeds, simulation only
+  L6 longest horizon h=300
+  L7 s_post unused (anchor m0)
+  L8 carry-forward seconds (upper bound): 92.690 +/- 0.198 pct

@@ -1,0 +1,15 @@
+==============================================================================================================================
+Self-test
+==============================================================================================================================
+  T_ID  run_arm is RF.run_arm: True   wls: True   wmean: True   keeps: True
+  NC_CONST  constant mid -> a(h) over 54 cases: worst |a| = 0.000e+00 (must be exactly 0)
+  NC_LIN    linear mid (slope 0.037) -> a(h) vs -ps*slope*h over 54 cases: worst error 4.947e-12
+  NC_OFFEND j == n -> -62000.0 (must be a number)   j == n+1 -> None (must be None)
+  NC_ARGMAX planted peak at h=2 -> argmax_h returns h=2 value=9.0
+  NC_SPOST  not applicable (s_post unused)
+  NC_SUBSET 405 fills at horizon=86400, common subset (ti-1+300 <= 86400) holds 399
+  T_DET     determinism (horizon=86400s, 405 fills, 86402 mid entries)   identical: True
+            2835 per-field comparisons, all equal
+  NC_KEEPS  keeps(thr,thr)=True  keeps(-thr,thr)=True  keeps(thr+eps,thr)=False
+  Self-test PASS.
+
