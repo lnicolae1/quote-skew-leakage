@@ -1,0 +1,18 @@
+==============================================================================================================================
+Self-test. Negative controls, the anchoring collapse, the exact
+identity, and the per-second s_post property that this file's whole
+reading of span_pre depends on.
+==============================================================================================================================
+  NC1  wls on an exact line y = 3 + 0.5x   a=3.0000000000 b=0.5000000000 R2=1.0000000000
+  NC2  wls2 on an exact parabola 7 - 0.25x + 0.004x^2   a=7.00000000 b=-0.25000000 c=0.00400000 R2=1.00000000
+  NC2b wls2 on a straight line   a=2.00000000 b=0.30000000 c=2.642e-20 (must be 0)
+  NC3  anchors() with s_post = s_now = m0 collapse to one value: 0 disagreements in 8 cases
+  NC3b anchors() with three distinct starts -> (-50.0, -30.0, -40.0)  (must be three different numbers)
+  NC4  exact decomposition on 405 real fills (806 checks): worst absolute error 0.000e+00
+  NC5  s_post constant within a second: 402 seconds hold a fill, 3 hold more than one fill, 0 show more than one s_post value
+  NC6  keeps(thr, thr)=True  keeps(-thr, thr)=True  keeps(thr+eps)=False (committed rule is `if abs(st) > thr: continue`)
+  T5   determinism (horizon=86400s, 405 fills, 86402 mid entries)   identical: True
+       2835 per-field comparisons, all equal
+  T6   run_arm is residual_fit.run_arm: True   wls: True   wmean: True   keeps: True
+  Self-test PASS.
+

@@ -1,0 +1,213 @@
+==============================================================================================================================
+Self-test. Negative controls, the anchoring collapse, the exact
+identity, and the per-second s_post property that this file's whole
+reading of span_pre depends on.
+==============================================================================================================================
+  NC1  wls on an exact line y = 3 + 0.5x   a=3.0000000000 b=0.5000000000 R2=1.0000000000
+  NC2  wls2 on an exact parabola 7 - 0.25x + 0.004x^2   a=7.00000000 b=-0.25000000 c=0.00400000 R2=1.00000000
+  NC2b wls2 on a straight line   a=2.00000000 b=0.30000000 c=2.642e-20 (must be 0)
+  NC3  anchors() with s_post = s_now = m0 collapse to one value: 0 disagreements in 8 cases
+  NC3b anchors() with three distinct starts -> (-50.0, -30.0, -40.0)  (must be three different numbers)
+  NC4  exact decomposition on 405 real fills (806 checks): worst absolute error 0.000e+00
+  NC5  s_post constant within a second: 402 seconds hold a fill, 3 hold more than one fill, 0 show more than one s_post value
+  NC6  keeps(thr, thr)=True  keeps(-thr, thr)=True  keeps(thr+eps)=False (committed rule is `if abs(st) > thr: continue`)
+  T5   determinism (horizon=86400s, 405 fills, 86402 mid entries)   identical: True
+       2835 per-field comparisons, all equal
+  T6   run_arm is residual_fit.run_arm: True   wls: True   wmean: True   keeps: True
+  Self-test PASS.
+
+running life=720, 8 seeds ...
+    seed 0 done (29s elapsed)  NC5: 18 multi-fill seconds, 0 with a varying s_post
+    seed 1 done (58s elapsed)  NC5: 24 multi-fill seconds, 0 with a varying s_post
+    seed 2 done (88s elapsed)  NC5: 14 multi-fill seconds, 0 with a varying s_post
+    seed 3 done (117s elapsed)  NC5: 24 multi-fill seconds, 0 with a varying s_post
+    seed 4 done (146s elapsed)  NC5: 14 multi-fill seconds, 0 with a varying s_post
+    seed 5 done (176s elapsed)  NC5: 20 multi-fill seconds, 0 with a varying s_post
+    seed 6 done (206s elapsed)  NC5: 14 multi-fill seconds, 0 with a varying s_post
+    seed 7 done (236s elapsed)  NC5: 22 multi-fill seconds, 0 with a varying s_post
+  arm done in 236s
+
+  n_fills 2286.25 +/- 34.72   n_with_a60 2286.12 +/- 34.76   n_in_bucket 457.75 +/- 7.03   s_post fallbacks 0.00 +/- 0.00
+
+==============================================================================================================================
+Gate 1. Reproduce the committed figures before reporting anything new. Any failure halts.
+==============================================================================================================================
+  adverse move h=60                  got      24.8100   want      24.8100   diff   0.000030   OK    lifetime_sweep_results.txt:38
+  agree-bucket adverse move (2dp)    got       6.9282   want       6.9300   diff   0.001813   OK    lifetime_sweep_results.txt:38
+  agree-bucket adverse move (4dp)    got       6.9282   want       6.9282   diff   0.000013   OK    staleness_results.txt
+  wrong-side pct                     got      75.0876   want      75.0900   diff   0.002446   OK    lifetime_sweep_results.txt:38
+  bucket threshold $                 got      40.8723   want      40.8723   diff   0.000031   OK    staleness_results.txt
+  octile 1 mean d                    got    -218.0779   want    -218.0779   diff   0.000041   OK    staleness_results.txt sec.1
+  octile 1 adverse h=60              got      -4.9459   want      -4.9459   diff   0.000004   OK    staleness_results.txt sec.1
+  octile 2 mean d                    got     -33.5857   want     -33.5857   diff   0.000028   OK    staleness_results.txt sec.1
+  octile 2 adverse h=60              got       0.5966   want       0.5966   diff   0.000005   OK    staleness_results.txt sec.1
+  octile 3 mean d                    got      21.7423   want      21.7423   diff   0.000040   OK    staleness_results.txt sec.1
+  octile 3 adverse h=60              got      11.8726   want      11.8726   diff   0.000029   OK    staleness_results.txt sec.1
+  octile 4 mean d                    got      62.8970   want      62.8970   diff   0.000025   OK    staleness_results.txt sec.1
+  octile 4 adverse h=60              got      23.0238   want      23.0238   diff   0.000034   OK    staleness_results.txt sec.1
+  octile 5 mean d                    got     108.1653   want     108.1653   diff   0.000040   OK    staleness_results.txt sec.1
+  octile 5 adverse h=60              got      33.8485   want      33.8485   diff   0.000002   OK    staleness_results.txt sec.1
+  octile 6 mean d                    got     162.2079   want     162.2079   diff   0.000022   OK    staleness_results.txt sec.1
+  octile 6 adverse h=60              got      47.1548   want      47.1548   diff   0.000048   OK    staleness_results.txt sec.1
+  octile 7 mean d                    got     232.2041   want     232.2041   diff   0.000035   OK    staleness_results.txt sec.1
+  octile 7 adverse h=60              got      52.0136   want      52.0136   diff   0.000029   OK    staleness_results.txt sec.1
+  octile 8 mean d                    got     373.4102   want     373.4102   diff   0.000040   OK    staleness_results.txt sec.1
+  octile 8 adverse h=60              got      72.6649   want      72.6649   diff   0.000001   OK    staleness_results.txt sec.1
+
+  Gate 1 PASS. All 21 committed figures reproduced (3 headline, the 4dp agree, the threshold, and 8 octile rows on both axes).
+
+==============================================================================================================================
+Test A. Re-anchor the adverse move. Same 60-second endpoint mid[j], three different start instants.
+==============================================================================================================================
+   m0   = mid[ti-1], end of the previous second, post-requote. The committed anchor.
+   post = s_post, end of second ti, pre-requote. NOT 'just after the fill'; see the header, NC5.
+   now  = mid[ti], end of second ti, post-requote. Differs from `post` only by the maker's own requote.
+   d is from m0 throughout, so only the outcome changes between rows. Windows are 60s / 59s+ / 59s+ (L2).
+
+  anchor      overall mean (sw)      agree-bucket (sw)        a intercept          b slope           R2
+  m0        24.8100 +/- 0.7670     6.9282 +/- 0.3074   15.3858 +/- 0.5322  0.148459 +/- 0.006117  0.277839 +/- 0.008434
+  now        6.7826 +/- 0.3496    -5.2157 +/- 0.2505    0.8319 +/- 0.3857  0.093803 +/- 0.003969  0.326689 +/- 0.009354
+  post       7.7127 +/- 0.3762    -4.8011 +/- 0.2513    1.4756 +/- 0.4143  0.098365 +/- 0.003810  0.343186 +/- 0.008501
+
+  Unweighted, the robustness arm:
+  anchor      overall mean (u)       agree-bucket (u)         a intercept          b slope           R2
+  m0        11.7153 +/- 0.1612     4.0904 +/- 0.1070    6.1616 +/- 0.1664  0.062827 +/- 0.001921  0.173676 +/- 0.006350
+  now        5.3019 +/- 0.1215    -0.4156 +/- 0.1055    1.1816 +/- 0.1262  0.046661 +/- 0.001560  0.196118 +/- 0.006924
+  post       7.5206 +/- 0.1669     0.5678 +/- 0.0894    2.6130 +/- 0.1591  0.055529 +/- 0.001652  0.216907 +/- 0.008378
+
+  Size-weighted minus unweighted intercept, paired per seed.
+  Diagnostic only, not adjudicating. Condition (ii) no longer reads this; it was superseded because
+  intercepts on this data are extrapolations through a convex relationship, missing their one
+  checkable point by 14.1 SE. (ii) now reads the local |d| <= 10 window instead, which assumes
+  no functional form. These rows describe the misspecification; they do not decide anything.
+    m0      a(sw) - a(u) =    9.2242 +/- 0.4709      within 2 SE of zero ? False
+    now     a(sw) - a(u) =   -0.3496 +/- 0.3321      within 2 SE of zero ? True
+    post    a(sw) - a(u) =   -1.1374 +/- 0.3238      within 2 SE of zero ? False
+
+  Reminder, from the header: the overall `post` mean is an algebraic consequence of the overall
+  `m0` mean minus span_pre, not an independent measurement. NC4 asserts the identity numerically.
+  The bucket means, the local windows and every intercept are independent measurements.
+
+==============================================================================================================================
+Test B. Local estimates around d = 0. No global line is assumed. This replaces the intercept.
+==============================================================================================================================
+   Fills binned by signed d in symmetric windows about zero. This is the honest local answer:
+   it assumes nothing about functional form, which matters because the life=720 run showed the
+   relationship is convex in d and the global intercept is an extrapolation.
+
+  window       n fills        mean d (u)       a60_m0 (sw)      a60_post (sw)     a60_now (sw)    post as pct of 24.8100
+  |d|<=5       57.4+/-1.9   -0.01 +/- 0.08   5.611 +/- 0.807  -8.544 +/- 2.029 -8.892 +/- 2.023 -34.08 +/- 8.29
+  |d|<=10     119.9+/-5.6    0.37 +/- 0.15   6.290 +/- 0.599  -6.442 +/- 0.969 -6.847 +/- 0.980 -25.99 +/- 4.02
+  |d|<=20     238.9+/-8.6    2.09 +/- 0.15   6.074 +/- 0.211  -5.433 +/- 0.438 -5.811 +/- 0.455 -21.96 +/- 1.77
+  |d|<=40     456.8+/-18.3   5.57 +/- 0.57   7.049 +/- 0.294  -4.395 +/- 0.246 -4.819 +/- 0.252 -17.79 +/- 1.09
+
+  Unweighted within the same windows:
+  window       mean d (sw)      a60_m0 (u)       a60_post (u)     a60_now (u)
+  |d|<=5     -0.191 +/- 0.121  2.601 +/- 0.373 -1.547 +/- 0.710 -2.414 +/- 0.705
+  |d|<=10    -0.182 +/- 0.251  2.813 +/- 0.233 -1.086 +/- 0.322 -1.986 +/- 0.348
+  |d|<=20    1.085 +/- 0.597  3.304 +/- 0.088 -0.190 +/- 0.161 -1.099 +/- 0.168
+  |d|<=40    2.125 +/- 0.942  4.104 +/- 0.143  0.642 +/- 0.151 -0.336 +/- 0.161
+
+  A window with fewer than 30 fills per seed is marked THIN and must not be leaned on (L3).
+
+==============================================================================================================================
+Test C. Decompose the 17.09. And the part that cannot be done.
+==============================================================================================================================
+   span_pre = -ps*(s_post - m0), m0 -> end of second ti, pre-requote. This is the figure printed as
+   'own impact' in residual_fit_720.txt. The label was wrong. It is the full one-second adverse move
+   across the fill's own second: the maker's own impact together with every other trade and quote in
+   that second. NC5 shows s_post takes one value per second, shared by every fill in it.
+
+   span_req = -ps*(mid[ti] - s_post), the remainder of the second after s_post; which is exactly and
+   only the maker's own requote's effect on the mid, since no other agent acts between the two reads.
+
+  span_pre  size-weighted     17.0940 +/- 0.4426 $/BTC        unweighted  4.1948 +/- 0.0594
+  span_req  size-weighted      0.9298 +/- 0.0432 $/BTC        unweighted  2.2186 +/- 0.0577
+  a60_m0    size-weighted     24.8100 +/- 0.7670 $/BTC   (= span_pre + span_req + a60_now, exactly)
+
+  The requested further split; own-fill impact versus drift before the fill; is not possible.
+  There is no mid observation between m0 and s_post, because m0 is the mid at the start of second ti,
+  and the entire second's flow is applied to the engine before any fill record is inspected (header,
+  points 1-3). Recovering a pre-fill mid would require interleaving the flow, i.e. Changing the
+  simulation. It is not estimated. The size gradient below is the discriminator that survives.
+
+  fill-size quartile     n      mean size (BTC)    span_pre (u)     span_pre (sw)    span_req (u)     a60_m0 (sw)    a60_post (sw)
+  Q1           571.2 0.000183 +/- 0.000003  2.070 +/- 0.028  2.071 +/- 0.027 3.0840 +/- 0.1044 11.657 +/- 0.194 9.586 +/- 0.205
+  Q2           571.6 0.000542 +/- 0.000006  1.731 +/- 0.045  1.760 +/- 0.047 2.5439 +/- 0.0821 9.937 +/- 0.184 8.177 +/- 0.169
+  Q3           571.4 0.001138 +/- 0.000020  1.504 +/- 0.038  1.720 +/- 0.043 1.9145 +/- 0.1001 8.816 +/- 0.423 7.096 +/- 0.392
+  Q4           572.0 0.010811 +/- 0.000219 11.467 +/- 0.214 19.739 +/- 0.539 1.3329 +/- 0.0808 27.468 +/- 0.943 7.724 +/- 0.456
+
+  Size gradient, paired per seed: span_pre(Q4,u) - span_pre(Q1,u) = 9.3965 +/- 0.2072
+    Unweighted within a size quartile on purpose: size-weighting inside a size bin would
+    re-introduce the very gradient being tested.
+    rising with size at 2 SE ? True
+
+==============================================================================================================================
+Test D. Characterise the convexity. A description, NOT A model.
+==============================================================================================================================
+   adverse = a + b*d + c*d^2, size-weighted, against the linear fit from Test A. The quadratic
+   intercept is still an extrapolation to d = 0; it is only worth anything where it agrees with
+   Test B, which assumes no functional form. The gap is reported paired per seed.
+
+  anchor      a (quadratic)        b                    c                    R2 (quad)      R2 (linear)
+  m0       12.7863 +/- 0.7652 0.135188 +/- 0.003722 0.00011026 +/- 0.00002721 0.298212 +/- 0.019249 0.277839 +/- 0.008434
+  now      -0.3542 +/- 0.4074 0.088275 +/- 0.003588 0.00004727 +/- 0.00001579 0.343019 +/- 0.017337 0.326689 +/- 0.009354
+  post      0.1776 +/- 0.3693 0.092223 +/- 0.003438 0.00005236 +/- 0.00001519 0.360065 +/- 0.016904 0.343186 +/- 0.008501
+
+  Quadratic intercept minus the local |d| <= 10 estimate, paired per seed:
+    m0         6.4967 +/- 0.7128      agree within 2 SE ? False
+    now        6.4931 +/- 1.1354      agree within 2 SE ? False
+    post       6.6199 +/- 1.1057      agree within 2 SE ? False
+
+  If these disagree materially, Test B is what should be quoted.
+
+==============================================================================================================================
+The decision rule. Both branches carry conditions this time.
+==============================================================================================================================
+  the decision window is |d| <= 10, holding 119.9 fills per seed (THIN threshold 30)
+
+  (i)   local a60_post below half local a60_m0, by more than 2 SE
+          local a60_m0   6.2896 +/- 0.5987        local a60_post -6.4423 +/- 0.9688
+          half*m0 - post = 3.1448 - -6.4423 = 9.5871   (equals the paired mean below, by linearity)
+          margin paired per seed  9.5871 +/- 1.0860   needs > 2.1719   -> (i) True
+  (ii)  Local a60_post agrees size-weighted vs unweighted, inside |d| <= 10
+          local a60_post (sw) -6.4423 +/- 0.9688     (u) -1.0860 +/- 0.3223
+          paired difference -5.3563 +/- 0.6890, within 2 SE (1.3780) ? -> (ii) False
+          NOT the regression intercepts: the committed run showed those are extrapolations
+          through a convex relationship, missing their one checkable point by 14.1 SE.
+  (iii) span_pre rises with fill size
+          Q4 - Q1 paired 9.3965 +/- 0.2072, above 2 SE ? -> (iii) True
+
+  local a60_post as a share of the unrounded overall a60_m0 (24.8100 +/- 0.7670 $/BTC):
+          -25.99 +/- 4.02 pct   lower 2-SE bound -34.0299 pct   must exceed 15.0 pct
+          15.0 was pre-registered before any result existed. It sits well below the status quo
+          (committed bucket 27.93 pct, identity-forced overall a60_post 31.10 pct), so the branch
+          is not rigged to confirm, and well clear of zero, so 'substantial' means something.
+
+  Neither branch fires cleanly. Stopping rather than picking the nearer.
+    artefact conditions (i)/(ii)/(iii) = True/False/True  -> all three ? False
+    substantial share ? False   (share -25.9875 pct, lower 2-SE bound -34.0299 pct, threshold 15.0 pct)
+  Both fired, or neither did. The task says say so and stop, and that is what this is.
+  No estimate is quoted from an ambiguous rule.
+
+==============================================================================================================================
+Limitations. Carried, not buried.
+==============================================================================================================================
+  L1 s_post is a per-second quantity, not per-fill (NC5). Test C's requested split of span_pre into
+     own-fill impact versus prior drift is not possible and is not estimated.
+  L2 The three anchorings differ in window length as well as start instant: 60s for m0, 59s+ for
+     the other two, because the endpoint mid[j] is shared as specified.
+  L3 Local windows are narrow slices of a distribution with sd(d) = 174.43 +/- 4.91. n is printed for every
+     window; any window below 30 fills per seed is marked THIN.
+  L4 SUBSTANTIAL_SHARE = 15.0 pct was pre-registered before any result existed, and the real branch
+     tests the lower 2-SE bound of the share against it. It sits below the status quo (committed
+     bucket 27.93 pct, identity-forced overall a60_post 31.10 pct) so the branch cannot fire on
+     essentially the existing answer, and clear of zero so 'substantial' is not 'nonzero'. The
+     share and its SE are printed so another threshold can be applied without re-running.
+  L5 One arm, life=720, 8 seeds, one simulated world. Nothing here is measured on real BTCUSD data.
+  L6 SEs are across seeds. Every difference is computed per seed first, never as a difference of means.
+  L7 The quadratic is a description of curvature, not a model. Its intercept is still an
+     extrapolation to d = 0.
+
+  No committed default changed. Nothing retuned. No sweep. No repricing. JOIN clipping untouched.
+  No sniffer.
