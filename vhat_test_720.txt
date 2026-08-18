@@ -1,0 +1,221 @@
+==============================================================================================================================
+Self-test. Estimator negative controls, MM/seed exclusion, the
+mirrored-loop equivalence, and determinism.
+==============================================================================================================================
+  T_ID     run_arm is RF.run_arm: True   wls: True   wmean: True   keeps: True
+  NC_VMID  skewed fixture (5 bids / 4 asks, unequal sizes and spacing). V := the mid = 62005.00.
+           E0 err = 0   (asserted == 0.0, the only forced quantity)
+           reported, not asserted: E1 62005.0000, E2a 62006.7262, E2b 61988.7500, E3 61976.2500, E4 62010.0000, E5a 62002.5000, E5b 62000.0000
+           exact coincidences among the above: none; all estimators separate
+           (E0 == E1 = 62005.00 is STRUCTURAL, not a coincidence: this book holds no MM or seed
+            orders, so the residual midpoint is the raw midpoint.)
+  NC_DISP  V displaced to 61967.50 -> E0 error must be exactly +37.5: +37.5
+  NC_EXCL  asymmetric plants: MM bid 61999 / MM ask 62008, seed 61995 / 62015, all 99 BTC,
+           all inside the touch. E0 must move; E1 and E3 must NOT.
+           E0 62005.0000 -> 62003.5000   moved: True
+           E1 62005.0000 -> 62005.0000   unchanged: True
+           E3 61976.2500 -> 61976.2500   unchanged: True  (99-BTC plants would dominate a size-weighted
+           centroid if they leaked)
+  NC_TOUCH E1 = 62005.0000 (best 61990/62020), E5a = 62002.5000 (2nd 61975/62030), E5b = 62000.0000 (4th 61900/62100)
+  NC_EMPTY one-sided book -> E0 None, E1 None, E5a None (all must be None)
+  T_MIRROR pass1 405 fills vs pass2 405 fills; mid arrays 86402 vs 86402
+           records and mid array identical; the mirrored loop is the same world.
+  NC_SAMP  uniform samples 1440, fill-adjacent samples 402 (both must be > 0)
+  T_DET    run_sampled repeated (horizon=86400s, 405 fills): identical: True
+           11520 per-sample estimator comparisons, all equal
+  NC_KEEPS keeps(thr,thr)=True keeps(-thr,thr)=True keeps(thr+eps)=False
+  Self-test PASS.
+
+running life=720, 8 seeds, sampling every 60s ...
+    seed 0 done (66s elapsed)  fills 2382, uniform samples 10080, fill-adjacent samples 2364, levels 553/561 per side
+    seed 1 done (133s elapsed)  fills 2170, uniform samples 10080, fill-adjacent samples 2146, levels 557/567 per side
+    seed 2 done (199s elapsed)  fills 2389, uniform samples 10080, fill-adjacent samples 2375, levels 543/567 per side
+    seed 3 done (266s elapsed)  fills 2408, uniform samples 10080, fill-adjacent samples 2384, levels 550/571 per side
+    seed 4 done (332s elapsed)  fills 2204, uniform samples 10080, fill-adjacent samples 2190, levels 548/559 per side
+    seed 5 done (399s elapsed)  fills 2317, uniform samples 10080, fill-adjacent samples 2297, levels 555/551 per side
+    seed 6 done (467s elapsed)  fills 2203, uniform samples 10080, fill-adjacent samples 2189, levels 546/566 per side
+    seed 7 done (536s elapsed)  fills 2217, uniform samples 10080, fill-adjacent samples 2194, levels 554/558 per side
+  arm done in 536s
+
+==============================================================================================================================
+Gate 1. Reproduce the committed figures before reporting anything new. Any failure halts.
+==============================================================================================================================
+  adverse move h=60                got      24.8100   want      24.8100   diff   0.000030   OK    lifetime_sweep_results.txt:38
+  agree-bucket (2dp)               got       6.9282   want       6.9300   diff   0.001813   OK    lifetime_sweep_results.txt:38
+  agree-bucket (4dp)               got       6.9282   want       6.9282   diff   0.000013   OK    staleness_results.txt
+  wrong-side pct                   got      75.0876   want      75.0900   diff   0.002446   OK    lifetime_sweep_results.txt:38
+  bucket threshold $               got      40.8723   want      40.8723   diff   0.000031   OK    staleness_results.txt
+
+  Cited, not gated; the exact population behind 00b1773's E[d] is not recoverable from its prose,
+  so these are printed for comparison and NOT asserted:
+    E[d] size-weighted, all fills   63.4072 +/- 2.5671   against the cited 63.4072
+    E[d] unweighted,    all fills   88.7261 +/- 2.4056
+    half-spread h                   cited 9.1810
+
+  Gate 1 PASS. 5 checks reproduced (count computed, not a string literal).
+
+==============================================================================================================================
+A / B. Tracking error against V. Uniform samples only (L7).
+==============================================================================================================================
+   Read against the scale arithmetic: one unclipped order sits ~$272.08 from V, the committed mid's
+   median error is $101, and averaging buys ~272/sqrt(N). N is the mean level count per sample.
+
+  estimator                                      median |err| $       mean |err| $          sd(err) $  mean signed err $  N/sample
+  engine.mid(); committed anchor              100.96 +/- 2.03    129.15 +/- 2.07    168.82 +/- 2.54  -11.184 +/- 3.520       2.0
+  residual-book midpoint (best non-MM/seed)     100.92 +/- 2.03    128.96 +/- 2.06    168.39 +/- 2.51  -11.204 +/- 3.489       2.0
+  depth-wtd mid, <=10bp                          97.76 +/- 1.99    126.20 +/- 2.04    165.74 +/- 2.52  -11.354 +/- 3.308      89.7
+      ^ unweighted variant                      100.57 +/- 2.03    128.84 +/- 2.05    168.55 +/- 2.53  -11.491 +/- 3.365
+  depth-wtd mid, <=50bp                          80.50 +/- 1.64    105.39 +/- 1.73    140.22 +/- 2.17   -9.250 +/- 2.761     609.0
+      ^ unweighted variant                       89.40 +/- 1.72    115.39 +/- 1.80    152.04 +/- 2.28  -10.161 +/- 3.100
+  centroid of ALL non-MM/seed orders             70.64 +/- 1.36     84.82 +/- 1.28    107.30 +/- 1.40   -3.216 +/- 1.594    1113.5
+      ^ unweighted variant                       51.40 +/- 0.78     60.92 +/- 0.72     76.43 +/- 0.85   -0.285 +/- 0.959
+  time-average of E0 over 300s (NULL)           108.43 +/- 2.25    136.21 +/- 2.21    175.99 +/- 2.70  -11.769 +/- 3.757     299.9
+  touch-excluded midpoint (2nd best)             99.55 +/- 1.98    127.17 +/- 2.03    165.98 +/- 2.45  -10.908 +/- 3.430       2.0
+  top-3-excluded midpoint                        97.26 +/- 1.94    124.21 +/- 1.96    162.01 +/- 2.33  -10.517 +/- 3.351       2.0
+
+  A biased estimator is a different problem from a noisy one, which is why mean signed error is
+  reported beside sd. The C2b midpoint's predicted upward bias is +$0.9377 (V*disp^2/2).
+  book levels per side: bid 550.9 +/- 1.8   ask 562.6 +/- 2.3
+
+==============================================================================================================================
+C. Direction versus magnitude, relative to E0. Uniform samples.
+==============================================================================================================================
+   V is the truth, so there is no 'correct side' in the abstract. The two honest questions are
+   whether the estimator is closer than E0, and whether it sits on the opposite side of V from E0.
+
+  estimator                                      pct closer than E0 pct opposite side to E0
+  engine.mid(); committed anchor                    0.00 +/- 0.00          0.00 +/- 0.00
+  residual-book midpoint (best non-MM/seed)           3.77 +/- 0.15          0.01 +/- 0.00
+  depth-wtd mid, <=10bp                              62.93 +/- 0.36          1.81 +/- 0.04
+      ^ unweighted variant                           51.77 +/- 0.37          0.58 +/- 0.03
+  depth-wtd mid, <=50bp                              76.46 +/- 0.50          6.29 +/- 0.13
+      ^ unweighted variant                           80.76 +/- 0.32          2.39 +/- 0.06
+  centroid of ALL non-MM/seed orders                 66.55 +/- 0.55         21.42 +/- 0.48
+      ^ unweighted variant                           76.88 +/- 0.42         21.69 +/- 0.28
+  time-average of E0 over 300s (NULL)                11.07 +/- 0.22          1.40 +/- 0.05
+  touch-excluded midpoint (2nd best)                 62.68 +/- 0.49          0.52 +/- 0.02
+  top-3-excluded midpoint                            70.68 +/- 0.44          0.93 +/- 0.04
+
+==============================================================================================================================
+D. At fill instants. Ehat replaces mid[ti-1] in the committed d.
+==============================================================================================================================
+   *** Necessary but not sufficient. *** E[d] here is measured at the current fill population --
+   the fills the maker got while quoting off the mid. A maker quoting off a better anchor would
+   quote different prices and get different fills. This cannot predict counterfactual performance.
+   It says only whether the anchor error is small enough that a fix is worth building.
+
+  estimator                                       E[d] size-wtd $    E[d] unweighted $       wrong-side pct
+  engine.mid(); committed anchor               63.407 +/- 2.567     88.726 +/- 2.406       75.09 +/- 0.39
+  residual-book midpoint (best non-MM/seed)      63.373 +/- 2.570     88.677 +/- 2.403       75.09 +/- 0.39
+  depth-wtd mid, <=10bp                          60.596 +/- 2.498     85.703 +/- 2.374       74.64 +/- 0.37
+      ^ unweighted variant                       63.409 +/- 2.579     88.749 +/- 2.402       74.87 +/- 0.39
+  depth-wtd mid, <=50bp                          47.280 +/- 1.944     67.599 +/- 1.982       72.97 +/- 0.35
+      ^ unweighted variant                       55.147 +/- 2.249     77.316 +/- 2.197       74.35 +/- 0.42
+  centroid of ALL non-MM/seed orders             26.486 +/- 1.679     37.392 +/- 1.207       64.33 +/- 0.53
+      ^ unweighted variant                       16.244 +/- 1.159     19.072 +/- 0.764       61.06 +/- 0.56
+  time-average of E0 over 300s (NULL)            65.431 +/- 2.900     93.591 +/- 2.583       74.61 +/- 0.47
+  touch-excluded midpoint (2nd best)             62.098 +/- 2.567     86.538 +/- 2.354       74.92 +/- 0.39
+  top-3-excluded midpoint                        60.245 +/- 2.567     83.929 +/- 2.245       74.69 +/- 0.43
+
+  break-even is E[d] < h, with h cited at 9.1810. committed wrong-side is 75.0876 +/- 0.3921 pct.
+  An estimator clearing E[d] < h here has not shown that a maker using it would break even. It has
+  shown that the anchor error is small enough to be worth fixing. The break-even test belongs to a
+  counterfactual policy this run cannot evaluate.
+
+==============================================================================================================================
+The weighting rule. If the two weightings disagree by more than the effect, the effect is not
+Established.
+==============================================================================================================================
+   Noise sizes are heavy-tailed bootstrapped draws, so a size-weighted centroid can be dominated
+   by a few large orders. anchor_test_720.txt found the two weightings diverging by 7.77 SE.
+
+    E2a    |med(sw) - med(u)| = -2.8105 +/- 0.1357    effect (0.5*med_E0 - med) = -47.2825 +/- 0.9749    established: True
+    E2b    |med(sw) - med(u)| = -8.8989 +/- 0.3009    effect (0.5*med_E0 - med) = -30.0214 +/- 0.6669    established: True
+    E3     |med(sw) - med(u)| = 19.2405 +/- 1.0166    effect (0.5*med_E0 - med) = -20.1586 +/- 1.0373    established: True
+
+==============================================================================================================================
+Pre-registered predictions, SCORED. Fixed before any result existed.
+==============================================================================================================================
+  P1  E1 (residual-book midpoint) tracks V materially better than E0; median |E1 - V| below
+      half of E0's. Confidence lowered from medium after Step 0's clipping finding, before any
+      result existed: JOIN clipping reprices marketable orders to the touch, which is exactly
+      where E1 reads. The scale arithmetic independently predicts E1 loses (N=2 -> $192 vs $101).
+      median |E0 - V| = 100.9565, half = 50.4783; median |E1 - V| = 100.9155
+      P1: REFUTED
+
+  P2  E1's improvement is larger in magnitude than in direction; |E1 - V| falls more than the
+      wrong-side share does. Low confidence.
+      relative fall in median |err| = 0.0004; relative fall in wrong-side share = -0.0001
+      P2: HELD
+
+  P3  E4, the plain time-average null candidate, does NOT match E1. If it does, the book
+      structure is not carrying the information and P1's mechanism is wrong even if its number
+      is right. Medium confidence, and the prediction most worth checking.
+      median |E4 - V| = 108.4294; median |E1 - V| = 100.9155; paired difference 7.5139 +/- 0.3087
+      distinguishable at 2 SE ? True
+      P3: HELD
+
+  P4  At least one estimator brings E[d] at the current fill population below h = 9.1810.
+      Low confidence; E[d] is 6.91x away and there was no basis for a number.
+      lowest E[d] is E3 at 26.4859
+      P4: REFUTED
+
+  P5  added after Step 0, before any result. E1 is the most contaminated estimator, not the least:
+      E1 tracks V no better than E0 (or only marginally), while E5 and the deeper/aggregate
+      estimators do better. This partially inverts P1.
+      median |err|: E0 100.9565, E1 100.9155, E5a 99.5494, E5b 97.2620, E3 70.6369
+      E1 failed to beat half of E0 ? True;  some E5 beats E1 ? True
+      P5: HELD
+
+==============================================================================================================================
+The reading rule. Both branches carry conditions, equal burden.
+==============================================================================================================================
+   A fix is available from the observable book if ALL of:
+     (a) median |Ehat - V| below half E0's, paired per seed, clearing 2 SE
+     (b) that SAME Ehat's E[d] at fill instants below E0's by more than 2 SE, paired.
+         (b) Is evidence that the anchor error is small enough to be worth fixing. It is not A
+         predicted post-fix E[d]. Every estimator is scored on the fills the maker got while
+         anchored to the mid; a differently-anchored maker gets different fills, so no
+         counterfactual is available from this run.
+     (c) it beats E4, the NULL candidate, by more than 2 SE on median |err|, paired --
+         so a win attributable to smoothing rather than structure does not count.
+
+  est           (a) 0.5*medE0 - med              (b) EdE0 - Ed            (c) medE4 - med      ALL 3
+  E1           -50.4372+/-1.0128             0.0338+/-0.0076             7.5139+/-0.3087          False
+  E2a          -47.2825+/-0.9749             2.8110+/-0.1014            10.6686+/-0.3513          False
+  E2b          -30.0214+/-0.6669            16.1273+/-0.7110            27.9298+/-0.7956          False
+  E3           -20.1586+/-1.0373            36.9213+/-1.4538            37.7925+/-1.7736          False
+  E4           -57.9511+/-1.2443            -2.0243+/-0.4928             0.0000+/-0.0000          False
+  E5a          -49.0711+/-0.9687             1.3090+/-0.0858             8.8800+/-0.3228          False
+  E5b          -46.7837+/-0.9355             3.1622+/-0.1958            11.1674+/-0.3900          False
+
+  Neither branch fires cleanly. Stopping rather than picking the nearer.
+    some estimator beat E0's half-median at 2 SE ? False
+    some estimator's E[d] differs from E0's at 2 SE ? True
+    estimators clearing all three conditions: 0
+  No estimate is quoted from an ambiguous rule.
+
+==============================================================================================================================
+Limitations. Carried, not buried.
+==============================================================================================================================
+  L1 depth has no accessor. best_bid/best_ask/mid/depth_at are the whole public query surface, and
+     depth_at does not separate by agent. This file iterates engine.bids/engine.asks directly --
+     the committed convention (lifetime_sweep.py:156-162), so not a new violation, but attribute
+     access rather than an API.
+  L2 Per-order clip status is unrecoverable: n_clipped is a flow counter and run_arm does not
+     return the flow. The book cannot be partitioned into clipped and unclipped, so E1-vs-E5 is
+     an indirect test of the touch-echo hypothesis. No instrumentation was added to get it.
+  L3 Section D cannot predict counterfactual performance. Different quotes would mean different
+     fills; E[d] there is measured at the fill population the mid anchor produced.
+  L4 E3 combines both sides into one centroid, so depth asymmetry shifts it regardless of V.
+     Levels per side: bid 550.9 +/- 1.8, ask 562.6 +/- 2.3.
+  L5 SEs are across seeds. Every difference is computed per seed first.
+  L6 One arm, life=720, 8 seeds, one simulated world. Nothing here is measured on real BTCUSD data.
+  L7 Uniform samples (every 60s, sections A-C) and fill-adjacent samples (section D) are never
+     pooled. 10080.0 +/- 0.0 uniform and 2267.4 +/- 34.8 fill-adjacent per seed.
+  L8 the seed book is still built. clipped_placement.make_world:133 calls sim_run._seed_book,
+     posting 5 levels a side with agent_id 'seed'. Those orders are NOT V-priced and are excluded
+     here, as the committed calibration excludes them. Flagged, not chased, not fixed.
+
+  No committed default changed. Nothing retuned. No sweep. No repricing. The maker's quoting rule
+  is unchanged. JOIN clipping untouched. No sniffer. No fix built.

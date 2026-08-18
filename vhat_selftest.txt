@@ -1,0 +1,28 @@
+==============================================================================================================================
+Self-test. Estimator negative controls, MM/seed exclusion, the
+mirrored-loop equivalence, and determinism.
+==============================================================================================================================
+  T_ID     run_arm is RF.run_arm: True   wls: True   wmean: True   keeps: True
+  NC_VMID  skewed fixture (5 bids / 4 asks, unequal sizes and spacing). V := the mid = 62005.00.
+           E0 err = 0   (asserted == 0.0, the only forced quantity)
+           reported, not asserted: E1 62005.0000, E2a 62006.7262, E2b 61988.7500, E3 61976.2500, E4 62010.0000, E5a 62002.5000, E5b 62000.0000
+           exact coincidences among the above: none; all estimators separate
+           (E0 == E1 = 62005.00 is STRUCTURAL, not a coincidence: this book holds no MM or seed
+            orders, so the residual midpoint is the raw midpoint.)
+  NC_DISP  V displaced to 61967.50 -> E0 error must be exactly +37.5: +37.5
+  NC_EXCL  asymmetric plants: MM bid 61999 / MM ask 62008, seed 61995 / 62015, all 99 BTC,
+           all inside the touch. E0 must move; E1 and E3 must NOT.
+           E0 62005.0000 -> 62003.5000   moved: True
+           E1 62005.0000 -> 62005.0000   unchanged: True
+           E3 61976.2500 -> 61976.2500   unchanged: True  (99-BTC plants would dominate a size-weighted
+           centroid if they leaked)
+  NC_TOUCH E1 = 62005.0000 (best 61990/62020), E5a = 62002.5000 (2nd 61975/62030), E5b = 62000.0000 (4th 61900/62100)
+  NC_EMPTY one-sided book -> E0 None, E1 None, E5a None (all must be None)
+  T_MIRROR pass1 405 fills vs pass2 405 fills; mid arrays 86402 vs 86402
+           records and mid array identical; the mirrored loop is the same world.
+  NC_SAMP  uniform samples 1440, fill-adjacent samples 402 (both must be > 0)
+  T_DET    run_sampled repeated (horizon=86400s, 405 fills): identical: True
+           11520 per-sample estimator comparisons, all equal
+  NC_KEEPS keeps(thr,thr)=True keeps(-thr,thr)=True keeps(thr+eps)=False
+  Self-test PASS.
+
