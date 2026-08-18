@@ -1,0 +1,22 @@
+==============================================================================================================
+relam_pilot.py self-tests
+==============================================================================================================
+  T-ID    PASS; 27 imported names are is-identical to their source
+  T-family PASS; anchor gives lam=1.8040 p_market=0.0100; both constraints hold at all 5 lifetimes
+  T-VERDICT PASS; band [80.0, 120.0]; MET / MISSED / UNRESOLVED all reproduce
+  (the three run-based gates each build a full 1-day world; expect ~60s)
+  T-OBS   PASS; full dict equality against clipped_depth_sweep.run, including all 86400 spreads_bp
+  T-fill  PASS; 405 fill records identical to residual_fit.run_arm; E[d] 79.911606 matches exactly
+  T-part  PASS; 5 participation/rate figures identical to clipped_mm_check.run (fill share 8.3998 pct, near share 32.0499 pct)
+  T-det   PASS; 16 statistics reproduce across two identical runs, on 286 MM fills
+  T-nonempty PASS; 286 fills, 86400 quotes, E[d] and participation both finite
+
+  All self-tests PASS  (40s)
+
+  Not covered by any gate, and said plainly:
+    - seed_touch_pct is transcribed from mm_on_off.py:83-89 and has
+      no committed reference to check against. Diagnostic only.
+    - the family arithmetic is checked against its own anchor, not
+      against an external source; product is imported, not restated.
+    - nothing here tests whether the levels anchor holds. That is
+      the measurement the pilot exists to make.
