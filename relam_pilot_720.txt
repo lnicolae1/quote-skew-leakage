@@ -1,0 +1,313 @@
+==============================================================================================================
+relam_pilot.py self-tests
+==============================================================================================================
+  T-ID    PASS; 27 imported names are is-identical to their source
+  T-FAMILY PASS; anchor gives lam=1.8040 p_market=0.0100; both constraints hold at all 5 lifetimes
+  T-VERDICT PASS; band [80.0, 120.0]; MET / MISSED / UNRESOLVED all reproduce
+  (the three run-based gates each build a full 1-day world; expect ~60s)
+  T-OBS   PASS; full dict equality against clipped_depth_sweep.run, including all 86400 spreads_bp
+  T-FILL  PASS; 405 fill records identical to residual_fit.run_arm; E[d] 79.911606 matches exactly
+  T-PART  PASS; 5 participation/rate figures identical to clipped_mm_check.run (fill share 8.3998 pct, near share 32.0499 pct)
+  T-DET   PASS; 16 statistics reproduce across two identical runs, on 286 MM fills
+  T-NONEMPTY PASS; 286 fills, 86400 quotes, E[d] and participation both finite
+
+  All self-tests PASS  (41s)
+
+  Not covered by any gate, and said plainly:
+    - seed_touch_pct is transcribed from mm_on_off.py:83-89 and has
+      no committed reference to check against. Diagnostic only.
+    - the family arithmetic is checked against its own anchor, not
+      against an external source; PRODUCT is imported, not restated.
+    - nothing here tests whether the levels anchor holds. That is
+      the measurement the pilot exists to make.
+
+======================================================================================================================
+The calibration re-solve; pilot. Can the book hold density while shortening memory?
+======================================================================================================================
+Feasibility pilot: 86400s x 3 seeds per cell. Not the headline; survivors go to a 7-day arm next.
+MM present (k=0.17763, gamma=1.33918e-06, quote_size=0.020). JOIN clipping. Seed book in. disp=0.0055 held.
+
+The family: lam*p_market = 0.01804 (rate) and lam*life = 1298.9 (levels), so life is the only free parameter.
+  life (s)       lam /s     p_market  pct of 7.1913  pct of 6.3235
+  ----------------------------------------------------------------
+  720            1.8040     0.010000            25%            29%
+  360            3.6080     0.005000            50%            57%
+  180            7.2160     0.002500           100%           114%
+  120           10.8240     0.001667           151%           171%
+  60            21.6480     0.000833           301%           342%
+
+  The last two columns are lam against the measured real addition rate, Route 2 and Route 1
+  (lam_ceiling_arithmetic.py:110-111). Any cell over 100% quotes an arrival rate the real venue
+  is not measured to sustain. Those cells are still run; a mechanism that fails even there is
+  dead without the ceiling argument; but survival at such a cell must be read with that attached.
+
+The levels anchor is a model, NOT A measurement (lam_ceiling_arithmetic.py:314, caveat at :318-328).
+  Measured levels/side are scored per cell like any other target. Systematically off-target levels
+  mean the anchor is wrong, which is a finding about the model and not a failure of the cell.
+
+The four bands were fitted MM-ABSENT and this arm is MM-present (emergent_book.py:46-49).
+  And the committed point itself fails them: at 7d MM-present, width 0.3976bp against a 0.34476
+  ceiling, and lifetime_sweep_results.txt:62 records 'Levels passing all three: none'. So a cell
+  That merely matches the committed point has PASSED nothing.
+
+  The life=720 cell is the family's anchor, not a control: PRODUCT = 1.8040 * 0.0100 passes through
+  Phase 3's committed-rate point, NOT the 847a7fa working point (p_market 0.0126, +26%). It will not
+  reproduce 847a7fa's numbers and is not meant to.
+
+======================================================================================================================
+Pre-registered PASS conditions; fixed before any cell ran
+======================================================================================================================
+  P-cal   all four scored targets MET, using clipped_window's own band()/verdict(). MET requires the
+          whole 95% interval inside the band; straddling an edge is UNRESOLVED and is NOT a hit.
+          At 3 seeds this is a hard bar and UNRESOLVED is a likely outcome. It is not weakened.
+  P-edge  E[d] < h with the gap clearing 2.0 SE, paired per seed (the seeds share the V path).
+  P-PART  mm_fill_share >= 5.0% and mm_near_share >= 15.0%.
+          These are a judgement call, at roughly half the committed point's own k=0.17763 values
+          (8.63% of fills, 31.29% of near-touch size). Half, because a re-solve moving lam up to 12x
+          should not have to leave participation untouched; and not lower, because a maker under
+          5% of fills and 15% of near-touch size is not the venue's liquidity provider in any sense
+          that makes the leakage question meaningful. A bar a ghost could clear would let a cell pass
+          by making the maker irrelevant, which is exactly what this condition exists to catch.
+
+  A cell survives only if all three hold. Survivors are not ranked and no winner is picked.
+  If no cell survives, that is a bounded negative result: the (lam, mean_lifetime) lever is exhausted.
+
+  Burden asymmetry, flagged not fixed: P-cal and P-edge are interval tests; P-PART is a point-estimate
+  test, because its thresholds were pre-registered as bare percentages. The 95% interval is printed
+  beside each participation figure so the reader can see whether the point estimate is resolved.
+
+  running life=720 (lam=1.8040 p_market=0.010000) ...
+      seed 0 done (6s, 286 MM fills)
+      seed 1 done (6s, 331 MM fills)
+      seed 2 done (6s, 368 MM fills)
+----------------------------------------------------------------------------------------------------------------------
+Cell life=720s  lam=1.8040  p_market=0.010000  (lam is 25% of the measured Route-2 addition rate)
+----------------------------------------------------------------------------------------------------------------------
+  A. The four scored targets  (95% interval vs band; MET requires the whole interval inside)
+     median width bp          0.26895 +/- 0.01471    95% [   0.24011,    0.29779]  band [   0.22984,    0.34476]  MET           2.66 SE
+     levels/side            550.48854 +/- 5.49502    95% [ 539.71829,  561.25879]  band [ 533.07200,  799.60800]  MET           3.17 SE
+     aggTrades/s              0.03468 +/- 0.00086    95% [   0.03300,    0.03637]  band [   0.04059,    0.04961]  MISSED       -6.88 SE
+     mean/median shape        2.05315 +/- 0.09748    95% [   1.86209,    2.24421]  band [   0.94605,    2.83815]  MET           8.05 SE
+     -> 3/4 MET, 1 MISSED, 0 UNRESOLVED
+     measured levels/side 550.5 +/- 5.5 against the anchor's nominal 666.3; the anchor is a model
+
+  B. The edge  (E[d] size-weighted over all fills; h from the maker's own quote log)
+     E[d] size-weighted     84.0535 +/- 9.1565     $/BTC
+     E[d] unweighted        96.6111 +/- 5.2329     $/BTC
+     h (median half-spread)  6.1305 +/- 0.0087     $
+     E[d] / h               13.7107
+     paired gap h - E[d]   -77.9230 +/- 9.1652      needs > 18.3303
+     MM fills per seed        328.3 +/- 23.7     
+
+  C. Participation  (point estimate is what P-PART scores; the interval is printed, not scored)
+     fill-count share (%)          7.7650 +/- 0.6619    95% [   6.4677,    9.0623]  threshold 5.0
+     near-touch size share (%)    24.0880 +/- 0.9300    95% [  22.2652,   25.9109]  threshold 15.0
+     volume share (%)             15.2034 +/- 0.7635    95% [  13.7069,   16.6999]  not scored
+     passive share, all (%)        0.9410 +/- 0.0104    95% [   0.9206,    0.9613]  not scored
+     sd(q) over the run          0.040193 +/- 0.009579  BTC
+
+  D. PnL; reported, not scored
+     MM PnL                  -52.97 +/- 11.02      $
+     this is not A PASS condition. The committed 7-day life=60 figure is +14.91 +/- 193.95, i.e.
+     0.08 SE from zero and indistinguishable from both zero and -525.18. At 1 day and 3 seeds
+     this pilot has strictly less power than that, so no PnL threshold could resolve.
+
+  E. Seed-book influence; diagnostic, gates nothing
+     seed order at the touch 10.1088 +/- 0.3219    % of two-sided seconds  (committed reference 7.4692)
+
+  Verdict for this cell
+     P-cal   False  (3/4 MET)
+     P-edge  False  (gap -77.9230 +/- 9.1652, needs > 18.3303 and > 0)
+     P-PART  True   (fills 7.7650 vs 5.0, near 24.0880 vs 15.0)
+     survives: False
+
+  running life=360 (lam=3.6080 p_market=0.005000) ...
+      seed 0 done (8s, 227 MM fills)
+      seed 1 done (8s, 272 MM fills)
+      seed 2 done (8s, 340 MM fills)
+----------------------------------------------------------------------------------------------------------------------
+Cell life=360s  lam=3.6080  p_market=0.005000  (lam is 50% of the measured Route-2 addition rate)
+----------------------------------------------------------------------------------------------------------------------
+  A. The four scored targets  (95% interval vs band; MET requires the whole interval inside)
+     median width bp          0.17722 +/- 0.01258    95% [   0.15256,    0.20188]  band [   0.22984,    0.34476]  MISSED       -4.18 SE
+     levels/side            572.31377 +/- 4.07782    95% [ 564.32124,  580.30631]  band [ 533.07200,  799.60800]  MET           9.62 SE
+     aggTrades/s              0.03437 +/- 0.00139    95% [   0.03163,    0.03710]  band [   0.04059,    0.04961]  MISSED       -4.46 SE
+     mean/median shape        2.32031 +/- 0.03004    95% [   2.26142,    2.37920]  band [   0.94605,    2.83815]  MET          17.24 SE
+     -> 2/4 MET, 2 MISSED, 0 UNRESOLVED
+     measured levels/side 572.3 +/- 4.1 against the anchor's nominal 666.3; the anchor is a model
+
+  B. The edge  (E[d] size-weighted over all fills; h from the maker's own quote log)
+     E[d] size-weighted     56.1812 +/- 9.9360     $/BTC
+     E[d] unweighted        81.8496 +/- 7.8054     $/BTC
+     h (median half-spread)  6.1313 +/- 0.0091     $
+     E[d] / h                9.1630
+     paired gap h - E[d]   -50.0499 +/- 9.9320      needs > 19.8639
+     MM fills per seed        279.7 +/- 32.8     
+
+  C. Participation  (point estimate is what P-PART scores; the interval is printed, not scored)
+     fill-count share (%)          6.3353 +/- 0.6431    95% [   5.0747,    7.5958]  threshold 5.0
+     near-touch size share (%)    22.9418 +/- 0.1858    95% [  22.5777,   23.3059]  threshold 15.0
+     volume share (%)             14.9400 +/- 1.1641    95% [  12.6585,   17.2216]  not scored
+     passive share, all (%)        0.9261 +/- 0.0057    95% [   0.9148,    0.9373]  not scored
+     sd(q) over the run          0.043665 +/- 0.016290  BTC
+
+  D. PnL; reported, not scored
+     MM PnL                  -49.15 +/- 21.33      $
+     this is not A PASS condition. The committed 7-day life=60 figure is +14.91 +/- 193.95, i.e.
+     0.08 SE from zero and indistinguishable from both zero and -525.18. At 1 day and 3 seeds
+     this pilot has strictly less power than that, so no PnL threshold could resolve.
+
+  E. Seed-book influence; diagnostic, gates nothing
+     seed order at the touch  8.6802 +/- 2.5108    % of two-sided seconds  (committed reference 7.4692)
+
+  Verdict for this cell
+     P-cal   False  (2/4 MET)
+     P-edge  False  (gap -50.0499 +/- 9.9320, needs > 19.8639 and > 0)
+     P-PART  True   (fills 6.3353 vs 5.0, near 22.9418 vs 15.0)
+     survives: False
+
+  running life=180 (lam=7.2160 p_market=0.002500) ...
+      seed 0 done (12s, 271 MM fills)
+      seed 1 done (12s, 306 MM fills)
+      seed 2 done (12s, 371 MM fills)
+----------------------------------------------------------------------------------------------------------------------
+Cell life=180s  lam=7.2160  p_market=0.002500  (lam is 100% of the measured Route-2 addition rate)
+----------------------------------------------------------------------------------------------------------------------
+  A. The four scored targets  (95% interval vs band; MET requires the whole interval inside)
+     median width bp          0.13275 +/- 0.01110    95% [   0.11099,    0.15451]  band [   0.22984,    0.34476]  MISSED       -8.75 SE
+     levels/side            590.91678 +/- 5.11378    95% [ 580.89378,  600.93978]  band [ 533.07200,  799.60800]  MET          11.31 SE
+     aggTrades/s              0.03750 +/- 0.00119    95% [   0.03517,    0.03982]  band [   0.04059,    0.04961]  MISSED       -2.61 SE
+     mean/median shape        2.53289 +/- 0.07158    95% [   2.39259,    2.67320]  band [   0.94605,    2.83815]  MET           4.26 SE
+     -> 2/4 MET, 2 MISSED, 0 UNRESOLVED
+     measured levels/side 590.9 +/- 5.1 against the anchor's nominal 666.3; the anchor is a model
+
+  B. The edge  (E[d] size-weighted over all fills; h from the maker's own quote log)
+     E[d] size-weighted     46.9978 +/- 2.5132     $/BTC
+     E[d] unweighted        67.3480 +/- 3.5853     $/BTC
+     h (median half-spread)  6.1309 +/- 0.0087     $
+     E[d] / h                7.6657
+     paired gap h - E[d]   -40.8668 +/- 2.5065      needs > 5.0129
+     MM fills per seed        316.0 +/- 29.3     
+
+  C. Participation  (point estimate is what P-PART scores; the interval is printed, not scored)
+     fill-count share (%)          6.9704 +/- 0.4685    95% [   6.0521,    7.8888]  threshold 5.0
+     near-touch size share (%)    22.5535 +/- 0.7133    95% [  21.1555,   23.9516]  threshold 15.0
+     volume share (%)             14.9056 +/- 1.7068    95% [  11.5603,   18.2509]  not scored
+     passive share, all (%)        0.9124 +/- 0.0027    95% [   0.9071,    0.9178]  not scored
+     sd(q) over the run          0.024421 +/- 0.001093  BTC
+
+  D. PnL; reported, not scored
+     MM PnL                    5.18 +/- 7.22       $
+     this is not A PASS condition. The committed 7-day life=60 figure is +14.91 +/- 193.95, i.e.
+     0.08 SE from zero and indistinguishable from both zero and -525.18. At 1 day and 3 seeds
+     this pilot has strictly less power than that, so no PnL threshold could resolve.
+
+  E. Seed-book influence; diagnostic, gates nothing
+     seed order at the touch  6.3692 +/- 3.1563    % of two-sided seconds  (committed reference 7.4692)
+
+  Verdict for this cell
+     P-cal   False  (2/4 MET)
+     P-edge  False  (gap -40.8668 +/- 2.5065, needs > 5.0129 and > 0)
+     P-PART  True   (fills 6.9704 vs 5.0, near 22.5535 vs 15.0)
+     survives: False
+
+  running life=120 (lam=10.8240 p_market=0.001667) ...
+      seed 0 done (16s, 306 MM fills)
+      seed 1 done (16s, 317 MM fills)
+      seed 2 done (16s, 314 MM fills)
+----------------------------------------------------------------------------------------------------------------------
+Cell life=120s  lam=10.8240  p_market=0.001667  (lam is 151% of the measured Route-2 addition rate)
+----------------------------------------------------------------------------------------------------------------------
+  A. The four scored targets  (95% interval vs band; MET requires the whole interval inside)
+     median width bp          0.12361 +/- 0.00996    95% [   0.10409,    0.14313]  band [   0.22984,    0.34476]  MISSED      -10.67 SE
+     levels/side            595.30127 +/- 8.11116    95% [ 579.40340,  611.19915]  band [ 533.07200,  799.60800]  MET           7.67 SE
+     aggTrades/s              0.03492 +/- 0.00148    95% [   0.03202,    0.03781]  band [   0.04059,    0.04961]  MISSED       -3.84 SE
+     mean/median shape        2.49577 +/- 0.17994    95% [   2.14308,    2.84846]  band [   0.94605,    2.83815]  UNRESOLVED    1.90 SE
+     -> 1/4 MET, 2 MISSED, 1 UNRESOLVED
+     measured levels/side 595.3 +/- 8.1 against the anchor's nominal 666.3; the anchor is a model
+
+  B. The edge  (E[d] size-weighted over all fills; h from the maker's own quote log)
+     E[d] size-weighted     47.1802 +/- 3.4127     $/BTC
+     E[d] unweighted        60.6521 +/- 3.4423     $/BTC
+     h (median half-spread)  6.1309 +/- 0.0087     $
+     E[d] / h                7.6955
+     paired gap h - E[d]   -41.0493 +/- 3.4119      needs > 6.8239
+     MM fills per seed        312.3 +/- 3.3      
+
+  C. Participation  (point estimate is what P-PART scores; the interval is printed, not scored)
+     fill-count share (%)          6.9190 +/- 0.1593    95% [   6.6069,    7.2312]  threshold 5.0
+     near-touch size share (%)    23.5532 +/- 1.1984    95% [  21.2044,   25.9020]  threshold 15.0
+     volume share (%)             15.6120 +/- 1.1039    95% [  13.4484,   17.7756]  not scored
+     passive share, all (%)        0.9092 +/- 0.0049    95% [   0.8996,    0.9188]  not scored
+     sd(q) over the run          0.041764 +/- 0.003624  BTC
+
+  D. PnL; reported, not scored
+     MM PnL                 -101.16 +/- 46.89      $
+     this is not A PASS condition. The committed 7-day life=60 figure is +14.91 +/- 193.95, i.e.
+     0.08 SE from zero and indistinguishable from both zero and -525.18. At 1 day and 3 seeds
+     this pilot has strictly less power than that, so no PnL threshold could resolve.
+
+  E. Seed-book influence; diagnostic, gates nothing
+     seed order at the touch  6.8642 +/- 2.3698    % of two-sided seconds  (committed reference 7.4692)
+
+  Verdict for this cell
+     P-cal   False  (1/4 MET)
+     P-edge  False  (gap -41.0493 +/- 3.4119, needs > 6.8239 and > 0)
+     P-PART  True   (fills 6.9190 vs 5.0, near 23.5532 vs 15.0)
+     survives: False
+
+  running life=60 (lam=21.6480 p_market=0.000833) ...
+      seed 0 done (27s, 303 MM fills)
+      seed 1 done (27s, 308 MM fills)
+      seed 2 done (27s, 318 MM fills)
+----------------------------------------------------------------------------------------------------------------------
+Cell life=60s  lam=21.6480  p_market=0.000833  (lam is 301% of the measured Route-2 addition rate)
+----------------------------------------------------------------------------------------------------------------------
+  A. The four scored targets  (95% interval vs band; MET requires the whole interval inside)
+     median width bp          0.08860 +/- 0.00390    95% [   0.08096,    0.09625]  band [   0.22984,    0.34476]  MISSED      -36.21 SE
+     levels/side            612.04271 +/- 2.35343    95% [ 607.42998,  616.65543]  band [ 533.07200,  799.60800]  MET          33.56 SE
+     aggTrades/s              0.04019 +/- 0.00119    95% [   0.03786,    0.04251]  band [   0.04059,    0.04961]  UNRESOLVED   -0.34 SE
+     mean/median shape        2.86772 +/- 0.07520    95% [   2.72033,    3.01511]  band [   0.94605,    2.83815]  UNRESOLVED   -0.39 SE
+     -> 1/4 MET, 1 MISSED, 2 UNRESOLVED
+     measured levels/side 612.0 +/- 2.4 against the anchor's nominal 666.3; the anchor is a model
+
+  B. The edge  (E[d] size-weighted over all fills; h from the maker's own quote log)
+     E[d] size-weighted     31.1563 +/- 5.6280     $/BTC
+     E[d] unweighted        46.9020 +/- 2.1691     $/BTC
+     h (median half-spread)  6.1308 +/- 0.0089     $
+     E[d] / h                5.0819
+     paired gap h - E[d]   -25.0255 +/- 5.6212      needs > 11.2425
+     MM fills per seed        309.7 +/- 4.4      
+
+  C. Participation  (point estimate is what P-PART scores; the interval is printed, not scored)
+     fill-count share (%)          6.2805 +/- 0.0962    95% [   6.0920,    6.4689]  threshold 5.0
+     near-touch size share (%)    25.2572 +/- 0.7932    95% [  23.7025,   26.8118]  threshold 15.0
+     volume share (%)             15.5534 +/- 0.7901    95% [  14.0049,   17.1020]  not scored
+     passive share, all (%)        0.9012 +/- 0.0022    95% [   0.8968,    0.9056]  not scored
+     sd(q) over the run          0.065937 +/- 0.006798  BTC
+
+  D. PnL; reported, not scored
+     MM PnL                  -23.69 +/- 111.51     $
+     this is not A PASS condition. The committed 7-day life=60 figure is +14.91 +/- 193.95, i.e.
+     0.08 SE from zero and indistinguishable from both zero and -525.18. At 1 day and 3 seeds
+     this pilot has strictly less power than that, so no PnL threshold could resolve.
+
+  E. Seed-book influence; diagnostic, gates nothing
+     seed order at the touch  7.9047 +/- 1.2268    % of two-sided seconds  (committed reference 7.4692)
+
+  Verdict for this cell
+     P-cal   False  (1/4 MET)
+     P-edge  False  (gap -25.0255 +/- 5.6212, needs > 11.2425 and > 0)
+     P-PART  True   (fills 6.2805 vs 5.0, near 25.2572 vs 15.0)
+     survives: False
+
+======================================================================================================================
+Result
+======================================================================================================================
+  No cell survives. Every cell fails at least one of P-cal, P-edge, P-PART.
+  That is A BOUNDED negative result: holding density while shortening the book's memory does not
+  produce a maker that clears its own edge and stays a participant, anywhere on this family.
+  The (lam, mean_lifetime) lever is exhausted at pilot power. No estimate is quoted and no cell
+  Is carried forward.
+
+  total wall clock 207s
