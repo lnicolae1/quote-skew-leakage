@@ -1,0 +1,25 @@
+==============================================================================================================================
+Self-tests; quotesize_verdict.py. The arm has NOT run.
+==============================================================================================================================
+  T-IDENT     PASS  band/verdict/margin_se/TARGETS are clipped_window's own objects;
+                    all four (target, tol) pairs equal the committed constants.
+  T-bands     PASS  width [0.22984, 0.34476]  levels [533.072, 799.608]  rate [0.04059, 0.04961]
+                    shape [0.94605, 2.83815].  The two edges the probe's verdict turns on are
+                    the width ceiling 0.34476 and the rate floor 0.04059.
+  T-VERDICT   PASS  0.2873+-0.001 MET, 0.5000+-0.001 MISSED, 0.3400+-0.010 UNRESOLVED.
+                    The probe's 0.35051 reads MISSED at SE 0.0001 and UNRESOLVED at SE 0.0100,
+                    so the SE it never reported is exactly what decides its verdict.
+  T-PASS      PASS  four per-size branches and four overall branches all fire correctly;
+                    SD_MIN = 0.08258 BTC and a straddling interval does NOT clear it.
+  T-exponent  PASS  recovers 0.74 exactly on synthetic data; the committed three points
+                    (0.01479 / 0.02255 / 0.04129) fit 0.7406, which is the claimed 0.74.
+  T-mirror    PASS  all 10 shared quantities agree with probe_quotesize_lever.run to 1e-09
+                    at seed 0, quote_size 0.020 (15s). fill share 5.6701 both ways; width 0.279780
+                    both ways. The transcribed loop is the probe's loop plus columns.
+  T-nonempty  PASS  286 MM fills, 86400 inventory samples, sd(q)=0.06308, max|q|=0.23334,
+                    width 0.27978 bp, shape 2.3138, rate 0.04038/s; nothing degenerate.
+
+  All 7 self-tests PASSED.
+  Note what T-mirror costs and buys: it runs two full 86400s simulations to prove the
+  transcribed loop is the probe's loop. Transcription is the defect class this project
+  keeps hitting, and a visual diff has already failed to catch it once.

@@ -5,6 +5,8 @@
 #   hold 10800 s (headline), 300 s, 60 s; sniffer size 0.02 BTC
 # - cluster B: 7 days, 8 seeds, k 0.17763, gamma derived from C = 13.66 at this horizon
 # - metrics: d_PnL, MM edge/unit (execution edge), sniffer PnL; SE across seeds only
+# - pre-registered split d_PnL = d_SPREAD + d_INV: a component dominates iff |mean| >= 70% of
+#   (|d_SPREAD| + |d_INV|) and it is >= 2.0 SE from zero; neither -> no conclusion
 # - also checks Phase 5 item 3: does the MM make money with no adversary?
 
 import math
@@ -37,6 +39,11 @@ SEC_PER_YEAR = 365.25 * 86400.0
 HOLD_MID = 10800
 HOLDS = [HOLD_MID, 300, 60]
 THETAS = [0.0, 0.02, 0.04]
+
+# d_SPREAD / d_INV dominance rule (fixed before any treatment split was computed)
+DOM_FRAC = 0.70
+DOM_SE = 2.0
+SPLIT_TOL = 1e-6
 
 
 def gamma_for_C(c_target, horizon):
@@ -305,15 +312,27 @@ def main():
         configs.append(("theta=%.3f BTC  hold=%ds" % (th, HOLD_MID), th,
                         HOLD_MID))
 
+    # --headline selects a subset of the configurations above
+    if "--headline" in sys.argv:
+        configs = configs[:1]
+        print("--headline: headline configuration only. The other %d "
+              "committed configurations"
+              % (len(HOLDS) - 1 + len(THETAS) - 1))
+        print("are not run; their committed numbers stand.")
+        print("")
+
     results = []
     for label, th, hold in configs:
         t0 = time.time()
-        per = {k: [] for k in ("d_pnl", "d_sharpe", "d_invvar", "d_edge",
-                               "sn_pnl", "sn_share", "n_open", "mm_vol")}
+        per = {k: [] for k in ("d_pnl", "d_spread", "d_inv", "d_sharpe",
+                               "d_invvar", "d_edge", "sn_pnl", "sn_share",
+                               "n_open", "mm_vol")}
         for s in SEEDS:
             b = run(s, True, th, hold)
             a = ctrl[s]
             per["d_pnl"].append(b["mm_pnl"] - a["mm_pnl"])
+            per["d_spread"].append(b["mm_spread_pnl"] - a["mm_spread_pnl"])
+            per["d_inv"].append(b["mm_inv_pnl"] - a["mm_inv_pnl"])
             per["d_sharpe"].append(b["mm_sharpe"] - a["mm_sharpe"])
             per["d_invvar"].append(b["mm_inv_var"] - a["mm_inv_var"])
             per["d_edge"].append(b["mm_edge"] - a["mm_edge"])
@@ -351,6 +370,77 @@ def main():
           "zero at %d seeds." % len(SEEDS))
     print("  Holding windows overlap, so SEs are")
     print("  across seeds, never across windows.")
+
+    print("")
+    print("=" * 128)
+    print("1b. d_PnL split into spread and INV (rule fixed before this run).")
+    print("=" * 128)
+    print("  %-34s %20s %8s %20s %8s"
+          % ("configuration", "d spread ($)", "SE mult", "d INV ($)",
+             "SE mult"))
+    for r in results:
+        ms = (abs(r["d_spread"] / r["d_spread_se"])
+              if r["d_spread_se"] > 0 else float("nan"))
+        mi = (abs(r["d_inv"] / r["d_inv_se"])
+              if r["d_inv_se"] > 0 else float("nan"))
+        print("  %-34s %9.2f +/- %-7.2f %8.2f %9.2f +/- %-7.2f %8.2f"
+              % (r["label"], r["d_spread"], r["d_spread_se"], ms,
+                 r["d_inv"], r["d_inv_se"], mi))
+    print("")
+    print("  spread = edge against the mid at each MM fill; INV = residual")
+    print("  (price move on the inventory those fills left). Both differenced")
+    print("  per seed against the same seed's control.")
+    print("")
+    print("  Check: d_PnL = d_SPREAD + d_INV by construction (mm_inv_pnl =")
+    print("  pnl - spread_pnl); float residual ~1e-13")
+    print("  expected,")
+    print("  tolerance SPLIT_TOL = %.0e dollars;" % SPLIT_TOL)
+    print("  above it the run")
+    print("  raises.")
+    for r in results:
+        resid = max(abs(p - s - i) for p, s, i
+                    in zip(r["raw"]["d_pnl"], r["raw"]["d_spread"],
+                           r["raw"]["d_inv"]))
+        assert resid <= SPLIT_TOL, (
+            "SPLIT IDENTITY BROKEN at %s: max per-seed residual %.6e exceeds "
+            "SPLIT_TOL %.0e. d_SPREAD and d_INV are not the two halves of "
+            "d_PnL and section 1b must not be read." % (r["label"], resid,
+                                                        SPLIT_TOL))
+        print("    %-34s max per-seed residual %.3e   PASS (<= %.0e)"
+              % (r["label"], resid, SPLIT_TOL))
+    print("")
+    print("  Rule: a component dominates when |mean| >= %.0f%% of" % (100.0 * DOM_FRAC))
+    print("  (|d_SPREAD| + |d_INV|) and it is >= %.1f SE from zero (both" % DOM_SE)
+    print("  required).")
+    print("")
+    for r in results:
+        sp, iv = r["d_spread"], r["d_inv"]
+        gross = abs(sp) + abs(iv)
+        fs = (abs(sp) / gross) if gross > 0 else float("nan")
+        fi = (abs(iv) / gross) if gross > 0 else float("nan")
+        ms = abs(sp / r["d_spread_se"]) if r["d_spread_se"] > 0 else 0.0
+        mi = abs(iv / r["d_inv_se"]) if r["d_inv_se"] > 0 else 0.0
+        print("  %s" % r["label"])
+        print("    spread %.1f%% of gross at %.2f SE   |   INV %.1f%% of "
+              "gross at %.2f SE"
+              % (100.0 * fs, ms, 100.0 * fi, mi))
+        print("    per-seed d spread: %s"
+              % "  ".join("%+.2f" % v for v in r["raw"]["d_spread"]))
+        print("    per-seed d INV   : %s"
+              % "  ".join("%+.2f" % v for v in r["raw"]["d_inv"]))
+        if fs >= DOM_FRAC and ms >= DOM_SE:
+            print("    -> d_SPREAD dominates: the sniffer worsened the prices "
+                  "at which the maker's quotes")
+            print("       were hit (a transfer); the PnL metric measures extraction.")
+        elif fi >= DOM_FRAC and mi >= DOM_SE:
+            print("    -> d_INV dominates: price moved against inventory the "
+                  "maker already held")
+            print("       (valuation effect of an extra participant),")
+            print("       so the edge metric is right.")
+        else:
+            print("    -> Neither dominates; no conclusion. The PnL vs")
+            print("       edge disagreement is not adjudicated by this run.")
+        print("")
 
     print("")
     print("=" * 128)
