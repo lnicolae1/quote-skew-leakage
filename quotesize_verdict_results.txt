@@ -1,0 +1,107 @@
+==============================================================================================================================
+Does the quote_size ceiling survive the project's own verdict standard?; 8 seeds, intervals, sd(q)
+==============================================================================================================================
+Working point: lam=1.8040 p_market=0.0126 mean_lifetime=720s disp=0.0055, JOIN clipping. MM present.
+k=0.17763. gamma=9.40e-06 (C=13.71), the same binding viability cap the probe used, passed as a
+constructor argument. DEFAULT_GAMMA=1e-06 and DEFAULT_QUOTE_SIZE=0.02 untouched. 8 seeds x 86400s
+per size, book scanned every 60s. quote_size is the only thing that varies.
+
+Pre-registered before any cell ran: does any quote_size clear all four committed targets
+while giving sd(q) at least 2.0x the committed 0.04129 BTC, i.e. 0.08258 BTC, with the whole
+95% interval above that threshold? REOPENED / UNRESOLVED / BOUNDED / OUT OF GRID, and a
+BOUNDED result is a stronger claim than the null at one point, not a weaker one.
+
+  quote_size=0.020 BTC  measured in   59s   fill share= 5.80%   vol share=14.30%   sd(q)=0.04604
+  quote_size=0.035 BTC  measured in   57s   fill share= 6.19%   vol share=19.41%   sd(q)=0.05857
+  quote_size=0.050 BTC  measured in   57s   fill share= 6.34%   vol share=22.77%   sd(q)=0.07211
+  quote_size=0.080 BTC  measured in   57s   fill share= 6.59%   vol share=27.16%   sd(q)=0.09359
+
+==============================================================================================================================
+1. THE FOUR COMMITTED TARGETS, scored by clipped_window.verdict (imported, not reimplemented)
+==============================================================================================================================
+  quote_size=0.020
+    median width bp         0.32138 +/- 0.02275    95% [  0.27679,   0.36597]  band [  0.22984,   0.34476]  UNRESOLVED
+    levels/side           550.98455 +/- 2.77665    95% [545.54231, 556.42679]  band [533.07200, 799.60800]  MET
+    aggTrades/s             0.04083 +/- 0.00066    95% [  0.03953,   0.04213]  band [  0.04059,   0.04961]  UNRESOLVED
+    mean/median shape       2.17765 +/- 0.08618    95% [  2.00875,   2.34656]  band [  0.94605,   2.83815]  MET
+    -> 2/4 MET, 0 MISSED, 2 UNRESOLVED
+
+  quote_size=0.035
+    median width bp         0.33237 +/- 0.02036    95% [  0.29246,   0.37228]  band [  0.22984,   0.34476]  UNRESOLVED
+    levels/side           550.57817 +/- 2.88016    95% [544.93305, 556.22329]  band [533.07200, 799.60800]  MET
+    aggTrades/s             0.03927 +/- 0.00056    95% [  0.03817,   0.04038]  band [  0.04059,   0.04961]  MISSED
+    mean/median shape       2.10918 +/- 0.06383    95% [  1.98406,   2.23429]  band [  0.94605,   2.83815]  MET
+    -> 2/4 MET, 1 MISSED, 1 UNRESOLVED
+
+  quote_size=0.050
+    median width bp         0.33556 +/- 0.01825    95% [  0.29978,   0.37133]  band [  0.22984,   0.34476]  UNRESOLVED
+    levels/side           550.63650 +/- 2.82976    95% [545.09018, 556.18282]  band [533.07200, 799.60800]  MET
+    aggTrades/s             0.03859 +/- 0.00056    95% [  0.03748,   0.03969]  band [  0.04059,   0.04961]  MISSED
+    mean/median shape       2.08267 +/- 0.05796    95% [  1.96907,   2.19628]  band [  0.94605,   2.83815]  MET
+    -> 2/4 MET, 1 MISSED, 1 UNRESOLVED
+
+  quote_size=0.080
+    median width bp         0.33372 +/- 0.01568    95% [  0.30299,   0.36446]  band [  0.22984,   0.34476]  UNRESOLVED
+    levels/side           550.61680 +/- 2.98991    95% [544.75658, 556.47701]  band [533.07200, 799.60800]  MET
+    aggTrades/s             0.03765 +/- 0.00059    95% [  0.03649,   0.03882]  band [  0.04059,   0.04961]  MISSED
+    mean/median shape       2.08826 +/- 0.05130    95% [  1.98771,   2.18882]  band [  0.94605,   2.83815]  MET
+    -> 2/4 MET, 1 MISSED, 1 UNRESOLVED
+
+==============================================================================================================================
+2. sd(q) and max|q| -- never measured above quote_size=0.020 anywhere in this project
+==============================================================================================================================
+   quote_size            sd(q) BTC     95% lo    sd(q)/qsize     max|q| BTC  max|q|/qsize
+        0.020     0.04604 +/- 0.00507    0.03610          2.302        0.15129         7.565
+        0.035     0.05857 +/- 0.00605    0.04672          1.673        0.20436         5.839
+        0.050     0.07211 +/- 0.00831    0.05583          1.442        0.24392         4.878
+        0.080     0.09359 +/- 0.00895    0.07606          1.170        0.31357         3.920
+
+  Cross-check against the one recorded point. participation_skew_results.txt line 92
+  records sd(q) = 0.04129 at quote_size 0.020 (5 seeds, gamma 9.37e-06). Here, at 8 seeds
+  and gamma 9.40e-06: 0.04604 +/- 0.00507. Difference +0.00475 BTC (+11.5% of the recorded value).
+  The two are not the same experiment; different seed count, marginally different gamma --
+  so this is a plausibility check, not a replication, and it is not asserted anywhere.
+
+  Fitted exponent of sd(q) against quote_size over 0.020 -> 0.080 (a 4.0x range): 0.5148
+  The value claimed from the committed three points, over a different and non-overlapping
+  4x range below this one, was 0.74. Difference -0.2252.
+  The power law does NOT extrapolate cleanly across the two ranges, so any sd(q)
+  projected beyond 0.080 BTC from either exponent is an extrapolation and not a measurement.
+
+==============================================================================================================================
+3. The pre-registered verdict
+==============================================================================================================================
+  quote_size=0.020   sd(q) 95% lo = 0.03610 vs threshold 0.08258   -> TOO_SMALL
+  quote_size=0.035   sd(q) 95% lo = 0.04672 vs threshold 0.08258   -> TOO_SMALL
+  quote_size=0.050   sd(q) 95% lo = 0.05583 vs threshold 0.08258   -> TOO_SMALL
+  quote_size=0.080   sd(q) 95% lo = 0.07606 vs threshold 0.08258   -> TOO_SMALL
+
+  Overall: OUT OF GRID
+
+  No size tested reached the inventory threshold of 0.08258 BTC at all. The grid was chosen
+  wrong and nothing is concluded in either direction. The exponent fitted above says where
+  the threshold would be reached; that is the only thing this run establishes.
+
+==============================================================================================================================
+What this run does not do, and what limits it
+==============================================================================================================================
+  L1  It does not measure damage. It measures the range over which a damage measurement
+      could be made without decalibrating the book. Phase 7 is not run.
+  L2  It scores against the real-data targets (clipped_window.TARGETS), not against the
+      simulator's MM-absent output. On levels/side those references differ a lot; 666.34
+      against 551.24; so this column reads differently from the probe's by construction.
+      The MM-absent simulator sits only 3.4% above the levels band floor of 533.07 before
+      quote_size does anything, so a levels miss here would not be attributable to the maker.
+  L3  Near-touch depth is NOT one of the four scored targets and is not scored. The probe
+      reported it; clipped_window never scored it. Adding it as a fifth target would be a
+      new gate, and new gates are not invented inside a run.
+  L4  The MM is a large fraction of its own near-touch measurement bucket at these sizes
+      (the probe measured 4.4% at 0.050 and 19.8% at 0.200). A size that passes the four
+      targets can still be rebuilding the near-touch book rather than trading into it.
+  L5  T=86400s per cell, so sd(q) is measured over one day while the damage A/B runs seven.
+      Inventory half-lives here are 3-9h, so a day contains only a few, and sd(q) at 7 days
+      could be larger. That would make this test conservative about reaching the threshold.
+  L6  gamma is held at the binding viability cap. sd(q) moves only 1.33x across five decades
+      of gamma, so this is not a material free parameter; but it is held, not swept.
+  L7  No committed default changed, probe_quotesize_lever.py was not modified, and the
+      measurement loop is asserted identical to the probe's by T-mirror.

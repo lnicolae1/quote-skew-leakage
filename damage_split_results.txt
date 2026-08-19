@@ -1,0 +1,118 @@
+================================================================================================================================
+Paired-seed damage A/B (Phase 6 step 7)
+================================================================================================================================
+Working point: lam=1.8040 p_market=0.0126 mean_lifetime=720s disp=0.0055, JOIN clipping.
+Run length 604800s (7 days). k=0.17763. C = 13.66 (gate-2 viability cap), derived gamma = 1.3392e-06
+  (C_per_gamma at this horizon = 1.02e+07 vs 1.458e6 at 1 day.)
+8 seeds. Sniffer size 0.020 BTC. One open position at a time, at most one action per requote.
+DEFAULT_GAMMA=1e-06 and DEFAULT_QUOTE_SIZE=0.02 untouched; both are constructor arguments.
+
+Expected ceiling (before the run): ~0.066 bp/unit and ~$1.79/day at this cap,
+~$12.5 over 7 days. MM quotes ~1.46bp from mid vs a
+~0.156bp market touch, so its inventory barely moves the mid, and a 0.02 BTC clip cannot
+reach its quotes through 0.1244 BTC/side of near-touch depth. A null here means
+the leak is economically negligible here, not that the sniffer failed (inference is exact).
+
+Running control arm (Run A, sniffer observes only)...
+  8 control runs in 239s
+
+================================================================================================================================
+0. Phase 5 item 3: does the MM make money with no adversary present?
+================================================================================================================================
+  Criterion: with no sniffer, a well-parameterized MM
+  should make money.
+
+  Control-arm MM PnL   :    -525.18 +/- 162.43     (|mean|/SE = 3.23, 8 seeds, 7 days)
+  Control-arm Sharpe   :   -12.4326 +/- 2.8607     (annualised, from hourly mark-to-market)
+
+  per-seed control PnL : -442.34  -593.89  -1499.43  -815.78  -154.06  -75.57  -309.28  -311.07
+  negative on 8 of 8 seeds.
+
+  Decomposition, PnL = spread + INV (exact):
+    Spread (edge captured quoting) :     +63.83 +/- 0.78     
+    INV    (price vs inventory)    :    -589.01 +/- 162.83   
+    INV is 90.2% of the gross magnitude (old book: 88-95%.
+
+  VERDICT: FAILED. MM loses money with no adversary present, at
+  3.23 SE. Phase 5 item 3 not satisfied on this book;
+  every damage number below is a change in a baseline that is itself
+  negative,
+  its own.
+
+--headline: headline configuration only. The other 4 committed configurations
+are not run; their committed numbers stand.
+
+  theta=0  hold=10800s (headline)     395s   d_PnL =   -107.50 +/- 33.40     sniffer share 4.519%
+
+================================================================================================================================
+1. Damage: paired difference Run B minus Run A, SE across seeds
+================================================================================================================================
+  configuration                              d MM PnL ($)  SE mult          d MM Sharpe      d inventory var
+  theta=0  hold=10800s (headline)      -107.50 +/- 33.40       3.22   -0.5273 +/- 0.7104   3.41e-03 +/- 1.05e-03
+
+  SE mult = |mean| / SE; below ~2 not distinguishable from zero at 8 seeds.
+  Holding windows overlap, so SEs are
+  across seeds, never across windows.
+
+================================================================================================================================
+1b. d_PnL split into spread and INV (rule fixed before this run).
+================================================================================================================================
+  configuration                              d spread ($)  SE mult            d INV ($)  SE mult
+  theta=0  hold=10800s (headline)        -0.07 +/- 0.27        0.24   -107.43 +/- 33.15       3.24
+
+  spread = edge against the mid at each MM fill; INV = residual
+  (price move on the inventory those fills left). Both differenced
+  per seed against the same seed's control.
+
+  Check: d_PnL = d_SPREAD + d_INV by construction (mm_inv_pnl =
+  pnl - spread_pnl); float residual ~1e-13
+  expected,
+  tolerance SPLIT_TOL = 1e-06 dollars;
+  above it the run
+  raises.
+    theta=0  hold=10800s (headline)    max per-seed residual 5.684e-14   PASS (<= 1e-06)
+
+  Rule: a component dominates when |mean| >= 70% of
+  (|d_SPREAD| + |d_INV|) and it is >= 2.0 SE from zero (both
+  required).
+
+  theta=0  hold=10800s (headline)
+    spread 0.1% of gross at 0.24 SE   |   INV 99.9% of gross at 3.24 SE
+    per-seed d spread: +0.31  -0.62  -0.63  +0.73  -0.23  -1.29  +0.22  +0.99
+    per-seed d INV   : -18.63  -188.22  -237.65  -17.89  -129.47  -205.26  -46.72  -15.63
+    -> d_INV dominates: price moved against inventory the maker already held
+       (valuation effect of an extra participant),
+       so the edge metric is right.
+
+
+================================================================================================================================
+2. Execution quality (less sensitive to an extra participant in the book)
+================================================================================================================================
+  configuration                          d MM edge/unit ($)   as bp of mid  MM volume (BTC)
+  theta=0  hold=10800s (headline)      -0.00646 +/- 0.01023  -0.0010+-0.0016             7.23
+
+  MM edge/unit = size-weighted mean of (fill price - mid) signed by the MM's side:
+  edge per BTC; the difference is the cost of the sniffer's presence.
+
+================================================================================================================================
+3. Extra-participant confound; does the attack pay?
+================================================================================================================================
+  configuration                       sniffer share %      round trips  sniffer PnL ($)
+  theta=0  hold=10800s (headline)      4.5187+-0.0793               55    27.31+-13.59 
+
+  measured at ~4.4% (smoke seed). Run B has a participant Run A
+  lacks, at roughly a third of the MM's footprint, so the raw PnL difference in
+  section 1 is not pure leakage damage; section 2's execution edge is primary.
+  Sniffer PnL ~ 0: the attack does not pay
+  regardless of the maker; sniffer PnL much larger than the MM's loss:
+  profit comes from the rest of the book, not the maker
+  at all.
+
+================================================================================================================================
+4. Distribution across seeds
+================================================================================================================================
+  theta=0  hold=10800s (headline)
+    per-seed d MM PnL: -18.31  -188.84  -238.28  -17.17  -129.70  -206.56  -46.50  -14.65
+
+  Sign agreement across seeds: a difference that flips sign
+  seed to seed is noise.
