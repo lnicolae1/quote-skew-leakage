@@ -1,0 +1,24 @@
+﻿==========================================================================
+phase7_nobs.py self-test
+==========================================================================
+  SIGMA_EPS = $0.315532  (1.0 x one time-averaged sd of skew)
+  W_Q (QUANT) = 0.015654 BTC, imported from phase7_blind
+  M sweep = [1, 3, 10, 30, 100, 300], all fitted on the full kept sample
+
+  t_identity              PASS  (7 objects, all is-identity)
+  t_trailing_mean         PASS  (m=1 identity, partial windows, causality, m=0 raises)
+  t_ma_m1_is_unsmoothed   PASS  (50 rows bit-identical at m=1, and copied not aliased)
+  t_ma_targets_only_skew  PASS  (5 skew columns smoothed, const / spread_width / fillvol untouched)
+  t_sigma_eps_arithmetic  PASS  (SIGMA_EPS = $0.315532 = one time-averaged sd of skew)
+  t_predicted_values      PASS  (M/(M+1) at M=1, 30, 300 -> 0.500, 0.968, 0.997)
+  t_scoring_rules         PASS  (9 constructed curves; mismatched windows raise)
+  t_nan_halts             PASS  (9 degenerate inputs all raised; clean curves still score)
+  t_no_default_moved      PASS  (3 defaults intact; neither defense overrides total_spread)
+  t_zero_jitter_baseline  PASS  (86400 draws, all 6 windows bit-identical to BASELINE, none NaN)
+  t_jitter_degrades       PASS  (unsmoothed R2 1.000000 -> -1.208113, a drop of 2.208113)
+  t_smoothing_moves       PASS  (JITTER M=1 -1.208113 -> M=30 -0.116174, range 1.091939)
+  t_determinism_nonempty  PASS  (266 MM fills, 86400 views, 84672 kept, no NaN at any window; repeated run identical)
+  t_mirror                PASS  (r2 1.000000000, r2_norm 1.000000000, sd_q 0.062235820 all match sniffer_skew.run)
+
+  All self-tests PASS in 96s
+==========================================================================

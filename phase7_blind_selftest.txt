@@ -1,0 +1,19 @@
+﻿==========================================================================
+phase7_blind.py self-test
+==========================================================================
+  W_Q_LOW  = 0.015654 BTC  (0.34 x sd(q) = 0.04604)
+  W_Q_HIGH = 0.115100 BTC  (2.50 x sd(q) = 0.04604)
+
+  t_identity              PASS  (6 objects, all is-identity)
+  t_bucket_arithmetic     PASS  (8 cases on the grid)
+  t_bound                 PASS  (worst displacement $0.685343 over 108 states)
+  t_verdict_rule          PASS  (6 constructed cases, all four branches plus both boundaries)
+  t_nan_halts             PASS  (8 degenerate inputs all raised; legitimate inf still allowed)
+  t_no_default_moved      PASS  (3 defaults intact; neither defense overrides total_spread)
+  t_tiny_is_baseline      PASS  (86400 quotes, worst gap $0.005244 < one tick $0.01)
+  t_huge_is_flat          PASS  (86400 quotes bit-identical to FlatQuoteMM; R2 collapsed to -5.227080)
+  t_determinism_nonempty  PASS  (285 MM fills, 86400 views, 84672 kept, 5356 prints; repeated run identical)
+  t_mirror                PASS  (r2_mul 1.000000000, r2_norm 1.000000000, sd_q 0.062235820 all match sniffer_skew.run)
+
+  All self-tests PASS in 73s
+==========================================================================
