@@ -1,0 +1,136 @@
+﻿======================================================================================================================
+Phase 7 arm B: smoothing axis. Recovery vs destruction.
+======================================================================================================================
+Working point: lam=1.8040 p_market=0.0126 mean_lifetime=720s disp=0.0055, JOIN clipping. MM present.
+k=0.17763. gamma=9.40e-06. quote_size=0.020 BTC = DEFAULT_QUOTE_SIZE, untouched. 8 seeds x 86400s per arm.
+
+Axis: M, the attacker's trailing-mean window.
+  (Not n: fit_score is a
+  per-observation OLS, so errors-in-variables caps R2 independently
+  of n. M is how
+  much the attacker averages, which the two
+  defenses respond to differently.
+
+The two defenses:
+  JITTER  mean-zero Gaussian on the reservation price, sigma_eps = $0.315532
+          = 1.0 x one time-averaged sd of the maker's own skew ($0.315532).
+          Derived, not tuned; puts the M=1 ceiling near 0.5.
+  QUANT   inventory bucketed at W_Q = 0.015654 BTC = 0.34 x sd(q), arm A's
+          QUANT-LOW width, imported from phase7_blind.
+
+BASELINE R2 at M=1 is 1.000000 by construction, not by measurement.
+  skew = -q*gamma*sigma^2*(T-t): the level feature is an
+  invertible function of q.
+  (BASELINE R2 = 1 by construction.)
+  BASELINE is smoothed at the same M, so its
+  R2 falls with M: the control for how much decline
+  is the cost of smoothing itself.
+
+  BASELINE  measured in   86s   unsmoothed R2 = 1.000000 +/- 0.000000   kept = 84672
+  JITTER    measured in   86s   unsmoothed R2 = -10.790980 +/- 3.594537   kept = 84672
+  QUANT     measured in   87s   unsmoothed R2 = 0.846980 +/- 0.091807   kept = 84672
+
+======================================================================================================================
+Out-of-sample R2 against the trailing-mean window M
+======================================================================================================================
+       M                 BASELINE                   JITTER                    QUANT   PRED(JIT)
+       1     1.000000+/- 0.000000   -10.790980+/- 3.594537     0.846980+/- 0.091807       0.500
+       3     0.999863+/- 0.000021    -9.497795+/- 3.538647     0.846938+/- 0.091722            
+      10     0.999319+/- 0.000101    -5.037868+/- 1.929006     0.846649+/- 0.091461            
+      30     0.997977+/- 0.000287    -1.879677+/- 0.867276     0.846083+/- 0.090675       0.968
+     100     0.995148+/- 0.000690    -0.078851+/- 0.284682     0.846986+/- 0.087307            
+     300     0.984353+/- 0.002733     0.591141+/- 0.087509     0.840748+/- 0.085337       0.997
+
+  Cell = mean across 8 seeds of each seed's
+  out-of-sample R2 at that window, with the SE across seeds.
+  Every window fitted on the full kept sample;
+  M=1 asserted equal to the unsmoothed fit.
+  PRED(JIT): pre-registered M/(M+1) prediction for JITTER.
+
+  Paired step changes per seed, window to window:
+  step                         BASELINE                 JITTER                  QUANT
+      1->3       -0.000137+/-0.000021  6.6 +1.293185+/-1.024591  1.3 -0.000041+/-0.000093  0.4
+      3->10      -0.000543+/-0.000080  6.8 +4.459926+/-1.690893  2.6 -0.000289+/-0.000300  1.0
+     10->30      -0.001343+/-0.000187  7.2 +3.158191+/-1.094740  2.9 -0.000566+/-0.000862  0.7
+     30->100     -0.002829+/-0.000408  6.9 +1.800826+/-0.588206  3.1 +0.000903+/-0.003508  0.3
+    100->300     -0.010796+/-0.002080  5.2 +0.669992+/-0.199389  3.4 -0.006238+/-0.002827  2.2
+
+  Trailing number = |mean| / SE.
+
+======================================================================================================================
+The pre-registered predictions
+======================================================================================================================
+  Q1  JITTER R2 rises with M and approaches BASELINE at the same M
+      Q1a rise      M=1 -> M=30: +8.911303 +/- 2.965783   3.00 SE
+      Q1b approach  JITTER - BASELINE at M=30: -2.877654 +/- 0.867129   3.32 SE
+      measured vs predicted at M=1    -10.790980  vs  0.500   (miss -11.290980)
+      measured vs predicted at M=30   -1.879677  vs  0.968   (miss -2.847677)
+      measured vs predicted at M=300  0.591141  vs  0.997   (miss -0.405859)
+      -> REFUTED (rises, but stays below BASELINE)
+
+  Q2  QUANT R2 does not rise with M
+      Scored: flat within 2.0 SE from M=1 to M=300, paired.
+      QUANT M=1 -> M=300: -0.006231 +/- 0.007353   0.85 SE
+      -> HELD
+
+  Q3  climb turns over (descriptive)
+      AR1_DT = 60s, so M=300 is five AR(1) steps and the trailing
+      mean blurs signal as well as noise.
+      JITTER M=100 -> M=300: +0.669992 +/- 0.199389   3.36 SE
+      -> NO TURNOVER
+
+======================================================================================================================
+Shapes of the two curves
+======================================================================================================================
+  Expected contrast: JITTER climbs
+  with M (independent noise averages away); QUANT does not
+  (its error is a deterministic function of q
+  that is never emitted).
+
+  total climb M=1 -> M=300, paired per seed:
+    JITTER    +11.382120 +/- 3.529188   3.23 SE
+    QUANT     -0.006231 +/- 0.007353   0.85 SE
+    BASELINE  -0.015647 +/- 0.002733   5.73 SE
+
+  BASELINE's change = cost of smoothing itself. If
+  negative, part of any decline in the
+  defended arms is smoothing, so
+  read the defended curves against
+  BASELINE at the same M, not against 1.000000.
+
+  Unsmoothed single-feature (skew_norm only) scores, for comparison:
+    BASELINE  1.000000 +/- 0.000000
+    JITTER    -28.404442 +/- 12.877907
+    QUANT     0.963909 +/- 0.007808
+
+======================================================================================================================
+Limitations
+======================================================================================================================
+  L1  Non-adaptive attacker: fixed window,
+      no bucket-boundary detection (the best
+      response to quantization;
+      not implemented).
+      Every R2 here is an upper bound on how well each defense
+      works against a real adversary.
+  L2  Defenses not calibrated to equal strength:
+      JITTER at one sd of skew and QUANT at 0.34 sd of inventory
+      different amounts of hiding; levels of the two
+      curves not comparable, only their shapes in M.
+      only shape is scored.
+  L3  Trailing mean uses a running sum over up to
+      86400 rows (floating-point drift vs a
+      pairwise or Kahan sum); M=1 is
+      special-cased to the identity so the control
+      demand bit-equality.
+  L4  At large M the smoothed skew columns are highly collinear;
+      the committed ols skips singular pivots,
+      so a large-M fit may use fewer
+      effective columns.
+  L5  sigma_eps derived at the time-averaged tau; realized
+      noise-to-signal is better than designed early in the
+      day and worse late; the regression pools both.
+      M/(M+1) prediction inherits that approximation.
+  L6  No committed module or default modified; both defenses
+      are subclasses.
+      does with FlatQuoteMM.
+

@@ -1,0 +1,156 @@
+﻿==============================================================================================================================
+Phase 7 arm A: interior point or only two endpoints?
+==============================================================================================================================
+Working point: lam=1.8040 p_market=0.0126 mean_lifetime=720s disp=0.0055, JOIN clipping. MM present.
+k=0.17763. gamma=9.40e-06 (gate-2 viability cap, where sd(q) was measured).
+quote_size=0.020 BTC = DEFAULT_QUOTE_SIZE, untouched. 8 seeds x 86400s per arm.
+
+Bucket widths from the measured sd(q) = 0.04604 BTC:
+  QUANT-LOW   w / sd(q) = 0.34  ->  W_Q = 0.015654 BTC   (saturation R2 ~ 0.985)
+  QUANT-HIGH  w / sd(q) = 2.50  ->  W_Q = 0.115100 BTC   (blinding width)
+
+BASELINE R2 = 1.000000 is by construction, not by measurement.
+  skew = -q*gamma*sigma^2*(T-t): the level feature is an
+  invertible function of q (BASELINE R2 = 1 by construction).
+
+Power:
+  removing skew costs +0.0337 +/- 0.0082 at this quote
+  size (not distinguishable from zero at the other two sizes).
+  A partial defense costs a fraction
+  of that: power to detect NO INTERIOR; may
+  miss a small INTERIOR. NO INTERIOR =
+  not distinguishable at this power.
+
+  BASELINE    measured in   71s   R2(mul)=1.000000+/-0.000000   R_direct=0.2147+/-0.0404
+  QUANT-LOW   measured in   70s   R2(mul)=0.846980+/-0.091807   R_direct=0.2326+/-0.0396
+  QUANT-HIGH  measured in   71s   R2(mul)=-121.161816+/-119.803508   R_direct=0.2177+/-0.0318
+  FLAT        measured in   72s   R2(mul)=-6.301953+/-2.372750   R_direct=0.2026+/-0.0392
+
+==============================================================================================================================
+A. Inference axis: sniffer R2 (sniffer_skew.fit_score)
+==============================================================================================================================
+  arm                R2 multi-feature      R2 skew_norm only
+  BASELINE        1.000000+/- 0.000000    1.000000+/- 0.000000
+  QUANT-LOW       0.846980+/- 0.091807    0.963909+/- 0.007808
+  QUANT-HIGH   -121.161816+/-119.803508   -0.657154+/- 0.373225
+  FLAT           -6.301953+/- 2.372750   -3.800895+/- 1.185283
+
+  Multi-feature = adversary's model: all 12 columns except
+  the full-mid sensitivity.
+  Primary for the rule below.
+
+  Paired against BASELINE, per seed:
+  arm                         d R2(mul)   SE mult
+  QUANT-LOW       -0.153020 +/- 0.091807      1.67
+  QUANT-HIGH    -122.161816 +/- 119.803508      1.02
+  FLAT            -7.301953 +/- 2.372750      3.08
+
+==============================================================================================================================
+B. Cost axis: R_direct (participation_skew.series_stats)
+==============================================================================================================================
+  R_direct = -slope of (q[t+H] - q[t]) on demeaned q[t], H=3600s, train slice only.
+  Higher = more inventory reverts within the hour.
+
+  arm                        R_direct     R_ar1 (continuity)
+  BASELINE          0.2147+/-   0.0404      0.1703+/-   0.0365
+  QUANT-LOW         0.2326+/-   0.0396      0.1827+/-   0.0411
+  QUANT-HIGH        0.2177+/-   0.0318      0.1684+/-   0.0344
+  FLAT              0.2026+/-   0.0392      0.1572+/-   0.0392
+
+  paired against FLAT (no skew), per seed.
+  arm                        d R_direct   SE mult
+  BASELINE           0.0121 +/-   0.0150      0.81
+  QUANT-LOW          0.0300 +/-   0.0096      3.14
+  QUANT-HIGH         0.0151 +/-   0.0093      1.63
+
+  BASELINE minus FLAT corresponds to the +0.0337
+  reference, at gamma=9.40e-06 here vs 9.37e-06 there
+  and 8 seeds vs 5: not the same
+  experiment; no comparison asserted.
+
+==============================================================================================================================
+C. Feedback: does the defense change Var(q)?
+==============================================================================================================================
+  Analytic cap R2 = 1 - (w^2/12)/Var(q) assumes Var(q) fixed;
+  quantized quotes feed back into q, so
+  inventory can park inside a bucket. If sd(q)
+  moves across arms, the analytic prediction does not apply
+  to the real defense.
+
+  arm                     sd(q) BTC           max|q| BTC    sd/BASELINE
+  BASELINE       0.04604+/-  0.00507   0.15129+/-  0.01814         1.0000
+  QUANT-LOW      0.04577+/-  0.00521   0.15299+/-  0.01709         0.9943
+  QUANT-HIGH     0.04579+/-  0.00526   0.15023+/-  0.02018         0.9947
+  FLAT           0.04963+/-  0.00618   0.16119+/-  0.02063         1.0780
+
+  Paired against BASELINE, per seed:
+  arm                           d sd(q)   SE mult
+  QUANT-LOW        -0.00026 +/-  0.00022      1.18
+  QUANT-HIGH       -0.00024 +/-  0.00142      0.17
+  FLAT              0.00359 +/-  0.00159      2.26
+
+  Committed reference for BASELINE: sd(q) = 0.04604, max|q| = 0.15129
+  (8 seeds, gamma 9.40e-06).
+
+==============================================================================================================================
+D. MM PnL; reported, not scored
+==============================================================================================================================
+  Control arm loses -525.18 +/- 162.43 on 8 of 8 seeds
+  (damage_split_results.txt); PnL differences are
+  perturbations of a baseline
+  that is itself negative; printed for
+  completeness and adjudicates nothing.
+
+  arm                        MM PnL ($)          d vs BASELINE ($)
+  BASELINE           -68.10 +/-    24.40                         --
+  QUANT-LOW          -72.79 +/-    23.70          -4.69 +/-     4.80
+  QUANT-HIGH         -66.10 +/-    25.07           2.01 +/-     5.02
+  FLAT               -72.46 +/-    27.55          -4.36 +/-     5.78
+
+==============================================================================================================================
+The pre-registered verdict
+==============================================================================================================================
+  Cost  R_direct(QUANT-HIGH) - R_direct(FLAT)     +0.0151 +/- 0.0093   1.63 SE
+        per seed: -0.0039  +0.0333  +0.0000  +0.0728  +0.0031  +0.0140  +0.0014  +0.0000
+  Blind R2(QUANT-HIGH) - R2(BASELINE)             -122.161816 +/- 119.803508   1.02 SE
+        per seed: -1.3272  -6.1460  -1.6459  -0.7432  -1.1966  -2.3702  -3.0896  -960.7757
+
+  Threshold for every branch: 2.0 SE.
+
+  VERDICT: NO INTERIOR
+
+  The blinding width costs the maker as much as
+  abandoning skew. No useful partial defense on this book:
+  two endpoints,
+  no interior.
+
+  Not distinguishable at this power (not
+  proven identical). Removing skew costs
+  +0.0337 +/- 0.0082 at this size; an interior point worth
+  a fraction of that would not clear 2.0 SE at 8 seeds and
+  this design would miss it.
+
+==============================================================================================================================
+Limitations
+==============================================================================================================================
+  L1  Non-adaptive sniffer (committed OLS; no boundary-crossing
+      detector, no smoother). Transition times would localize q
+      at bucket boundaries; that attack is not implemented,
+      so each R2 is an upper bound on defense
+      performance
+      and a lower bound
+      on the leak.
+  L2  Two widths, not a sweep (both pinned to committed
+      numbers); the shape of R2 against W_Q
+      is not measured.
+  L3  T=86400s per arm, one day. Inventory half-lives on this book
+      are 3-9h; sd(q) and
+      R_direct could differ over seven days.
+  L4  gamma held at the viability cap, not swept (sd(q) moves
+      1.33x across five decades of gamma).
+  L5  Cost in dollars not stated while the control
+      arm loses money at 3.23 SE; R_direct is an
+      inventory-dynamics quantity.
+  L6  No committed module or default modified; the defense is
+      a subclass.
+
