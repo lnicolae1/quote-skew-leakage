@@ -1,0 +1,25 @@
+==========================================================================
+phase7_width.py self-test
+==========================================================================
+  24 seeds, 5 widths, Z_FAMILY = 2.58 (Bonferroni over 5), margin 0.15 R2
+    w/sd = 0.75  ->  W_Q = 0.034530 BTC   analytic cap 0.9531
+    w/sd = 1.00  ->  W_Q = 0.046040 BTC   analytic cap 0.9167
+    w/sd = 1.25  ->  W_Q = 0.057550 BTC   analytic cap 0.8698
+    w/sd = 1.50  ->  W_Q = 0.069060 BTC   analytic cap 0.8125
+    w/sd = 1.75  ->  W_Q = 0.080570 BTC   analytic cap 0.7448
+
+  t_identity              PASS  (11 objects is-identity, TRAIN_FRAC 0.70, fit_score unpatched)
+  t_widths_and_cap        PASS  (5 widths + 2 committed, cap inverts to w/sd = sqrt(12(1-cap)))
+  t_margin_arithmetic     PASS  (margin 0.15 > floor 0.13675; equivalent passes, at-margin fails)
+  t_nan_halts             PASS  (13 degenerate inputs all raised; sound inputs still score)
+  t_sign_statistics       PASS  (24/24 p=1.1921e-07, 12/24 p=1.0, ties counted into n)
+  t_flag_fires            PASS  (diverged ratio 15.54 / magn 15.80 trips; sound 0.47-1.24 does not)
+  t_verdict_labels        PASS  (6 labels reachable, precondition order enforced)
+  t_preconditions         PASS  (P1 P2 P3 P4 each accept and each reject on constructed input)
+  t_output_smoke          PASS  (616 lines rendered, 16 markers, no format raised)
+  t_capture_is_transparent PASS (13 fields bit-identical; pivot ratio 1.0106e+02, out-of-range 0.290)
+  t_determinism_and_nonempty PASS (288 fills, 86400 views, 84672 kept, 5360 prints; identical twice)
+  t_no_default_moved      PASS  (3 defaults intact; neither defense overrides total_spread; Arm A's seeds untouched)
+
+  All self-tests PASS in 30s
+==========================================================================
