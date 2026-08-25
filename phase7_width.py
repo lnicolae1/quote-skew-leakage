@@ -1,4 +1,19 @@
-"""Phase 7; the width sweep"""
+"""Phase 7 width sweep: is there an interior point?
+
+- five quantization widths w/sd(q) = 0.75, 1.00, 1.25, 1.50, 1.75 (sd(q) = 0.04604 BTC), plus BASELINE and FLAT
+- 24 seeds x 86400 s, forward 70/30 time split; multi-feature sniffer (10 columns)
+- pre-registered, Z_FAMILY = 2.58 (Bonferroni over 5 widths):
+  LEG 1 blinds: R2(arm) - R2(BASELINE) < 0 at Z_FAMILY
+  LEG 2 cheaper than FLAT: R_direct(arm) - R_direct(FLAT) > 0 at Z_FAMILY
+  LEG 3 blinds to the floor (non-inferiority): mean(R2(arm)) + Z_FAMILY * SE < 0.15, reference literal zero
+- preconditions, in order: P1 BASELINE R2 identity, P6 references in [0, 1], P2 FLAT blinds and costs,
+  P3 blinding does not fall as w widens; P4 voids a width's analytic cap if sd(q) moves
+- P5 flags implausible fits (sd(pred)/sd(y) >= 5.0 or max|pred|/max|q| > 3.0); labels only, never pooling
+- a width with a flagged fit is decided by sign counts (>= 19 of 24 seeds, exact binomial p < 0.01)
+- verdicts: INTERIOR POINT EXISTS / INTERIOR POINT PROVISIONAL / NO INTERIOR / NO REFERENCE / NO ROOM / NOT A CURVE / INCONCLUSIVE
+- power: removing skew costs +0.0337 +/- 0.0082 in R_direct; NO INTERIOR = not distinguishable at this power
+
+"""
 
 import contextlib
 import io
@@ -67,8 +82,19 @@ Z_NOMINAL = 2.0
 Z_FAMILY = 2.58
 N_COMPARISONS = len(W_OVER_SD)
 
+# same 0.05/5 as a probability, for the exact sign test
+ALPHA_FAMILY = 0.05 / N_COMPARISONS
+
+# Leg 3 margin: projected SE 0.091807 * sqrt(8/24) = 0.0530; Z_FAMILY * SE = 0.1367 < 0.15
 MARGIN_R2 = 0.15
 SE_R2_COMMITTED_8 = 0.091807
+
+# Leg 3 reference: literal zero (R2 of predicting the mean)
+LEG3_REFERENCE = 0.0
+
+# P6: sane range for any reference a leg compares against
+REF_LO = 0.0
+REF_HI = 1.0
 
 # P1: BASELINE R2 is an algebraic identity
 P1_TARGET = 1.0
@@ -243,12 +269,38 @@ def leg(diffs, direction):
 
 
 def leg3_noninferiority(diffs):
-    """LEG 3"""
+    """Leg 3: mean(d3) + Z_FAMILY * SE < MARGIN_R2, d3 = R2(arm) - 0."""
     m, se = mean_se(diffs)
     ub = m + Z_FAMILY * se
     n_below = sum(1 for d in diffs if d < MARGIN_R2)
     p = sign_p(len(diffs), n_below)
     return m, se, ub, n_below, p, (ub < MARGIN_R2)
+
+
+def leg3_diffs(res_arm):
+    """Paired Leg 3 differences: R2(arm) - LEG3_REFERENCE."""
+    return [r["r2_mul"] - LEG3_REFERENCE for r in res_arm]
+
+
+def sign_significant(n_pass, n_total, p):
+    """Sign-count pass: strict majority and p below the per-comparison level."""
+    return (2 * n_pass > n_total) and (p < ALPHA_FAMILY)
+
+
+def sign_bar(n_total):
+    """Smallest count sign_significant accepts at n_total (19 at n = 24)."""
+    for c in range(n_total + 1):
+        if sign_significant(c, n_total, sign_p(n_total, c)):
+            return c
+    raise DegenerateComparison(
+        "no count out of %d can satisfy the sign rule at alpha %.4f; the "
+        "bounded companion is unpassable at this seed count"
+        % (n_total, ALPHA_FAMILY))
+
+
+def width_passes(nflag, headline_ok, sign_ok):
+    """A width with a flagged fit is decided by sign counts, otherwise by headline means."""
+    return sign_ok if nflag > 0 else headline_ok
 
 
 # preconditions
@@ -294,11 +346,33 @@ def p4_var_q(res_arm, res_base):
     return (mult < Z_FAMILY), m, se, mult
 
 
+def p6_references(res):
+    """Every reference a leg compares against must lie in [REF_LO, REF_HI]."""
+    b_m, _b_se = mean_se([r["r2_mul"] for r in res[BASE]])
+    f_m, _f_se = mean_se([r["r_direct"] for r in res[FLAT]])
+    rows_in = (
+        ("LEG 1", "BASELINE R2(mul), across-seed mean", b_m),
+        ("LEG 2", "FLAT R_direct, across-seed mean", f_m),
+        ("LEG 3", "literal zero, a constant with no sampling error",
+         LEG3_REFERENCE),
+    )
+    rows, ok = [], True
+    for legname, what, val in rows_in:
+        require_finite("p6_references(%s)" % legname, val)
+        in_range = (REF_LO <= val <= REF_HI)
+        rows.append((legname, what, val, in_range))
+        if not in_range:
+            ok = False
+    return ok, rows
+
+
 # sweep-level verdict
-def sweep_verdict(p1_ok, p2_ok, p3_ok, width_records):
-    """The only place a label short-circuits"""
+def sweep_verdict(p1_ok, p6_ok, p2_ok, p3_ok, width_records):
+    """Verdict label; order P1, P6, P2, P3."""
     if not p1_ok:
         return "INCONCLUSIVE"
+    if not p6_ok:
+        return "NO REFERENCE"
     if not p2_ok:
         return "NO ROOM"
     if not p3_ok:
@@ -473,14 +547,17 @@ def t_verdict_labels():
     clean = {"passes_all": True, "provisional": False}
     flagged = {"passes_all": True, "provisional": True}
     fails = {"passes_all": False, "provisional": False}
+    # args: (p1_ok, p6_ok, p2_ok, p3_ok, records)
     cases = [
-        ((False, True, True, [clean]), "INCONCLUSIVE"),
-        ((True, False, True, [clean]), "NO ROOM"),
-        ((True, True, False, [clean]), "NOT A CURVE"),
-        ((True, True, True, [clean, fails]), "INTERIOR POINT EXISTS"),
-        ((True, True, True, [flagged, fails]), "INTERIOR POINT PROVISIONAL"),
-        ((True, True, True, [fails, fails]), "NO INTERIOR"),
-        ((True, True, True, []), "NO INTERIOR"),
+        ((False, True, True, True, [clean]), "INCONCLUSIVE"),
+        ((True, False, True, True, [clean]), "NO REFERENCE"),
+        ((True, True, False, True, [clean]), "NO ROOM"),
+        ((True, True, True, False, [clean]), "NOT A CURVE"),
+        ((True, True, True, True, [clean, fails]), "INTERIOR POINT EXISTS"),
+        ((True, True, True, True, [flagged, fails]),
+         "INTERIOR POINT PROVISIONAL"),
+        ((True, True, True, True, [fails, fails]), "NO INTERIOR"),
+        ((True, True, True, True, []), "NO INTERIOR"),
     ]
     seen = set()
     for args, want in cases:
@@ -488,11 +565,18 @@ def t_verdict_labels():
         assert got == want, "sweep_verdict%r returned %r, wanted %r" % (
             args, got, want)
         seen.add(got)
-    assert len(seen) == 6, "only %d distinct labels reachable" % len(seen)
-    assert sweep_verdict(False, False, False, [clean]) == "INCONCLUSIVE"
-    assert sweep_verdict(True, False, False, [clean]) == "NO ROOM"
+    assert len(seen) == 7, "only %d distinct labels reachable" % len(seen)
+    # order: P1, P6, P2, P3
+    assert sweep_verdict(False, False, False, False, [clean]) == "INCONCLUSIVE"
+    assert sweep_verdict(True, False, False, False, [clean]) == "NO REFERENCE"
+    assert sweep_verdict(True, True, False, False, [clean]) == "NO ROOM"
+    # P6 ahead of P2: P2 held at 5.38 SE while the old Leg 3 reference was -7.667137
+    assert (sweep_verdict(True, False, True, True,
+                          [fails, fails]) == "NO REFERENCE"), (
+        "a sweep with a bad reference and a passing P2 must return NO "
+        "REFERENCE, not a verdict about widths")
     # clean pass outranks provisional
-    assert sweep_verdict(True, True, True,
+    assert sweep_verdict(True, True, True, True,
                          [flagged, clean]) == "INTERIOR POINT EXISTS"
     print("  t_verdict_labels        PASS  (%d labels reachable, precondition "
           "order enforced)" % len(seen))
@@ -539,8 +623,131 @@ def t_preconditions():
                                          for s in range(8)])
     assert not ok and mult >= Z_FAMILY, \
         "P4 did not void the cap on a 10x-SE shift in sd(q)"
-    print("  t_preconditions         PASS  (P1 P2 P3 P4 each accept and each "
-          "reject on constructed input)")
+
+    # P6: sane reference passes, the old one fails
+    sane = {BASE: base, FLAT: [rec(0.05, rd=0.2559) for _ in range(8)]}
+    ok, rows = p6_references(sane)
+    assert ok and len(rows) == 3, rows
+    assert rows[2][2] == 0.0 and rows[2][3], \
+        "Leg 3's reference is not the constant zero"
+    # Leg 2 reference (FLAT R_direct) outside [0, 1] refused
+    bad_rd = {BASE: base, FLAT: [rec(0.05, rd=-0.4) for _ in range(8)]}
+    ok, rows = p6_references(bad_rd)
+    assert not ok and not rows[1][3], \
+        "P6 accepted a FLAT R_direct of -0.4 as a reference"
+    # Leg 1 reference (BASELINE R2) out of range caught by P6 too
+    bad_base = {BASE: [rec(-7.667137) for _ in range(8)],
+                FLAT: [rec(0.05, rd=0.2559) for _ in range(8)]}
+    ok, rows = p6_references(bad_base)
+    assert not ok and not rows[0][3], \
+        "P6 accepted an out-of-range R2 as a reference"
+
+    # old Leg 3 reference (-7.667137) must read out of range
+    assert not (REF_LO <= -7.667137 <= REF_HI), \
+        "the previous run's FLAT R2 would still pass P6; the check is useless"
+    assert REF_LO <= LEG3_REFERENCE <= REF_HI, \
+        "the new Leg 3 reference does not satisfy the check it is stated under"
+    print("  t_preconditions         PASS  (P1 P2 P3 P4 P6 each accept and "
+          "each reject; -7.667137 is OUT OF RANGE)")
+
+
+def t_leg3_reference():
+    """Leg 3 reference is a constant; d3 is R2 itself (not independent of Leg 1)."""
+    assert LEG3_REFERENCE == 0.0, "Leg 3's reference moved off literal zero"
+    rows = [{"r2_mul": 0.31}, {"r2_mul": -2.5}, {"r2_mul": 0.0}]
+    assert leg3_diffs(rows) == [0.31, -2.5, 0.0], \
+        "d3 is not R2(arm) with a zero reference"
+
+    # fitted reference: Leg 3 = Leg 1 shifted by a constant
+    r2_arm = [0.55 + 0.01 * s for s in range(len(SEEDS))]
+    r2_flat = [-7.667137 + 1.5 * (s % 3 - 1) for s in range(len(SEEDS))]
+    d1 = [a - 1.0 for a in r2_arm]
+    d3_old = [a - f for a, f in zip(r2_arm, r2_flat)]
+    shift = statistics.mean(d3_old) - statistics.mean(d1)
+    assert abs(shift - (1.0 - statistics.mean(r2_flat))) < 1e-12, \
+        "the collapse identity mean(d3)=mean(d1)+1-mean(R2_ref) does not hold"
+    assert abs(shift - 8.667137) < 1e-6, \
+        "the reproduced shift is %.6f, not the committed +8.667137" % shift
+    # old-Leg-3 difference = old-Leg-1 difference + constant
+    old_gaps = [b - a for a, b in zip(d1, d3_old)]
+    assert max(old_gaps) - min(old_gaps) > 0.5, \
+        "the constructed reference does not vary; the test proves nothing"
+
+    # zero reference: offset is also constant (1.0); not independent of Leg 1
+    d3_new = leg3_diffs([{"r2_mul": a} for a in r2_arm])
+    new_gaps = [b - a for a, b in zip(d1, d3_new)]
+    assert abs(max(new_gaps) - min(new_gaps)) < 1e-12, \
+        "a constant reference must give a CONSTANT offset"
+    assert abs(new_gaps[0] - 1.0) < 1e-12, \
+        "with BASELINE R2 = 1 the offset must be exactly 1.0, and it is %.12f" \
+        % new_gaps[0]
+
+    # gain: offset known in advance and carries no variance
+    _m_old, se_old, _ub, _n, _p, _ok = leg3_noninferiority(d3_old)
+    _m_new, se_new, ub_new, _n2, _p2, _ok2 = leg3_noninferiority(d3_new)
+    se_r2_alone = mean_se(r2_arm)[1]
+    assert abs(se_new - se_r2_alone) < 1e-12, \
+        "SE(d3) is not the SE of R2(arm) alone under a constant reference"
+    assert se_old > se_new * 5.0, \
+        ("the fitted reference did not inflate SE(d3) in this construction "
+         "(%.6f vs %.6f); the test is not exercising the effect"
+         % (se_old, se_new))
+    assert abs(ub_new - (mean_se(r2_arm)[0] + Z_FAMILY * se_r2_alone)) < 1e-12, \
+        "Leg 3's bound is not a bound on R2(arm) itself"
+    # legs differ: R2 = 0.80 descends from 1.0 but is far from 0.15
+    at80 = [{"r2_mul": 0.80 + 0.001 * s} for s in range(len(SEEDS))]
+    _m3, _se3, mult3, _n3, _p3, l1ok = leg(
+        [r["r2_mul"] - 1.0 for r in at80], -1)
+    _m4, _se4, _ub4, _n4, _p4, l3ok = leg3_noninferiority(leg3_diffs(at80))
+    assert l1ok and not l3ok, \
+        ("an arm at R2=0.80 must PASS Leg 1 (%.2f SE) and FAIL Leg 3; got "
+         "L1=%s L3=%s. If Leg 3 followed from Leg 1 it would not earn its "
+         "place." % (mult3, l1ok, l3ok))
+    assert not (REF_LO <= statistics.mean(r2_flat) <= REF_HI), \
+        "the fitted reference used here is not actually out of P6's range"
+    print("  t_leg3_reference        PASS  (d3 = R2(arm); +%.6f collapse "
+          "reproduced; offset now exactly 1.0 and SE %.4f -> %.4f)"
+          % (shift, se_old, se_new))
+
+
+def t_provisional_substitution():
+    """Flagged width decided by signs, unflagged by headline; the two disagree somewhere."""
+    n = len(SEEDS)
+    bar = sign_bar(n)
+    assert bar == 19, "the sign bar at %d seeds is %d, expected 19" % (n, bar)
+    assert sign_significant(bar, n, sign_p(n, bar))
+    assert not sign_significant(bar - 1, n, sign_p(n, bar - 1)), \
+        "the bar is not tight: %d/%d also passes" % (bar - 1, n)
+    # bare majority not enough
+    assert not sign_significant(13, n, sign_p(n, 13)), \
+        "a 13/24 majority passed the sign rule; alpha is not being applied"
+    # unanimous on the wrong side fails
+    assert not sign_significant(0, n, sign_p(n, 0)), \
+        "0/24 on the pass side passed the sign rule"
+
+    # unflagged: headline; flagged: signs
+    assert width_passes(0, True, False) is True
+    assert width_passes(0, False, True) is False
+    assert width_passes(2, True, False) is False, \
+        "a FLAGGED width was decided by the headline; the substitution is not "\
+        "implemented"
+    assert width_passes(2, False, True) is True, \
+        "a FLAGGED width did not pick up a sign-count pass"
+
+    # committed flagged width Q-1.75 under both rules: passes neither
+    q175_l1_sign = sign_significant(24, 24, sign_p(24, 24))
+    q175_l2_sign = sign_significant(17, 24, sign_p(24, 17))
+    assert q175_l1_sign and not q175_l2_sign, \
+        "the committed sign counts do not reproduce: L1 %s L2 %s" % (
+            q175_l1_sign, q175_l2_sign)
+    assert abs(sign_p(24, 17) - 0.0639) < 5e-4, \
+        "sign_p(24,17) is %.6f, not the committed 6.39e-02" % sign_p(24, 17)
+    assert not width_passes(1, False, q175_l1_sign and q175_l2_sign), \
+        "Q-1.75 passes under the substitution; it must not"
+    assert not width_passes(0, False, True), \
+        "Q-1.75 passes under the headline rule; it must not"
+    print("  t_PROVISIONAL_substitution PASS (bar %d/%d, rules disagree, "
+          "Q-1.75 fails under both)" % (bar, n))
 
 
 def t_capture_is_transparent():
@@ -651,30 +858,44 @@ def t_output_smoke():
                 print_arm_timing(arm, 12.3, res[arm])
             print_section_a(res)
             flags = print_section_b(res)
+            assert len(flags) == 4, \
+                "print_section_b returned %d flags, expected 4 (P1 P6 P2 P3)" \
+                % len(flags)
             recs = [print_width_block(i, res)
                     for i in range(len(WIDTH_ARMS))]
             print_verdict(sweep_verdict(*(flags + (recs,))), recs)
+        # P6 out-of-range branch and NO REFERENCE body
+        bad = _fake_res(False)
+        for r in bad[FLAT]:
+            r["r_direct"] = -0.4
+        print_section_b(bad)
         # every verdict label's print branch
         passing = [{"arm": "Q-1.00", "passes_all": True, "provisional": False,
                     "cap_valid": False}]
         for label in ("INTERIOR POINT EXISTS", "INTERIOR POINT PROVISIONAL",
-                      "NO INTERIOR", "NO ROOM", "NOT A CURVE",
+                      "NO INTERIOR", "NO REFERENCE", "NO ROOM", "NOT A CURVE",
                       "INCONCLUSIVE"):
             print_verdict(label, passing)
     out = buf.getvalue()
-    for marker in ("THE WIDTH SWEEP", "LEG 3  NOT WORSE THAN FLAT",
+    markers = ("THE WIDTH SWEEP", "LEG 3  BLINDS TO THE FLOOR",
                    "SECTION A", "SECTION B", "P1 IDENTITY", "P3 MONOTONICITY",
+                   "P6 REFERENCE SANITY", "OUT OF RANGE",
+                   "FAILED -> NO REFERENCE", "NO REFERENCE",
                    "LEG 1 BLINDS", "LEG 2 CHEAPER/FLAT", "LEG 3 NON-INFERIOR",
+                   "reference is LITERAL ZERO", "RULE IN FORCE HERE: SIGN",
+                   "RULE IN FORCE HERE: HEADLINE", "BOTH RULES",
+                   "A NEGATIVE R2 DOES NOT DEMONSTRATE BLINDING",
                    "FLAGGED", "PROVISIONAL", "INVALID, sd(q) moved",
                    "VIOLATION", "NOT A CURVE", "passing width",
-                   "analytic cap INVALID here"):
+                   "analytic cap INVALID here")
+    for marker in markers:
         assert marker in out, \
             "the output path never printed %r; a branch is unexercised" % (
                 marker,)
     n_lines = len(out.splitlines())
     assert n_lines > 400, "the smoke test only produced %d lines" % n_lines
     print("  t_output_smoke          PASS  (%d lines rendered, %d markers, "
-          "no format raised)" % (n_lines, 16))
+          "no format raised)" % (n_lines, len(markers)))
 
 
 def selftest():
@@ -684,6 +905,9 @@ def selftest():
     print("  %d seeds, %d widths, Z_FAMILY = %.2f (Bonferroni over %d), "
           "margin %.2f R2" % (len(SEEDS), len(WIDTHS), Z_FAMILY,
                               N_COMPARISONS, MARGIN_R2))
+    print("  Leg 3 reference = %.1f (literal zero). Sign rule needs >= %d/%d "
+          "at p < %.2f."
+          % (LEG3_REFERENCE, sign_bar(len(SEEDS)), len(SEEDS), ALPHA_FAMILY))
     for i, ratio in enumerate(W_OVER_SD):
         print("    w/sd = %.2f  ->  W_Q = %.6f BTC   analytic cap %.4f"
               % (ratio, WIDTHS[i], analytic_cap(WIDTHS[i])))
@@ -697,6 +921,8 @@ def selftest():
     t_flag_fires()
     t_verdict_labels()
     t_preconditions()
+    t_leg3_reference()
+    t_provisional_substitution()
     t_output_smoke()
     t_capture_is_transparent()
     t_determinism_and_nonempty()
@@ -731,6 +957,18 @@ def print_header():
           % (analytic_cap(0.34 * SD_Q_REF), analytic_cap(2.50 * SD_Q_REF)))
     print("  not re-run or corrected here.")
     print("")
+    print("Changes from the previous run:")
+    print("  (1) LEG 3'S reference is LITERAL ZERO, not R2(FLAT); "
+          "margin unchanged at %.2f" % MARGIN_R2)
+    print("      and not re-derived. (2) P6 REFERENCE SANITY added.")
+    print("      (3) PROVISIONAL sign-count substitution")
+    print("      implemented (does not change the previous outcome). Unchanged:")
+    print("      five widths, %d seeds, Z_FAMILY %.2f, P5 thresholds, "
+          "forward %d/%d split."
+          % (len(SEEDS), Z_FAMILY, int(100 * TRAIN_FRAC),
+             int(100 * (1 - TRAIN_FRAC))))
+    print("      (all as committed).")
+    print("")
 
 
 def print_preregistration():
@@ -744,10 +982,24 @@ def print_preregistration():
           "Z_FAMILY.")
     print("  LEG 2  cheaper than FLAT      R_direct(arm) - R_direct(FLAT) > 0 "
           "at Z_FAMILY.")
-    print("  LEG 3  NOT WORSE THAN FLAT    non-inferiority: the one-sided "
+    print("  LEG 3  BLINDS TO THE FLOOR    non-inferiority: the one-sided "
           "upper bound")
     print("                                mean(d3) + %.2f*SE < %.2f, where "
-          "d3 = R2(arm) - R2(FLAT)." % (Z_FAMILY, MARGIN_R2))
+          "d3 = R2(arm) - %.1f = R2(arm)."
+          % (Z_FAMILY, MARGIN_R2, LEG3_REFERENCE))
+    print("                                Reference LITERAL ZERO (not "
+          "FLAT, not a fitted null).")
+    print("                                R2 = 0: the attacker does "
+          "no better than")
+    print("                                predicting the mean inventory.")
+    print("                                Previously scored against")
+    print("                                R2(FLAT) = -7.667137, "
+          "making Leg 3 = Leg 1")
+    print("                                shifted by +8.667137; any")
+    print("                                fitted reference on a signal-free")
+    print("                                feature set has the same problem.")
+    print("                                Leg 1: descent from 1.0; "
+          "Leg 3: arrival at 0.")
     print("                                Margin %.2f: an equivalent "
           "arm can only" % MARGIN_R2)
     print("                                pass if the margin exceeds "
@@ -758,6 +1010,40 @@ def print_preregistration():
           "larger, LEG 3 is unpassable:")
     print("                                reported as a power limit; "
           "margin not raised.")
+    print("                                Margin unchanged at %.2f; "
+          "not re-derived for" % MARGIN_R2)
+    print("                                the new reference.")
+    print("")
+    print("  P6 REFERENCE SANITY. Every reference a leg compares "
+          "against must lie in [%.1f, %.1f]," % (REF_LO, REF_HI))
+    print("  stated in advance. R2 and R_direct are fraction-accounted-for")
+    print("  metrics; a reference below zero is itself failing and differences")
+    print("  against it are uninterpretable. Checked before P2 (P2 uses")
+    print("  FLAT's levels; it held at 5.38 SE previously because the "
+          "reference had")
+    print("  collapsed). Failure returns NO REFERENCE (run cannot "
+          "answer), not NO INTERIOR.")
+    print("")
+    print("  A NEGATIVE R2 DOES NOT DEMONSTRATE BLINDING. A no-skew "
+          "maker scored R2 = -7.667137 out of")
+    print("  sample, from the best-conditioned fits in that sweep. With no")
+    print("  signal the model fits training noise;")
+    print("  out-of-sample R2 is unbounded below. A large negative R2 is")
+    print("  consistent with a destroyed signal and with no signal; only R2 at or")
+    print("  below zero is a meaningful bar (Leg 3's reference).")
+    print("")
+    print("  PROVISIONAL substitution: a width with a flagged")
+    print("  fit has each leg decided by sign counts (>= %d of %d "
+          "seeds on the pass side,"
+          % (sign_bar(len(SEEDS)), len(SEEDS)))
+    print("  exact binomial p < %.2f) instead of the headline mean." % ALPHA_FAMILY)
+    print("  Previous outcome unchanged: Q-1.75 was the only flagged "
+          "width; it failed")
+    print("  Leg 1 on the headline (1.00 SE) and Leg 2 on the signs (17/24, "
+          "p = 6.39e-02), so it passed")
+    print("  neither rule. The blocking leg under the sign rule is LEG "
+          "2, untouched by the")
+    print("  Leg 3 reference change.")
     print("")
     print("  Every leg prints for every width; only the final label "
           "short-circuits")
@@ -817,7 +1103,7 @@ def print_section_a(res):
 
 
 def print_section_b(res):
-    """Preconditions P1-P3"""
+    """Preconditions P1, P6, P2, P3. Returns their flags."""
     print("=" * 126)
     print("SECTION B; preconditions")
     print("=" * 126)
@@ -825,6 +1111,21 @@ def print_section_b(res):
     print("  P1 IDENTITY          BASELINE R2 = %.9f +/- %.9f   target "
           "%.6f +/- %.0e   %s"
           % (p1_m, p1_se, P1_TARGET, P1_TOL, "HELD" if p1_ok else "FAILED"))
+
+    p6_ok, p6_rows = p6_references(res)
+    print("  P6 REFERENCE SANITY  every quantity a leg compares against must "
+          "lie in [%.1f, %.1f]:" % (REF_LO, REF_HI))
+    for legname, what, val, in_range in p6_rows:
+        print("       %-6s reference = %-48s %+12.6f   %s"
+              % (legname, what, val,
+                 "in range" if in_range else "OUT OF RANGE"))
+    print("       overall: %s"
+          % ("HELD" if p6_ok else "FAILED -> NO REFERENCE"))
+    print("       (Previously")
+    print("       Leg 3 was scored against R2(FLAT) =")
+    print("       -7.667137, i.e. Leg 1 shifted by +8.667137;")
+    print("       fed that number, the LEG 3 line reads OUT OF RANGE and")
+    print("       the sweep returns NO REFERENCE instead of NO INTERIOR.)")
 
     p2_ok, bm, bse, bmu, cm, cse, cmu = p2_endpoint(res[BASE], res[FLAT])
     print("  P2 endpoint          FLAT blinding %+.6f +/- %.6f  (%.2f SE)   "
@@ -842,7 +1143,7 @@ def print_section_b(res):
     print("       overall: %s"
           % ("HELD" if p3_ok else "FAILED -> NOT A CURVE"))
     print("")
-    return p1_ok, p2_ok, p3_ok
+    return p1_ok, p6_ok, p2_ok, p3_ok
 
 
 def print_width_block(i, res):
@@ -856,10 +1157,16 @@ def print_width_block(i, res):
 
     d1 = [x["r2_mul"] - y["r2_mul"] for x, y in zip(res[arm], res[BASE])]
     d2 = [x["r_direct"] - y["r_direct"] for x, y in zip(res[arm], res[FLAT])]
-    d3 = [x["r2_mul"] - y["r2_mul"] for x, y in zip(res[arm], res[FLAT])]
+    d3 = leg3_diffs(res[arm])
     l1m, l1se, l1mu, l1n, l1p, l1ok = leg(d1, -1)
     l2m, l2se, l2mu, l2n, l2p, l2ok = leg(d2, +1)
     l3m, l3se, l3ub, l3n, l3p, l3ok = leg3_noninferiority(d3)
+
+    # sign-count pass per leg (provisional widths)
+    n = len(SEEDS)
+    l1sig = sign_significant(l1n, n, l1p)
+    l2sig = sign_significant(l2n, n, l2p)
+    l3sig = sign_significant(l3n, n, l3p)
 
     print("  %-6s  w/sd %.2f   W_Q %.6f BTC   analytic cap %.4f %s"
           % (arm, W_OVER_SD[i], w, cap,
@@ -883,10 +1190,31 @@ def print_width_block(i, res):
           "upper %+.6f vs margin %.2f   sign %2d/%d below  p=%.2e   %s"
           % (l3m, l3se, l3ub, MARGIN_R2, l3n, len(SEEDS), l3p,
              "PASS" if l3ok else "fail"))
-    passes_all = l1ok and l2ok and l3ok
+    print("                              reference is LITERAL ZERO "
+          "(LEG3_REFERENCE = %.1f), so d3 is R2(arm). Not a fitted null."
+          % LEG3_REFERENCE)
+
+    headline_ok = l1ok and l2ok and l3ok
+    sign_ok = l1sig and l2sig and l3sig
+    passes_all = width_passes(nflag, headline_ok, sign_ok)
+    if nflag:
+        print("          RULE IN FORCE HERE: SIGN counts. This width is "
+              "PROVISIONAL (%d FLAGGED fit(s)), so a leg passes on >= %d/%d "
+              "seeds with p < %.2f." % (nflag, sign_bar(n), n, ALPHA_FAMILY))
+    else:
+        print("          RULE IN FORCE HERE: HEADLINE means. No FLAGGED fit "
+              "at this width.")
+    print("          BOTH RULES, printed whatever decides: headline %s "
+          "(L1 %s / L2 %s / L3 %s)   signs %s (L1 %s / L2 %s / L3 %s)"
+          % ("PASS" if headline_ok else "NOT PASSED",
+             "y" if l1ok else "n", "y" if l2ok else "n",
+             "y" if l3ok else "n",
+             "PASS" if sign_ok else "NOT PASSED",
+             "y" if l1sig else "n", "y" if l2sig else "n",
+             "y" if l3sig else "n"))
     print("          all three legs: %s%s"
           % ("PASS" if passes_all else "NOT PASSED",
-             "  (PROVISIONAL; sign counts carry it)"
+             "  (PROVISIONAL; sign counts carried it)"
              if (passes_all and nflag) else ""))
     print("-" * 126)
     return {"arm": arm, "passes_all": passes_all,
@@ -905,6 +1233,21 @@ def print_verdict(v, records):
                 print("    passing width: %s%s"
                       % (r["arm"], "" if r["cap_valid"]
                          else "  (analytic cap INVALID here)"))
+    if v == "NO REFERENCE":
+        print("    P6 failed: a reference is outside")
+        print("    [%.1f, %.1f], so that leg's differences mix the arm's"
+              % (REF_LO, REF_HI))
+        print("    behaviour with the reference's failure; no verdict")
+        print("    can be read. Not a finding about any")
+        print("    width: this run cannot answer.")
+        print("")
+    print("  A NEGATIVE R2 DOES NOT DEMONSTRATE BLINDING. A no-skew maker")
+    print("  scored R2 = -7.667137 out of sample")
+    print("  from well-conditioned, unflagged fits; a large negative R2 is")
+    print("  consistent with a destroyed signal and with no signal.")
+    print("  Only R2 at or below zero is a")
+    print("  meaningful bar (hence Leg 3's zero reference).")
+    print("")
     print("  NO INTERIOR = not distinguishable at this power; not")
     print("  proof that only the endpoints exist.")
     print("  Arm A's two widths were not re-run or corrected")
@@ -930,7 +1273,7 @@ def main():
     print("")
 
     print_section_a(res)
-    p1_ok, p2_ok, p3_ok = print_section_b(res)
+    p1_ok, p6_ok, p2_ok, p3_ok = print_section_b(res)
 
     print("=" * 126)
     print("Section C: the three legs (all printed for every width).")
@@ -938,7 +1281,7 @@ def main():
     records = [print_width_block(i, res) for i in range(len(WIDTH_ARMS))]
     print("")
 
-    print_verdict(sweep_verdict(p1_ok, p2_ok, p3_ok, records), records)
+    print_verdict(sweep_verdict(p1_ok, p6_ok, p2_ok, p3_ok, records), records)
 
 
 if __name__ == "__main__":
