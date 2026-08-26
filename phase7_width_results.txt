@@ -16,18 +16,59 @@ Widths from the committed sd(q) = 0.04604 BTC:
   outside it: cap 0.9904 (w/sd 0.34) and cap 0.4792 (w/sd 2.50);
   not re-run or corrected here.
 
+Changes from the previous run:
+  (1) LEG 3'S reference is LITERAL ZERO, not R2(FLAT); margin unchanged at 0.15
+      and not re-derived. (2) P6 REFERENCE SANITY added.
+      (3) PROVISIONAL sign-count substitution
+      implemented (does not change the previous outcome). Unchanged:
+      five widths, 24 seeds, Z_FAMILY 2.58, P5 thresholds, forward 70/30 split.
+      (all as committed).
+
 Pre-registered before any arm ran.
   Z_FAMILY = 2.58. Bonferroni over 5 widths: 0.05/5 = 0.01 two-sided. Nominal Z = 2.00 printed
   for comparison with arm A only.
 
   LEG 1  blinds at all          R2(arm) - R2(BASELINE) < 0 at Z_FAMILY.
   LEG 2  cheaper than FLAT      R_direct(arm) - R_direct(FLAT) > 0 at Z_FAMILY.
-  LEG 3  NOT WORSE THAN FLAT    non-inferiority: the one-sided upper bound
-                                mean(d3) + 2.58*SE < 0.15, where d3 = R2(arm) - R2(FLAT).
+  LEG 3  BLINDS TO THE FLOOR    non-inferiority: the one-sided upper bound
+                                mean(d3) + 2.58*SE < 0.15, where d3 = R2(arm) - 0.0 = R2(arm).
+                                Reference LITERAL ZERO (not FLAT, not a fitted null).
+                                R2 = 0: the attacker does no better than
+                                predicting the mean inventory.
+                                Previously scored against
+                                R2(FLAT) = -7.667137, making Leg 3 = Leg 1
+                                shifted by +8.667137; any
+                                fitted reference on a signal-free
+                                feature set has the same problem.
+                                Leg 1: descent from 1.0; Leg 3: arrival at 0.
                                 Margin 0.15: an equivalent arm can only
                                 pass if the margin exceeds Z_FAMILY*SE = 2.58*0.05300 = 0.13675.
                                 If the realised SE is larger, LEG 3 is unpassable:
                                 reported as a power limit; margin not raised.
+                                Margin unchanged at 0.15; not re-derived for
+                                the new reference.
+
+  P6 REFERENCE SANITY. Every reference a leg compares against must lie in [0.0, 1.0],
+  stated in advance. R2 and R_direct are fraction-accounted-for
+  metrics; a reference below zero is itself failing and differences
+  against it are uninterpretable. Checked before P2 (P2 uses
+  FLAT's levels; it held at 5.38 SE previously because the reference had
+  collapsed). Failure returns NO REFERENCE (run cannot answer), not NO INTERIOR.
+
+  A NEGATIVE R2 DOES NOT DEMONSTRATE BLINDING. A no-skew maker scored R2 = -7.667137 out of
+  sample, from the best-conditioned fits in that sweep. With no
+  signal the model fits training noise;
+  out-of-sample R2 is unbounded below. A large negative R2 is
+  consistent with a destroyed signal and with no signal; only R2 at or
+  below zero is a meaningful bar (Leg 3's reference).
+
+  PROVISIONAL substitution: a width with a flagged
+  fit has each leg decided by sign counts (>= 19 of 24 seeds on the pass side,
+  exact binomial p < 0.01) instead of the headline mean.
+  Previous outcome unchanged: Q-1.75 was the only flagged width; it failed
+  Leg 1 on the headline (1.00 SE) and Leg 2 on the signs (17/24, p = 6.39e-02), so it passed
+  neither rule. The blocking leg under the sign rule is LEG 2, untouched by the
+  Leg 3 reference change.
 
   Every leg prints for every width; only the final label short-circuits
   (arm A returned NO INTERIOR without consulting the blind leg;
@@ -46,14 +87,14 @@ Pre-registered before any arm ran.
   Power: removing skew costs +0.0337 +/- 0.0082 in R_direct; a partial defense costs
   a fraction of that: NO INTERIOR = not distinguishable at this power.
 
-  BASELINE  measured in   189s   R2(mul)=    1.000000+/-0.000000   R_direct=0.2848+/-0.0356   FLAGGED 0/24
-  Q-0.75    measured in   190s   R2(mul)=    0.555334+/-0.078068   R_direct=0.2868+/-0.0363   FLAGGED 0/24
-  Q-1.00    measured in   189s   R2(mul)=   -0.146493+/-0.209949   R_direct=0.2834+/-0.0363   FLAGGED 0/24
-  Q-1.25    measured in   189s   R2(mul)=   -1.095622+/-0.370399   R_direct=0.2789+/-0.0363   FLAGGED 0/24
-  Q-1.50    measured in   189s   R2(mul)=   -2.046213+/-0.607494   R_direct=0.2786+/-0.0368   FLAGGED 0/24
-  Q-1.75    measured in   189s   R2(mul)=-28181.981750+/-28178.969018   R_direct=0.2950+/-0.0374   FLAGGED 1/24
-  FLAT      measured in   190s   R2(mul)=   -7.667137+/-1.609519   R_direct=0.2559+/-0.0373   FLAGGED 0/24
-  total 1326s
+  BASELINE  measured in   187s   R2(mul)=    1.000000+/-0.000000   R_direct=0.2848+/-0.0356   FLAGGED 0/24
+  Q-0.75    measured in   187s   R2(mul)=    0.555334+/-0.078068   R_direct=0.2868+/-0.0363   FLAGGED 0/24
+  Q-1.00    measured in   187s   R2(mul)=   -0.146493+/-0.209949   R_direct=0.2834+/-0.0363   FLAGGED 0/24
+  Q-1.25    measured in   187s   R2(mul)=   -1.095622+/-0.370399   R_direct=0.2789+/-0.0363   FLAGGED 0/24
+  Q-1.50    measured in   187s   R2(mul)=   -2.046213+/-0.607494   R_direct=0.2786+/-0.0368   FLAGGED 0/24
+  Q-1.75    measured in   187s   R2(mul)=-28181.981750+/-28178.969018   R_direct=0.2950+/-0.0374   FLAGGED 1/24
+  FLAT      measured in   189s   R2(mul)=   -7.667137+/-1.609519   R_direct=0.2559+/-0.0373   FLAGGED 0/24
+  total 1311s
 
 ==============================================================================================================================
 SECTION A: per-fit diagnostics (P5). Nothing dropped.
@@ -243,6 +284,16 @@ SECTION A: per-fit diagnostics (P5). Nothing dropped.
 SECTION B; preconditions
 ==============================================================================================================================
   P1 IDENTITY          BASELINE R2 = 1.000000000 +/- 0.000000000   target 1.000000 +/- 1e-06   HELD
+  P6 REFERENCE SANITY  every quantity a leg compares against must lie in [0.0, 1.0]:
+       LEG 1  reference = BASELINE R2(mul), across-seed mean                  +1.000000   in range
+       LEG 2  reference = FLAT R_direct, across-seed mean                     +0.255872   in range
+       LEG 3  reference = literal zero, a constant with no sampling error     +0.000000   in range
+       overall: HELD
+       (Previously
+       Leg 3 was scored against R2(FLAT) =
+       -7.667137, i.e. Leg 1 shifted by +8.667137;
+       fed that number, the LEG 3 line reads OUT OF RANGE and
+       the sweep returns NO REFERENCE instead of NO INTERIOR.)
   P2 endpoint          FLAT blinding +8.667137 +/- 1.609519  (5.38 SE)   FLAT cost +0.028968 +/- 0.011142  (2.60 SE)   HELD
   P3 MONOTONICITY      blinding must not fall as w widens (paired, 4 adjacent pairs):
        Q-0.75 -> Q-1.00   blinding rises by +0.701828 +/- 0.223601  (3.14 SE)   22/24 seeds rise   ok
@@ -259,7 +310,10 @@ Section C: the three legs (all printed for every width).
           P4 sd(q) vs BASELINE  +0.000102 +/- 0.000331  (0.31 SE)   stable, cap valid
           LEG 1 BLINDS        d =    -0.444666 +/- 0.078068  ( 5.70 SE)   sign 24/24 neg  p=1.19e-07   PASS
           LEG 2 CHEAPER/FLAT  d =    +0.030934 +/- 0.007540  ( 4.10 SE)   sign 19/24 pos  p=6.61e-03   PASS
-          LEG 3 NON-INFERIOR  d =    +8.222471 +/- 1.599819  upper +12.350005 vs margin 0.15   sign  1/24 below  p=2.98e-06   fail
+          LEG 3 NON-INFERIOR  d =    +0.555334 +/- 0.078068  upper +0.756751 vs margin 0.15   sign  4/24 below  p=1.54e-03   fail
+                              reference is LITERAL ZERO (LEG3_REFERENCE = 0.0), so d3 is R2(arm). Not a fitted null.
+          RULE IN FORCE HERE: HEADLINE means. No FLAGGED fit at this width.
+          BOTH RULES, printed whatever decides: headline NOT PASSED (L1 y / L2 y / L3 n)   signs NOT PASSED (L1 y / L2 y / L3 n)
           All three legs: NOT PASSED
 ------------------------------------------------------------------------------------------------------------------------------
   Q-1.00  w/sd 1.00   W_Q 0.046040 BTC   analytic cap 0.9167 
@@ -267,7 +321,10 @@ Section C: the three legs (all printed for every width).
           P4 sd(q) vs BASELINE  +0.000727 +/- 0.000392  (1.85 SE)   stable, cap valid
           LEG 1 BLINDS        d =    -1.146493 +/- 0.209949  ( 5.46 SE)   sign 24/24 neg  p=1.19e-07   PASS
           LEG 2 CHEAPER/FLAT  d =    +0.027513 +/- 0.006681  ( 4.12 SE)   sign 21/24 pos  p=2.77e-04   PASS
-          LEG 3 NON-INFERIOR  d =    +7.520643 +/- 1.523535  upper +11.451363 vs margin 0.15   sign  0/24 below  p=1.19e-07   fail
+          LEG 3 NON-INFERIOR  d =    -0.146493 +/- 0.209949  upper +0.395174 vs margin 0.15   sign 10/24 below  p=5.41e-01   fail
+                              reference is LITERAL ZERO (LEG3_REFERENCE = 0.0), so d3 is R2(arm). Not a fitted null.
+          RULE IN FORCE HERE: HEADLINE means. No FLAGGED fit at this width.
+          BOTH RULES, printed whatever decides: headline NOT PASSED (L1 y / L2 y / L3 n)   signs NOT PASSED (L1 y / L2 y / L3 n)
           All three legs: NOT PASSED
 ------------------------------------------------------------------------------------------------------------------------------
   Q-1.25  w/sd 1.25   W_Q 0.057550 BTC   analytic cap 0.8698 
@@ -275,30 +332,48 @@ Section C: the three legs (all printed for every width).
           P4 sd(q) vs BASELINE  +0.000411 +/- 0.000384  (1.07 SE)   stable, cap valid
           LEG 1 BLINDS        d =    -2.095622 +/- 0.370399  ( 5.66 SE)   sign 24/24 neg  p=1.19e-07   PASS
           LEG 2 CHEAPER/FLAT  d =    +0.023053 +/- 0.008028  ( 2.87 SE)   sign 17/24 pos  p=6.39e-02   PASS
-          LEG 3 NON-INFERIOR  d =    +6.571515 +/- 1.521059  upper +10.495846 vs margin 0.15   sign  3/24 below  p=2.77e-04   fail
-          All three legs: NOT PASSED
+          LEG 3 NON-INFERIOR  d =    -1.095622 +/- 0.370399  upper -0.139993 vs margin 0.15   sign 17/24 below  p=6.39e-02   PASS
+                              reference is LITERAL ZERO (LEG3_REFERENCE = 0.0), so d3 is R2(arm). Not a fitted null.
+          RULE IN FORCE HERE: HEADLINE means. No FLAGGED fit at this width.
+          BOTH RULES, printed whatever decides: headline PASS (L1 y / L2 y / L3 y)   signs NOT PASSED (L1 y / L2 n / L3 n)
+          All three legs: PASS
 ------------------------------------------------------------------------------------------------------------------------------
   Q-1.50  w/sd 1.50   W_Q 0.069060 BTC   analytic cap 0.8125 
           measured R2(mul) -2.046213 +/- 0.607494      FLAGGED fits 0/24 
           P4 sd(q) vs BASELINE  +0.000546 +/- 0.000592  (0.92 SE)   stable, cap valid
           LEG 1 BLINDS        d =    -3.046213 +/- 0.607494  ( 5.01 SE)   sign 24/24 neg  p=1.19e-07   PASS
           LEG 2 CHEAPER/FLAT  d =    +0.022725 +/- 0.008539  ( 2.66 SE)   sign 16/24 pos  p=1.52e-01   PASS
-          LEG 3 NON-INFERIOR  d =    +5.620924 +/- 1.449942  upper +9.361774 vs margin 0.15   sign  4/24 below  p=1.54e-03   fail
-          All three legs: NOT PASSED
+          LEG 3 NON-INFERIOR  d =    -2.046213 +/- 0.607494  upper -0.478878 vs margin 0.15   sign 18/24 below  p=2.27e-02   PASS
+                              reference is LITERAL ZERO (LEG3_REFERENCE = 0.0), so d3 is R2(arm). Not a fitted null.
+          RULE IN FORCE HERE: HEADLINE means. No FLAGGED fit at this width.
+          BOTH RULES, printed whatever decides: headline PASS (L1 y / L2 y / L3 y)   signs NOT PASSED (L1 y / L2 n / L3 n)
+          All three legs: PASS
 ------------------------------------------------------------------------------------------------------------------------------
   Q-1.75  w/sd 1.75   W_Q 0.080570 BTC   analytic cap 0.7448 
           measured R2(mul) -28181.981750 +/- 28178.969018      FLAGGED fits 1/24 -> PROVISIONAL
           P4 sd(q) vs BASELINE  -0.000139 +/- 0.000708  (0.20 SE)   stable, cap valid
           LEG 1 BLINDS        d = -28182.981750 +/- 28178.969018  ( 1.00 SE)   sign 24/24 neg  p=1.19e-07   fail
           LEG 2 CHEAPER/FLAT  d =    +0.039131 +/- 0.013589  ( 2.88 SE)   sign 17/24 pos  p=6.39e-02   PASS
-          LEG 3 NON-INFERIOR  d = -28174.314614 +/- 28179.207750  upper +44528.041382 vs margin 0.15   sign  7/24 below  p=6.39e-02   fail
+          LEG 3 NON-INFERIOR  d = -28181.981750 +/- 28178.969018  upper +44519.758317 vs margin 0.15   sign 22/24 below  p=3.59e-05   fail
+                              reference is LITERAL ZERO (LEG3_REFERENCE = 0.0), so d3 is R2(arm). Not a fitted null.
+          RULE IN FORCE HERE: SIGN counts. This width is PROVISIONAL (1 FLAGGED fit(s)), so a leg passes on >= 19/24 seeds with p < 0.01.
+          BOTH RULES, printed whatever decides: headline NOT PASSED (L1 n / L2 y / L3 n)   signs NOT PASSED (L1 y / L2 n / L3 y)
           All three legs: NOT PASSED
 ------------------------------------------------------------------------------------------------------------------------------
 
 ==============================================================================================================================
 Verdict
 ==============================================================================================================================
-  NO INTERIOR
+  INTERIOR POINT EXISTS
+
+    passing width: Q-1.25
+    passing width: Q-1.50
+  A NEGATIVE R2 DOES NOT DEMONSTRATE BLINDING. A no-skew maker
+  scored R2 = -7.667137 out of sample
+  from well-conditioned, unflagged fits; a large negative R2 is
+  consistent with a destroyed signal and with no signal.
+  Only R2 at or below zero is a
+  meaningful bar (hence Leg 3's zero reference).
 
   NO INTERIOR = not distinguishable at this power; not
   proof that only the endpoints exist.
