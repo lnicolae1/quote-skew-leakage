@@ -1,0 +1,114 @@
+======================================================================================================================
+Phase 8 axis 2: does Q2 survive gamma?
+======================================================================================================================
+Working point: lam=1.8040 p_market=0.0126 mean_lifetime=720s disp=0.0055, JOIN clipping. MM present.
+k=0.17763. quote_size=0.020 BTC = DEFAULT_QUOTE_SIZE, untouched. 8 seeds x 86400s per arm, 3 arms x 3 gammas.
+
+Calibration:
+  phase7_nobs freezes SIGMA_EPS at GAMMA_CAP and
+  passes it to JitteredMM at any gamma.
+  Skew scales linearly in gamma; frozen
+  noise does not. A naive re-run at LOW would have
+  carried 9.82 sd of noise against a design value of 1.00:
+  more noise to average away,
+  so JITTER would climb harder while QUANT (w/sd barely
+  moves) stayed flat, confirming Q2
+  at low gamma as an artifact of defense scaling.
+
+Pre-registered (committed before the run):
+  Q2-GAMMA  QUANT's M=1 -> M=300 climb flat within 2.0 SE at all three
+            gammas, and JITTER's positive at 2.0 SE at all three.
+  Anchor    HIGH arm must reproduce the committed arm B climbs:
+            QUANT  -0.006231 +/- 0.007353
+            JITTER +11.382120 +/- 3.529188
+
+  LOW    gamma=1.00e-06 measured in  224s
+  MEDIUM gamma=3.00e-06 measured in  220s
+  HIGH   gamma=9.40e-06 measured in  214s
+
+======================================================================================================================
+Calibration (measured in this arm)
+======================================================================================================================
+  arm     gamma      sd(q) BTC +/- SE     sigma_eps $   w_q BTC      w/sd     naive N/S
+  LOW     1.00e-06   0.044786 +/- 0.004154   0.032653      0.015227     0.3400   9.66
+  MEDIUM  3.00e-06   0.044521 +/- 0.005074   0.097380      0.015137     0.3400   3.24
+  HIGH    9.40e-06   0.046035 +/- 0.005068   0.315497      0.015652     0.3400   1.00
+
+  w/sd held at 0.34 at every gamma; last
+  column = noise-to-signal ratio of an uncalibrated run
+  (design value 1.00; exactly 1.00 at
+  HIGH, the no-op the self-test asserts).
+
+======================================================================================================================
+M-curves per gamma
+======================================================================================================================
+  LOW  gamma=1.00e-06
+    arm       M=1            M=3            M=10           M=30           M=100          M=300        
+    BASELINE  +1.000000+-0.000  +0.999863+-0.000  +0.999305+-0.000  +0.997876+-0.000  +0.994958+-0.001  +0.984254+-0.003
+    JITTER    -5.762743+-2.037  -4.864922+-1.687  -2.809747+-0.790  -0.941406+-0.332  +0.232002+-0.150  +0.703849+-0.052
+    QUANT     +0.931097+-0.026  +0.931012+-0.026  +0.930717+-0.025  +0.930001+-0.025  +0.928740+-0.024  +0.924056+-0.022
+
+  MEDIUM  gamma=3.00e-06
+    arm       M=1            M=3            M=10           M=30           M=100          M=300        
+    BASELINE  +1.000000+-0.000  +0.999859+-0.000  +0.999289+-0.000  +0.997842+-0.000  +0.994908+-0.001  +0.984284+-0.003
+    JITTER    -6.660586+-2.548  -5.757455+-2.043  -3.389723+-0.923  -1.212012+-0.369  +0.124367+-0.171  +0.663027+-0.061
+    QUANT     +0.960770+-0.011  +0.960664+-0.011  +0.960225+-0.011  +0.959097+-0.011  +0.956086+-0.011  +0.947971+-0.013
+
+  HIGH  gamma=9.40e-06
+    arm       M=1            M=3            M=10           M=30           M=100          M=300        
+    BASELINE  +1.000000+-0.000  +0.999863+-0.000  +0.999319+-0.000  +0.997977+-0.000  +0.995148+-0.001  +0.984353+-0.003
+    JITTER    -10.790961+-3.595  -9.497131+-3.538  -5.037063+-1.929  -1.879180+-0.867  -0.078645+-0.285  +0.591219+-0.087
+    QUANT     +0.826170+-0.112  +0.826074+-0.112  +0.825571+-0.112  +0.824468+-0.112  +0.823896+-0.110  +0.813130+-0.112
+
+======================================================================================================================
+Q2-gamma (pre-registered rule)
+======================================================================================================================
+  arm     gamma      QUANT M=1 -> M=300             flat?    verdict
+  LOW     1.00e-06   -0.007041 +/- 0.005437  1.30 SE  yes      HELD
+  MEDIUM  3.00e-06   -0.012799 +/- 0.004573  2.80 SE  no       REFUTED (FALLS)
+  HIGH    9.40e-06   -0.013040 +/- 0.002309  5.65 SE  no       REFUTED (FALLS)
+
+  arm     gamma      JITTER M=1 -> M=300            rises?
+  LOW     1.00e-06   +6.466592 +/- 2.009826  3.22 SE  yes
+  MEDIUM  3.00e-06   +7.323614 +/- 2.516790  2.91 SE  yes
+  HIGH    9.40e-06   +11.382179 +/- 3.529303  3.23 SE  yes
+
+  Q2-GAMMA -> REFUTED (QUANT is NOT flat at every gamma)
+
+======================================================================================================================
+Anchor: does HIGH reproduce the committed arm B?
+======================================================================================================================
+  arm       this run at HIGH           committed 3625d32          gap in SE
+  QUANT     -0.013040 +/- 0.002309  -0.006231 +/- 0.007353  0.88
+  JITTER    +11.382179 +/- 3.529303  +11.382120 +/- 3.529188  0.00
+
+  Calibration is a no-op at HIGH (asserted
+  by t_calibration_is_noop_at_cap), so
+  these should agree to seed-level reproducibility;
+  a gap would be a defect in this file.
+
+======================================================================================================================
+Limitations
+======================================================================================================================
+  G1  At low gamma the hidden quantity is smaller:
+      sd(skew) scales with gamma;
+      at gamma 1e-6 sd(skew) = $0.02724,
+      2.7 ticks ($0.01 tick).
+      Below a tick the quote centre does not move
+      and a null would be uninterpretable,
+      so no gamma below 1e-6.
+  G2  Three points, not a sweep; no shape against
+      gamma is claimed.
+  G3  Non-adaptive smoothing attacker, as in arm B: every
+      R2 is an upper bound on defense performance.
+  G4  Gate 2 caps gamma at 9.40e-06 for spread realism; nothing
+      above the cap is run.
+  G5  Defenses not calibrated to each other
+      (JITTER one sd of skew, QUANT 0.34 sd of inventory).
+      Only shapes in M are compared and scored;
+      each defense is calibrated to itself
+      across gammas.
+  G6  No committed module or default modified; both defenses
+      are the phase7 classes, passed
+      in through run()'s mm_override.
+
