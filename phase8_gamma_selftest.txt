@@ -1,0 +1,25 @@
+==========================================================================
+phase8_gamma.py self-test
+==========================================================================
+  gammas   LOW 1.00e-06, MEDIUM 3.00e-06, HIGH 9.40e-06
+  incumbent SIGMA_EPS = $0.315531722, W_Q_LOW = 0.015653600 BTC
+  Q2-GAMMA is scored M=1 -> M=300, paired, at 2.0 SE
+
+  t_is_identity                  PASS
+  t_no_default_moved             PASS
+  t_calibration_is_noop_at_cap   PASS  (sigma_eps = $0.315531722, w_q = 0.015653600 BTC, both equal to committed)
+  t_calibration_holds_the_ratio  PASS
+  t_calibration_scales_linearly  PASS
+  t_uncalibrated_ratio_is_trap   PASS  (a naive run would have carried 9.82 sd of noise at LOW, 3.30 at MEDIUM, against a design value of 1.00)
+  t_gammas_defensible            PASS  (LOW=1.00e-06, MEDIUM=3.00e-06, HIGH=9.40e-06, all <= the cap)
+  t_q2_rule_fires                PASS
+  t_q2_gamma_conjunction         PASS
+  t_nan_halts                    PASS
+  t_override_reaches_the_maker   PASS
+  t_prepass_measures_sd_q        PASS  (seed 0 at LOW: 411 fills, sd(q) = 0.062236 BTC)
+  t_zero_jitter_is_baseline      PASS  (86400 draws, R2 identical)
+  t_calibrated_jitter_degrades   PASS  (sigma_eps $0.045375 took R2 1.000000 -> -0.717051 at LOW)
+  t_determinism                  PASS  (367 fills, 86400 views; identical twice)
+
+  All self-tests PASS in 65s
+==========================================================================
