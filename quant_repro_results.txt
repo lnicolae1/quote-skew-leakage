@@ -1,0 +1,43 @@
+====================================================================================================
+QUANT at HIGH: does the committed w_q reproduce the committed run?
+====================================================================================================
+gamma=9.40e-06, 8 seeds x 86400s, k=0.17763, quote_size=0.020. Nothing scored, nothing re-run that was committed.
+committed W_Q_LOW      = 0.015653600  (0.34 * SD_Q_REF = 0.04604)
+phase8 measured w_q    = 0.015651900  (0.34 * 0.046035)
+relative width change  = -0.010860%
+
+  A  override + COMMITTED w_q        w_q=0.015653600
+      M=1    +0.846980 +/- 0.091807   (committed +0.846980 +/- 0.091807)
+      climb  -0.006231 +/- 0.007353   (committed -0.006231 +/- 0.007353)  0.85 SE
+      reproduces 3625d32 to printed precision: M=1 yes, climb yes
+
+  B  no override (incumbent path)    w_q=0.015653600
+      M=1    +0.846980 +/- 0.091807   (committed +0.846980 +/- 0.091807)
+      climb  -0.006231 +/- 0.007353   (committed -0.006231 +/- 0.007353)  0.85 SE
+      reproduces 3625d32 to printed precision: M=1 yes, climb yes
+
+  C  override + measured w_q         w_q=0.015651900
+      M=1    +0.826170 +/- 0.112255   (committed +0.846980 +/- 0.091807)
+      climb  -0.013040 +/- 0.002309   (committed -0.006231 +/- 0.007353)  5.65 SE
+      reproduces 3625d32 to printed precision: M=1 no, climb no
+
+====================================================================================================
+Attribution
+====================================================================================================
+  A vs B  (override path at the SAME width) identical curves: yes
+  A vs C  (same path, different width)       identical curves: no
+
+  -> Override path inert; width is the whole
+     difference. The phase8 HIGH gap is the 0.011% width.
+
+  per-seed M=1:
+    seed   A (committed w)      B (no override)     C (measured w)
+    0      +0.970847909  +0.970847909  +0.970984057
+    1      +0.974923769  +0.974923769  +0.974923769
+    2      +0.966281516  +0.966281516  +0.966281516
+    3      +0.913032548  +0.913032548  +0.913032548
+    4      +0.818646811  +0.818646811  +0.818646811
+    5      +0.923988765  +0.923988765  +0.923988765
+    6      +0.989371044  +0.989371044  +0.989371044
+    7      +0.218746354  +0.218746354  +0.052130299
+
