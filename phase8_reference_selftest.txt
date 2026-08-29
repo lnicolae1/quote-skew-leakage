@@ -1,0 +1,21 @@
+====================================================================================================
+Self-tests; phase8_reference.py
+====================================================================================================
+  PASS  t_calibration_no_op                   0.0s  calibration is an EXACT no-op at HIGH: sigma_eps=0.315531722 w_q=0.015653600
+  PASS  t_sigma_eps_scales                    0.0s  sigma_eps LOW/MED/HIGH = 0.033567204 / 0.100701613 / 0.315531722; a frozen constant would have carried 9.40 / 3.13 / 1.00 sd of noise
+  PASS  t_w_q_constant_across_gamma           0.0s  w_q = 0.015653600 BTC at all three gammas (= W_Q_LOW)
+  PASS  t_diff_curve_matches_paired_arms      0.0s  diff_curve reproduces paired_arms at M=1, 3, 300 exactly
+  PASS  t_baseline_climb_is_not_zero_climb    0.0s  zero ref -0.035000 (a FALL) vs BASELINE ref +0.060000 (a RISE) on the same curves
+  PASS  t_dominance_arithmetic                0.0s  the committed values give 0.846980 +/- 0.091807; seed 7 carries 83.6% of the squared deviation
+  PASS  t_lone_outlier_does_not_dilute        0.0s  seed 7 alone: 83.6% of 8 -> 84.7% of 24 (NOT diluted); with three seeds like it: 24.5%. Bar 40% separates the two.
+  PASS  t_r1_can_fail                         0.0s  R1 refutes on a 5.0 SE decline, holds on a 0.5 SE one and on a rise
+  PASS  t_r2_can_fail                         0.0s  R2 refutes at 85%, holds at 10% and exactly at the 40% bar
+  PASS  t_anchor_check_fires                  0.0s  anchor passes the committed M=1 mean and FAILS a 1e-5 move on one seed
+  PASS  t_eight_is_a_slice_of_24              0.0s  seeds 0-7 cell is the literal leading slice of the 24-seed cell
+  PASS  t_no_default_moved                    0.0s  GAMMA_CAP, SD_Q_REF, W_Q_LOW, SIGMA_EPS_MULT, Z_SE, windows, quote_size, k and the three gammas all unmoved
+  PASS  t_zero_jitter_is_baseline            18.5s  zero-jitter == BASELINE bit for bit over 86400 draws at LOW gamma
+  PASS  t_determinism                         0.6s  QUANT at HIGH reproduces its own curve exactly on re-run
+  PASS  t_new_seeds_are_live                 26.5s  seeds 0, 8, 23 give distinct curves; sd(q) = 0.063076 / 0.066547 / 0.045396
+  PASS  t_degenerate_inputs_halt              0.0s  empty, NaN, inf, mismatched seeds and mismatched windows all halt
+
+  16 of 16 PASS
