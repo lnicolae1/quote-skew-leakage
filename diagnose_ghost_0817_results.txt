@@ -1,0 +1,63 @@
+﻿
+==============================================================================
+Part 1/2: find the ghost; chain 08-15 (own snapshot anchor) -> 08-16 -> 08-17
+==============================================================================
+  chained 08-15: diffs=76782 snapshots=1 gaps=1 crossed=5456  end bb=63024.62000000 ba=63024.63000000 crossed_now=False
+      snapshot ts=2026-08-15T00:02:07.051991+00:00 uid=4539513952 prev_uid=None invisible_span=None
+  chained 08-16: diffs=76152 snapshots=0 gaps=0 crossed=0  end bb=62845.34000000 ba=62845.36000000 crossed_now=False
+
+  Book entering 08-17: best_bid=62845.34000000 best_ask=62845.36000000 crossed=False
+
+  08-17: diffs=193274 snapshots=1 gaps=2 crossed_instances=192293
+    SNAPSHOT ts=2026-08-17T00:06:10.237766+00:00 uid=4540074153 prev_uid=4540074090 invisible_span=(4540074090, 4540074153, 63)
+        book before snapshot: bb=62853.58000000 ba=62853.60000000
+        book after  snapshot: bb=62852.37000000 ba=62852.38000000
+    gap invisible_span: 2026-08-17T00:06:00.977696+00:00 -> 2026-08-17T00:06:10.237766+00:00 (63 updates lost)
+    gap resumption: 2026-08-17T00:06:10.237766+00:00 -> 2026-08-17T00:06:10.786231+00:00 (80 updates lost)
+
+  *** First crossing in 08-17 ***
+    local_timestamp=2026-08-17T00:06:16.290633+00:00  u=4540074292  U=4540074288  prev_last_update_id=4540074287  contiguous(U==prev+1)? True
+    best_bid=62852.37000000  best_ask=62850.80000000  bb-ba=1.57000000
+    this diff's raw bid updates: [['62842.24000000', '0.00936000']]
+    this diff's raw ask updates: [['62850.80000000', '0.00629000'], ['62852.44000000', '0.00000000'], ['62869.17000000', '0.00545000']]
+    Top 6 bids (desc): [('62852.37000000', '0.00169000'), ('62850.87000000', '0.00165000'), ('62844.77000000', '0.00621000'), ('62844.76000000', '0.00078000'), ('62842.24000000', '0.00936000'), ('62842.14000000', '0.41627000')]
+    Top 6 asks (asc):  [('62850.80000000', '0.00629000'), ('62852.38000000', '0.00208000'), ('62852.39000000', '0.00159000'), ('62855.84000000', '0.03295000'), ('62857.14000000', '0.03312000'), ('62860.96000000', '1.78347000')]
+    staleness at the touch (price, last_touch_uid, seconds_since_touch):
+      bid: ('62852.37000000', 4540074153, 6.052867)
+      ask: ('62850.80000000', 4540074292, 0.0)
+    TRUE TOUCH excluding levels stale > 300s: bb=62852.37 ba=62850.8
+
+  End of 08-17: top levels with age since last touch
+    BIDS (best first):
+      price=64488.03000000 qty=0.00097000 last_touch_uid=4541103875 age=50.7 s
+      price=64485.00000000 qty=0.01779000 last_touch_uid=4541104501 age=0.3 s
+      price=64473.01000000 qty=0.03374000 last_touch_uid=4541104479 age=2.6 s
+      price=64470.43000000 qty=0.03179000 last_touch_uid=4541104487 age=1.7 s
+      price=64470.22000000 qty=0.03100000 last_touch_uid=4541104499 age=0.7 s
+      price=64469.99000000 qty=0.00403000 last_touch_uid=4541104505 age=0.0 s
+      price=64469.75000000 qty=0.11797000 last_touch_uid=4541104413 age=11.0 s
+      price=64469.51000000 qty=0.02122000 last_touch_uid=4541104450 age=7.1 s
+    ASKS (best first):
+      price=62852.38000000 qty=0.00208000 last_touch_uid=4540074153 age=86028.6 s
+      price=62852.39000000 qty=0.00159000 last_touch_uid=4540074153 age=86028.6 s
+      price=62855.84000000 qty=0.03295000 last_touch_uid=4540074153 age=86028.6 s
+      price=62862.61000000 qty=0.01590000 last_touch_uid=4540074153 age=86028.6 s
+      price=62863.85000000 qty=0.00425000 last_touch_uid=4540074153 age=86028.6 s
+      price=62871.66000000 qty=0.00386000 last_touch_uid=4540074153 age=86028.6 s
+      price=62878.61000000 qty=0.02365000 last_touch_uid=4540074153 age=86028.6 s
+      price=62883.85000000 qty=0.03547000 last_touch_uid=4540074153 age=86028.6 s
+    raw touch : bb=64488.03000000 ba=62852.38000000
+    TRUE touch (stale>300s dropped): bb=64488.03 ba=64488.04
+
+  Ghost candidates (stale > 300s and sitting inside the true touch): 9
+    side=ask price=62852.38000000 qty=0.00208000 entered_or_last_touched_uid=4540074153 ts=2026-08-17T00:06:10.237766+00:00
+    side=ask price=62852.39000000 qty=0.00159000 entered_or_last_touched_uid=4540074153 ts=2026-08-17T00:06:10.237766+00:00
+    side=ask price=62855.84000000 qty=0.03295000 entered_or_last_touched_uid=4540074153 ts=2026-08-17T00:06:10.237766+00:00
+    side=ask price=62862.61000000 qty=0.01590000 entered_or_last_touched_uid=4540074153 ts=2026-08-17T00:06:10.237766+00:00
+    side=ask price=62863.85000000 qty=0.00425000 entered_or_last_touched_uid=4540074153 ts=2026-08-17T00:06:10.237766+00:00
+    side=ask price=62871.66000000 qty=0.00386000 entered_or_last_touched_uid=4540074153 ts=2026-08-17T00:06:10.237766+00:00
+    side=ask price=62878.61000000 qty=0.02365000 entered_or_last_touched_uid=4540074153 ts=2026-08-17T00:06:10.237766+00:00
+    side=ask price=62883.85000000 qty=0.03547000 entered_or_last_touched_uid=4540074153 ts=2026-08-17T00:06:10.237766+00:00
+    side=ask price=62904.70000000 qty=0.00344000 entered_or_last_touched_uid=4540074153 ts=2026-08-17T00:06:10.237766+00:00
+
+  (ghost candidate list written to ghost_target.txt for the next stage)

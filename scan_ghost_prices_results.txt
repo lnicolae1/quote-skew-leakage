@@ -1,0 +1,104 @@
+﻿Targets (9 stuck ask levels from the 08-17 00:06:10 snapshot):
+   62852.38000000
+   62852.39000000
+   62855.84000000
+   62862.61000000
+   62863.85000000
+   62871.66000000
+   62878.61000000
+   62883.85000000
+   62904.70000000
+
+Scanning 2026-07-15 .. 2026-08-29 for any reference to these exact price strings.
+(A reference after the 08-23 re-anchor is expected and harmless; the market
+ legitimately returns to these prices. What matters is references during the
+ stuck window, which would mean the apply path skipped a delivered removal.)
+
+  2026-07-17 : 179 references
+  2026-07-23 : 2 references
+  2026-07-28 : 38 references
+  2026-07-31 : 100 references
+  2026-08-01 : 91 references
+  2026-08-02 : 11 references
+  2026-08-03 : 53 references
+  2026-08-13 : 12 references
+  2026-08-14 : 222 references
+  2026-08-15 : 30 references
+  2026-08-16 : 67 references
+  2026-08-17 : 25 references
+
+==============================================================================
+Per-price result
+==============================================================================
+
+price 62852.38000000 : 87 total references in the window, 3 during the stuck period
+   *** References during the stuck window; apply path would be suspect ***
+     2026-08-17 2026-08-17T00:06:10.237766+00:00 SNAPSHOT 4540074153 asks qty=0.00208000
+     2026-08-17 2026-08-17T01:00:17.947571+00:00 diff (4540115917, 4540115920) bid qty=0.03180000
+     2026-08-17 2026-08-17T01:00:19.948679+00:00 diff (4540115946, 4540115947) bid qty=0.00000000
+   first reference at or after 08-17: 2026-08-17 2026-08-17T00:06:10.237766+00:00 SNAPSHOT asks qty=0.00208000
+   references before 08-17: 84
+
+price 62852.39000000 : 91 total references in the window, 3 during the stuck period
+   *** References during the stuck window; apply path would be suspect ***
+     2026-08-17 2026-08-17T00:06:10.237766+00:00 SNAPSHOT 4540074153 asks qty=0.00159000
+     2026-08-17 2026-08-17T00:45:01.741424+00:00 diff (4540102971, 4540102998) bid qty=0.04391000
+     2026-08-17 2026-08-17T00:45:02.339641+00:00 diff (4540103030, 4540103055) bid qty=0.00000000
+   first reference at or after 08-17: 2026-08-17 2026-08-17T00:06:10.237766+00:00 SNAPSHOT asks qty=0.00159000
+   references before 08-17: 88
+
+price 62855.84000000 : 85 total references in the window, 1 during the stuck period
+   *** References during the stuck window; apply path would be suspect ***
+     2026-08-17 2026-08-17T00:06:10.237766+00:00 SNAPSHOT 4540074153 asks qty=0.03295000
+   first reference at or after 08-17: 2026-08-17 2026-08-17T00:06:10.237766+00:00 SNAPSHOT asks qty=0.03295000
+   references before 08-17: 84
+
+price 62862.61000000 : 108 total references in the window, 5 during the stuck period
+   *** References during the stuck window; apply path would be suspect ***
+     2026-08-17 2026-08-17T00:06:10.237766+00:00 SNAPSHOT 4540074153 asks qty=0.01590000
+     2026-08-17 2026-08-17T00:58:33.107544+00:00 diff (4540113872, 4540113910) bid qty=0.00413000
+     2026-08-17 2026-08-17T00:58:33.280580+00:00 diff (4540113955, 4540113981) bid qty=0.00000000
+     2026-08-17 2026-08-17T01:00:23.451217+00:00 diff (4540115988, 4540115989) bid qty=0.00413000
+     2026-08-17 2026-08-17T01:00:34.565107+00:00 diff (4540116027, 4540116042) bid qty=0.00000000
+   first reference at or after 08-17: 2026-08-17 2026-08-17T00:06:10.237766+00:00 SNAPSHOT asks qty=0.01590000
+   references before 08-17: 103
+
+price 62863.85000000 : 83 total references in the window, 1 during the stuck period
+   *** References during the stuck window; apply path would be suspect ***
+     2026-08-17 2026-08-17T00:06:10.237766+00:00 SNAPSHOT 4540074153 asks qty=0.00425000
+   first reference at or after 08-17: 2026-08-17 2026-08-17T00:06:10.237766+00:00 SNAPSHOT asks qty=0.00425000
+   references before 08-17: 82
+
+price 62871.66000000 : 121 total references in the window, 1 during the stuck period
+   *** References during the stuck window; apply path would be suspect ***
+     2026-08-17 2026-08-17T00:06:10.237766+00:00 SNAPSHOT 4540074153 asks qty=0.00386000
+   first reference at or after 08-17: 2026-08-17 2026-08-17T00:05:58.376084+00:00 diff ask qty=0.00386000
+   references before 08-17: 119
+
+price 62878.61000000 : 72 total references in the window, 2 during the stuck period
+   *** References during the stuck window; apply path would be suspect ***
+     2026-08-17 2026-08-17T00:06:10.237766+00:00 SNAPSHOT 4540074153 asks qty=0.02365000
+     2026-08-17 2026-08-17T00:44:39.122594+00:00 diff (4540102363, 4540102366) bid qty=0.00000000
+   first reference at or after 08-17: 2026-08-17 2026-08-17T00:04:44.527784+00:00 diff ask qty=0.02365000
+   references before 08-17: 69
+
+price 62883.85000000 : 86 total references in the window, 3 during the stuck period
+   *** References during the stuck window; apply path would be suspect ***
+     2026-08-17 2026-08-17T00:06:10.237766+00:00 SNAPSHOT 4540074153 asks qty=0.03547000
+     2026-08-17 2026-08-17T01:01:32.098532+00:00 diff (4540118857, 4540118885) bid qty=0.15902000
+     2026-08-17 2026-08-17T01:01:49.333223+00:00 diff (4540119756, 4540119788) bid qty=0.00000000
+   first reference at or after 08-17: 2026-08-17 2026-08-17T00:03:12.966039+00:00 diff ask qty=0.03547000
+   references before 08-17: 80
+
+price 62904.70000000 : 97 total references in the window, 1 during the stuck period
+   *** References during the stuck window; apply path would be suspect ***
+     2026-08-17 2026-08-17T00:06:10.237766+00:00 SNAPSHOT 4540074153 asks qty=0.00344000
+   first reference at or after 08-17: 2026-08-17 2026-08-17T00:06:10.237766+00:00 SNAPSHOT asks qty=0.00344000
+   references before 08-17: 96
+
+==============================================================================
+Summary
+==============================================================================
+Total references to any stuck price during 08-17 00:06:10 .. 08-23: 20
+=> Removals did arrive during the stuck window. The apply path skipped them.
+   This would be a reconstruction bug, not a feed gap.

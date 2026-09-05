@@ -1,0 +1,60 @@
+﻿==============================================================================
+RECOVERY test: per-day recovery by repair
+STALE_SECONDS=300  SAMPLE_STEP=10s
+==============================================================================
+  (chained 08-15)
+  (chained 08-16)
+
+  --- 08-17 ---  samples=8640
+    RAW  crossed:   8592 ( 99.44%)   usable raw samples: 48
+    TRUE crossed:     30 (  0.35%)   usable true samples: 8610   true-touch empty: 0
+    RAW  spread bp: p25=0.0016 median=0.0016 p75=0.0700
+    TRUE spread bp: p25=0.1958 median=0.6463 p75=1.0519
+    mean # stale ask levels at or below best_bid while crossed: 8.71
+    SNAPSHOT 2026-08-17T00:06:10.237766+00:00 uid=4540074153
+        before: (62853.58, 62853.6)  crossed=False
+        after : (62852.37, 62852.38)  crossed=False
+
+  --- 08-18 ---  samples=8640
+    RAW  crossed:   8640 (100.00%)   usable raw samples: 0
+    TRUE crossed:      0 (  0.00%)   usable true samples: 8640   true-touch empty: 0
+    TRUE spread bp: p25=0.2705 median=0.6868 p75=1.1327
+    mean # stale ask levels at or below best_bid while crossed: 9.00
+
+  --- 08-19 ---  samples=8640
+    RAW  crossed:   8640 (100.00%)   usable raw samples: 0
+    TRUE crossed:      0 (  0.00%)   usable true samples: 8640   true-touch empty: 0
+    TRUE spread bp: p25=0.0638 median=0.5988 p75=1.1295
+    mean # stale ask levels at or below best_bid while crossed: 9.00
+
+  --- 08-20 ---  samples=8640
+    RAW  crossed:   8640 (100.00%)   usable raw samples: 0
+    TRUE crossed:      0 (  0.00%)   usable true samples: 8640   true-touch empty: 0
+    TRUE spread bp: p25=0.0685 median=0.6690 p75=1.3094
+    mean # stale ask levels at or below best_bid while crossed: 9.00
+
+  --- 08-21 ---  samples=8640
+    RAW  crossed:   8637 ( 99.97%)   usable raw samples: 3
+    TRUE crossed:     28 (  0.32%)   usable true samples: 8612   true-touch empty: 0
+    RAW  spread bp: p25=0.0362 median=0.0533 p75=0.1251
+    TRUE spread bp: p25=0.4028 median=1.1341 p75=1.7748
+    mean # stale ask levels at or below best_bid while crossed: 1.01
+    SNAPSHOT 2026-08-21T00:02:11.783983+00:00 uid=4547092681
+        before: (73134.59, 62852.38)  crossed=True
+        after : (73146.24, 73147.68)  crossed=False
+
+  --- 08-22 ---  samples=8640
+    RAW  crossed:   8640 (100.00%)   usable raw samples: 0
+    TRUE crossed:      0 (  0.00%)   usable true samples: 8640   true-touch empty: 0
+    TRUE spread bp: p25=0.3845 median=0.8667 p75=1.5828
+    mean # stale ask levels at or below best_bid while crossed: 1.00
+
+  --- 08-23 ---  samples=8640
+    RAW  crossed:   4048 ( 46.85%)   usable raw samples: 4592
+    TRUE crossed:     11 (  0.13%)   usable true samples: 8629   true-touch empty: 0
+    RAW  spread bp: p25=0.4453 median=0.9585 p75=1.4189
+    TRUE spread bp: p25=0.4136 median=0.9536 p75=1.4203
+    mean # stale ask levels at or below best_bid while crossed: 19.35
+    SNAPSHOT 2026-08-23T00:04:08.571478+00:00 uid=4553356068
+        before: (77123.12, 73147.68)  crossed=True
+        after : (77123.12, 77123.13)  crossed=False

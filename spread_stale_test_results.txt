@@ -1,0 +1,44 @@
+﻿==============================================================================
+Question 4: is the spread series contaminated by THE SAME mechanism?
+==============================================================================
+STALE_SECONDS=300  SAMPLE_STEP=10s
+
+Chain A: anchor 07-19 (own snapshot) -> 07-20 -> 07-21
+
+  --- 07-19 ---
+    samples=8628  crossed=0 (0.00%)  raw touch stale>300s=233 (2.70%) [stale bid=162, stale ask=71]
+    median spread raw  (as regime_scan measured it): 0.2329 bp
+    median spread TRUE (stale levels dropped)      : 0.2506 bp
+    ratio TRUE/RAW = 1.1x   <== >5x means the raw figure is an artifact
+
+  --- 07-20 ---
+    samples=8640  crossed=0 (0.00%)  raw touch stale>300s=100 (1.16%) [stale bid=45, stale ask=55]
+    median spread raw  (as regime_scan measured it): 0.0031 bp
+    median spread TRUE (stale levels dropped)      : 0.0031 bp
+    ratio TRUE/RAW = 1.0x   <== >5x means the raw figure is an artifact
+
+  --- 07-21 ---
+    samples=8640  crossed=0 (0.00%)  raw touch stale>300s=65 (0.75%) [stale bid=17, stale ask=48]
+    median spread raw  (as regime_scan measured it): 0.0015 bp
+    median spread TRUE (stale levels dropped)      : 0.0015 bp
+    ratio TRUE/RAW = 1.0x   <== >5x means the raw figure is an artifact
+
+Chain B: anchor 08-26 (own snapshot) -> 08-27 -> 08-28
+
+  --- 08-26 ---
+    samples=6423  crossed=6341 (98.72%)  raw touch stale>300s=6317 (98.35%) [stale bid=6314, stale ask=42]
+    median spread raw  (as regime_scan measured it): 0.4468 bp
+    median spread TRUE (stale levels dropped)      : 0.4988 bp
+    ratio TRUE/RAW = 1.1x   <== >5x means the raw figure is an artifact
+
+  --- 08-27 ---
+    samples=8640  crossed=2061 (23.85%)  raw touch stale>300s=2128 (24.63%) [stale bid=40, stale ask=2100]
+    median spread raw  (as regime_scan measured it): 0.1751 bp
+    median spread TRUE (stale levels dropped)      : 0.2863 bp
+    ratio TRUE/RAW = 1.6x   <== >5x means the raw figure is an artifact
+
+  --- 08-28 ---
+    samples=8640  crossed=0 (0.00%)  raw touch stale>300s=110 (1.27%) [stale bid=57, stale ask=53]
+    median spread raw  (as regime_scan measured it): 0.0413 bp
+    median spread TRUE (stale levels dropped)      : 0.0527 bp
+    ratio TRUE/RAW = 1.3x   <== >5x means the raw figure is an artifact
