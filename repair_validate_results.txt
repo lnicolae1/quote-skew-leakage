@@ -1,0 +1,143 @@
+==============================================================================
+Ground-truth validation of the crossing-triggered orphan repair
+==============================================================================
+Chain: 08-15 -> 08-16 -> 08-17 -> 08-18 -> 08-19 -> 08-20 -> 08-21   (droplet only)
+Target: the independently-fetched REST snapshot at 08-21T00:02:11,
+        lastUpdateId=4547092681. The book is compared against it before it is
+        applied, so the snapshot is genuine external ground truth.
+Rule under test: while best_bid >= best_ask, drop whichever touch level
+        was written at the lower update-ID. No time constant.
+
+Run 1 of 2: CONTROL (no repair; what the committed pipeline does today)
+    chained 08-15  (last_update_id=4539761471, drops so far=0)
+    chained 08-16  (last_update_id=4540070837, drops so far=0)
+    chained 08-17  (last_update_id=4541104505, drops so far=0)
+    chained 08-18  (last_update_id=4541929106, drops so far=0)
+    chained 08-19  (last_update_id=4544253733, drops so far=0)
+    chained 08-20  (last_update_id=4547087366, drops so far=0)
+
+Run 2 of 2: REPAIRED (crossing-triggered rule)
+    chained 08-15  (last_update_id=4539761471, drops so far=1)
+    chained 08-16  (last_update_id=4540070837, drops so far=1)
+    chained 08-17  (last_update_id=4541104505, drops so far=21)
+    chained 08-18  (last_update_id=4541929106, drops so far=21)
+    chained 08-19  (last_update_id=4544253733, drops so far=21)
+    chained 08-20  (last_update_id=4547087366, drops so far=21)
+
+==============================================================================
+Position at the comparison point
+==============================================================================
+  snapshot timestamp   : 2026-08-21T00:02:11.783983+00:00
+  snapshot lastUpdateId: 4547092681
+  snapshot levels      : 779 bids, 1000 asks
+  CONTROL  book last_update_id before the snapshot: 4547092244
+  REPAIRED book last_update_id before the snapshot: 4547092244
+  invisible span between my position and the snapshot: 437 updates
+  ^ these updates were never delivered. An exact match is therefore not
+    expected: any level those 437 updates changed will legitimately differ.
+    The comparison is still decisive because the CONTROL and the REPAIRED
+    run face the identical handicap; only the rule differs between them.
+
+  CONTROL : diffs applied=1281392, crossed-book events=1132933 (88.41%)
+  REPAIRED: diffs applied=1281392, crossed-book events=0 (0.00%), levels dropped=21 across 15 repair events
+  first levels the rule dropped (side, price, uid_written, uid_now):
+      bid 62974.15000000 written_at=4539513952 dropped_at=4539515078
+      bid 62852.37000000 written_at=4540074153 dropped_at=4540074292
+      bid 62850.87000000 written_at=4540074153 dropped_at=4540074292
+      bid 62842.14000000 written_at=4540074153 dropped_at=4540074769
+      bid 62836.97000000 written_at=4540074153 dropped_at=4540074769
+      bid 62835.52000000 written_at=4540074153 dropped_at=4540074850
+      bid 62835.46000000 written_at=4540074153 dropped_at=4540074850
+      bid 62834.57000000 written_at=4540074153 dropped_at=4540074850
+      bid 62834.22000000 written_at=4540074153 dropped_at=4540074850
+      bid 62827.52000000 written_at=4540074153 dropped_at=4540076320
+      bid 62811.21000000 written_at=4540074153 dropped_at=4540076542
+      ask 62852.38000000 written_at=4540074153 dropped_at=4540077922
+
+==============================================================================
+Level-for-level comparison against the 08-21 SNAPSHOT
+==============================================================================
+
+  --- CONTROL (no repair) ---
+    BIDS: 759/779 exact matches (price and quantity string)
+        quantity mismatches: 0   missing from my book: 20
+        extra levels inside snapshot range: 23
+        my levels beyond the snapshot's range (beyond cap, NOT a mismatch): 0
+          missing price=73146.24000000 snapshot_qty=0.00296000
+          missing price=73122.68000000 snapshot_qty=0.00300000
+          missing price=73122.67000000 snapshot_qty=0.00355000
+          missing price=73118.07000000 snapshot_qty=0.01367000
+          missing price=73118.01000000 snapshot_qty=0.02730000
+          missing price=73110.97000000 snapshot_qty=0.03775000
+          missing price=73102.04000000 snapshot_qty=0.00634000
+          missing price=73096.29000000 snapshot_qty=0.06800000
+          extra   price=62850.87000000 my_qty=0.00165000
+          extra   price=62842.14000000 my_qty=0.41627000
+          extra   price=62836.97000000 my_qty=0.03409000
+          extra   price=62834.22000000 my_qty=0.00258000
+          extra   price=62589.69000000 my_qty=0.00495000
+          extra   price=72857.61000000 my_qty=0.26881000
+          extra   price=72900.64000000 my_qty=0.00050000
+          extra   price=72789.64000000 my_qty=0.00050000
+    ASKS: 552/1000 exact matches (price and quantity string)
+        quantity mismatches: 0   missing from my book: 448
+        extra levels inside snapshot range: 21
+        my levels beyond the snapshot's range (beyond cap, NOT a mismatch): 4
+          missing price=73147.68000000 snapshot_qty=0.00300000
+          missing price=73148.28000000 snapshot_qty=0.00355000
+          missing price=73153.18000000 snapshot_qty=0.03230000
+          missing price=73158.70000000 snapshot_qty=0.06800000
+          missing price=73159.98000000 snapshot_qty=0.03771000
+          missing price=73170.00000000 snapshot_qty=0.11541000
+          missing price=73172.52000000 snapshot_qty=0.03230000
+          missing price=73172.74000000 snapshot_qty=0.11409000
+          extra   price=62852.38000000 my_qty=0.00208000
+          extra   price=62852.39000000 my_qty=0.00159000
+          extra   price=62855.84000000 my_qty=0.03295000
+          extra   price=62862.61000000 my_qty=0.01590000
+          extra   price=62863.85000000 my_qty=0.00425000
+          extra   price=62871.66000000 my_qty=0.00386000
+          extra   price=62878.61000000 my_qty=0.02365000
+          extra   price=62883.85000000 my_qty=0.03547000
+
+  --- REPAIRED (crossing-triggered rule) ---
+    BIDS: 759/779 exact matches (price and quantity string)
+        quantity mismatches: 0   missing from my book: 20
+        extra levels inside snapshot range: 19
+        my levels beyond the snapshot's range (beyond cap, NOT a mismatch): 0
+          missing price=73146.24000000 snapshot_qty=0.00296000
+          missing price=73122.68000000 snapshot_qty=0.00300000
+          missing price=73122.67000000 snapshot_qty=0.00355000
+          missing price=73118.07000000 snapshot_qty=0.01367000
+          missing price=73118.01000000 snapshot_qty=0.02730000
+          missing price=73110.97000000 snapshot_qty=0.03775000
+          missing price=73102.04000000 snapshot_qty=0.00634000
+          missing price=73096.29000000 snapshot_qty=0.06800000
+          extra   price=62589.69000000 my_qty=0.00495000
+          extra   price=72857.61000000 my_qty=0.26881000
+          extra   price=72900.64000000 my_qty=0.00050000
+          extra   price=72789.64000000 my_qty=0.00050000
+          extra   price=73112.43000000 my_qty=0.11597000
+          extra   price=73103.32000000 my_qty=0.11591000
+          extra   price=73122.61000000 my_qty=0.03230000
+          extra   price=73114.07000000 my_qty=0.06800000
+    ASKS: 552/1000 exact matches (price and quantity string)
+        quantity mismatches: 0   missing from my book: 448
+        extra levels inside snapshot range: 12
+        my levels beyond the snapshot's range (beyond cap, NOT a mismatch): 4
+          missing price=73147.68000000 snapshot_qty=0.00300000
+          missing price=73148.28000000 snapshot_qty=0.00355000
+          missing price=73153.18000000 snapshot_qty=0.03230000
+          missing price=73158.70000000 snapshot_qty=0.06800000
+          missing price=73159.98000000 snapshot_qty=0.03771000
+          missing price=73170.00000000 snapshot_qty=0.11541000
+          missing price=73172.52000000 snapshot_qty=0.03230000
+          missing price=73172.74000000 snapshot_qty=0.11409000
+          extra   price=73172.80000000 my_qty=0.06800000
+          extra   price=73194.17000000 my_qty=0.11479000
+          extra   price=73365.04000000 my_qty=0.29241000
+          extra   price=73183.48000000 my_qty=0.03230000
+          extra   price=73187.39000000 my_qty=0.03230000
+          extra   price=73218.36000000 my_qty=0.16409000
+          extra   price=73232.31000000 my_qty=0.01384000
+          extra   price=73203.77000000 my_qty=0.12534000
