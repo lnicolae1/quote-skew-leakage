@@ -1,0 +1,366 @@
+=== regime_scan.py ===
+Data: market_data_droplet (read-only)
+Warm-up (chained for the book anchor, stats printed but excluded): 2026-07-11 .. 2026-07-14
+Usable window (selected by date): 2026-07-15 .. 2026-08-29
+Volatility: 5-minute sampling of a 1s previous-tick forward-filled mid grid,
+  gap-excluded and crossed-book-excluded (compute_volatility_clean.py's estimator).
+Spread: ((best_ask-best_bid)/mid)*10000, clean 1s samples (spread_depth_profile.py).
+lambda: unique aggTrades (deduped by id `a`) over the file's raw timestamp span,
+  NOT gap-corrected.
+
+=== Per-day scan ===
+  2026-07-11  [warmup ]  size=  17907840  msgs=    46170  uid_span=   202131  vol5m=  21.40%  med_spread_bp=  0.5090  trades=    379  lambda=  0.01722
+             grid_s=22016  crossed_s=0  vol_n=73  vol_excl=0  spread_n=22016  span_s=22015.0  gaps=0  updates_lost=0  snaps=1
+  2026-07-12  [warmup ]  size=  77912486  msgs=   202254  uid_span=   878020  vol5m=  19.98%  med_spread_bp=  0.4880  trades=   1164  lambda=  0.01347
+             grid_s=86399  crossed_s=0  vol_n=287  vol_excl=0  spread_n=86399  span_s=86398.0  gaps=0  updates_lost=0  snaps=0
+  2026-07-13  [warmup ]  size= 119201183  msgs=   279507  uid_span=  1715641  vol5m=  36.94%  med_spread_bp=  0.5182  trades=   3033  lambda=  0.03510
+             grid_s=86399  crossed_s=0  vol_n=286  vol_excl=1  spread_n=86369  span_s=86398.0  gaps=2  updates_lost=220  snaps=2
+  2026-07-14  [warmup ]  size= 122615962  msgs=   284744  uid_span=  1658193  vol5m=  38.41%  med_spread_bp=  0.1409  trades=   4574  lambda=  0.05294
+             grid_s=86400  crossed_s=0  vol_n=287  vol_excl=0  spread_n=86400  span_s=86399.5  gaps=0  updates_lost=0  snaps=0
+  2026-07-15  [USABLE ]  size= 131927414  msgs=   302444  uid_span=  1799422  vol5m=  32.00%  med_spread_bp=  0.2931  trades=   3163  lambda=  0.03661
+             grid_s=86400  crossed_s=0  vol_n=287  vol_excl=0  spread_n=86400  span_s=86399.9  gaps=0  updates_lost=0  snaps=0
+  2026-07-16  [USABLE ]  size= 142476102  msgs=   314130  uid_span=  1914142  vol5m=  31.68%  med_spread_bp=  0.2169  trades=   3772  lambda=  0.04366
+             grid_s=86400  crossed_s=0  vol_n=287  vol_excl=0  spread_n=86400  span_s=86399.9  gaps=0  updates_lost=0  snaps=0
+  2026-07-17  [USABLE ]  size= 156285293  msgs=   321383  uid_span=  2251931  vol5m=  27.05%  med_spread_bp=  0.1435  trades=   4148  lambda=  0.04801
+             grid_s=86400  crossed_s=58121  vol_n=89  vol_excl=198  spread_n=28271  span_s=86399.7  gaps=2  updates_lost=335  snaps=1
+  2026-07-18  [USABLE ]  size=  57331773  msgs=   138552  uid_span=   629316  vol5m=  14.19%  med_spread_bp=  0.0047  trades=   1338  lambda=  0.01549
+             grid_s=86400  crossed_s=0  vol_n=287  vol_excl=0  spread_n=86400  span_s=86399.7  gaps=0  updates_lost=0  snaps=0
+  2026-07-19  [USABLE ]  size=  68802668  msgs=   157767  uid_span=   830363  vol5m=  17.95%  med_spread_bp=  0.2321  trades=   1434  lambda=  0.01660
+             grid_s=86400  crossed_s=0  vol_n=286  vol_excl=1  spread_n=86388  span_s=86399.1  gaps=1  updates_lost=22  snaps=1
+  2026-07-20  [USABLE ]  size= 161155990  msgs=   337268  uid_span=  2247388  vol5m=  43.62%  med_spread_bp=  0.0031  trades=   5556  lambda=  0.06431
+             grid_s=86399  crossed_s=0  vol_n=287  vol_excl=0  spread_n=86399  span_s=86398.4  gaps=0  updates_lost=0  snaps=0
+  2026-07-21  [USABLE ]  size= 128719851  msgs=   276917  uid_span=  1752282  vol5m=  27.97%  med_spread_bp=  0.0015  trades=   5788  lambda=  0.06699
+             grid_s=86400  crossed_s=0  vol_n=287  vol_excl=0  spread_n=86400  span_s=86399.7  gaps=0  updates_lost=0  snaps=0
+  2026-07-22  [USABLE ]  size= 128969166  msgs=   281203  uid_span=  1698729  vol5m=  26.54%  med_spread_bp=  0.0030  trades=   3699  lambda=  0.04281
+             grid_s=86400  crossed_s=0  vol_n=287  vol_excl=0  spread_n=86400  span_s=86399.5  gaps=0  updates_lost=0  snaps=0
+  2026-07-23  [USABLE ]  size= 125762145  msgs=   264051  uid_span=  1711166  vol5m=  26.61%  med_spread_bp=  0.0046  trades=   3188  lambda=  0.03690
+             grid_s=86400  crossed_s=0  vol_n=286  vol_excl=1  spread_n=86393  span_s=86399.8  gaps=1  updates_lost=230  snaps=1
+  2026-07-24  [USABLE ]  size= 124841857  msgs=   252006  uid_span=  1789829  vol5m=  31.00%  med_spread_bp=  0.2149  trades=   2276  lambda=  0.02634
+             grid_s=86400  crossed_s=0  vol_n=287  vol_excl=0  spread_n=86400  span_s=86399.8  gaps=0  updates_lost=0  snaps=0
+  2026-07-25  [USABLE ]  size=  49661459  msgs=   122354  uid_span=   529109  vol5m=  11.93%  med_spread_bp=  0.2063  trades=    673  lambda=  0.00779
+             grid_s=86400  crossed_s=0  vol_n=286  vol_excl=1  spread_n=86394  span_s=86399.9  gaps=1  updates_lost=120  snaps=1
+  2026-07-26  [USABLE ]  size=  53015071  msgs=   123313  uid_span=   634929  vol5m=  16.92%  med_spread_bp=  0.2939  trades=   1330  lambda=  0.01539
+             grid_s=86400  crossed_s=0  vol_n=287  vol_excl=0  spread_n=86400  span_s=86399.7  gaps=0  updates_lost=0  snaps=0
+  2026-07-27  [USABLE ]  size= 142057472  msgs=   296739  uid_span=  1993147  vol5m=  33.54%  med_spread_bp=  0.1800  trades=   3625  lambda=  0.04196
+             grid_s=86400  crossed_s=0  vol_n=287  vol_excl=0  spread_n=86400  span_s=86399.8  gaps=0  updates_lost=0  snaps=0
+  2026-07-28  [USABLE ]  size= 134042614  msgs=   278493  uid_span=  1907734  vol5m=  33.95%  med_spread_bp=  0.0345  trades=   3556  lambda=  0.04116
+             grid_s=86400  crossed_s=0  vol_n=287  vol_excl=0  spread_n=86400  span_s=86399.6  gaps=0  updates_lost=0  snaps=1
+  2026-07-29  [USABLE ]  size= 156969624  msgs=   331335  uid_span=  2140028  vol5m=  38.96%  med_spread_bp=  0.4834  trades=   4060  lambda=  0.04699
+             grid_s=86400  crossed_s=0  vol_n=287  vol_excl=0  spread_n=86400  span_s=86399.6  gaps=0  updates_lost=0  snaps=0
+  2026-07-30  [USABLE ]  size= 101808411  msgs=   233936  uid_span=  1253331  vol5m=  29.27%  med_spread_bp=  0.0875  trades=   3270  lambda=  0.03785
+             grid_s=86399  crossed_s=0  vol_n=287  vol_excl=0  spread_n=86399  span_s=86398.5  gaps=0  updates_lost=0  snaps=0
+  2026-07-31  [USABLE ]  size= 115115294  msgs=   242996  uid_span=  1584891  vol5m=  32.14%  med_spread_bp=  0.1602  trades=   5046  lambda=  0.05840
+             grid_s=86400  crossed_s=0  vol_n=286  vol_excl=1  spread_n=86390  span_s=86399.7  gaps=2  updates_lost=334  snaps=1
+  2026-08-01  [USABLE ]  size=  43361874  msgs=   104462  uid_span=   488997  vol5m=  14.14%  med_spread_bp=  0.8996  trades=   1616  lambda=  0.01871
+             grid_s=86394  crossed_s=0  vol_n=286  vol_excl=1  spread_n=86391  span_s=86393.2  gaps=1  updates_lost=6  snaps=1
+  2026-08-02  [USABLE ]  size=  56068097  msgs=   135385  uid_span=   666020  vol5m=  24.16%  med_spread_bp=  0.7152  trades=   2675  lambda=  0.03096
+             grid_s=86399  crossed_s=0  vol_n=287  vol_excl=0  spread_n=86399  span_s=86398.2  gaps=0  updates_lost=0  snaps=0
+  2026-08-03  [USABLE ]  size= 106569491  msgs=   240811  uid_span=  1326554  vol5m=  30.30%  med_spread_bp=  0.9051  trades=   3680  lambda=  0.04259
+             grid_s=86399  crossed_s=0  vol_n=287  vol_excl=0  spread_n=86399  span_s=86398.6  gaps=0  updates_lost=0  snaps=0
+  2026-08-04  [USABLE ]  size= 105089826  msgs=   225130  uid_span=  1372049  vol5m=  28.36%  med_spread_bp=  0.7293  trades=   3019  lambda=  0.03494
+             grid_s=86400  crossed_s=0  vol_n=287  vol_excl=0  spread_n=86400  span_s=86399.5  gaps=0  updates_lost=0  snaps=0
+  2026-08-05  [USABLE ]  size=  98298848  msgs=   213176  uid_span=  1263302  vol5m=  28.05%  med_spread_bp=  0.7984  trades=   2621  lambda=  0.03034
+             grid_s=86400  crossed_s=3874  vol_n=272  vol_excl=15  spread_n=82517  span_s=86399.7  gaps=2  updates_lost=370  snaps=1
+  2026-08-06  [USABLE ]  size=  87525574  msgs=   196099  uid_span=  1082953  vol5m=  22.04%  med_spread_bp=  0.2571  trades=   2293  lambda=  0.02654
+             grid_s=86400  crossed_s=0  vol_n=287  vol_excl=0  spread_n=86400  span_s=86399.7  gaps=0  updates_lost=0  snaps=0
+  2026-08-07  [USABLE ]  size=  97833394  msgs=   224112  uid_span=  1191965  vol5m=  23.72%  med_spread_bp=  0.3181  trades=   3665  lambda=  0.04242
+             grid_s=86400  crossed_s=0  vol_n=286  vol_excl=1  spread_n=86390  span_s=86398.6  gaps=1  updates_lost=33  snaps=1
+  2026-08-08  [USABLE ]  size=  26686570  msgs=    73054  uid_span=   254183  vol5m=   7.70%  med_spread_bp=  0.5464  trades=   1474  lambda=  0.01706
+             grid_s=86398  crossed_s=0  vol_n=287  vol_excl=0  spread_n=86398  span_s=86397.1  gaps=0  updates_lost=0  snaps=0
+  2026-08-09  [USABLE ]  size=  30564724  msgs=    80924  uid_span=   310247  vol5m=  12.91%  med_spread_bp=  0.5897  trades=   1225  lambda=  0.01418
+             grid_s=86400  crossed_s=0  vol_n=287  vol_excl=0  spread_n=86400  span_s=86398.5  gaps=0  updates_lost=0  snaps=0
+  2026-08-10  [USABLE ]  size=  81762198  msgs=   184565  uid_span=  1051065  vol5m=  26.49%  med_spread_bp=  0.5658  trades=   3088  lambda=  0.03574
+             grid_s=86395  crossed_s=0  vol_n=287  vol_excl=0  spread_n=86395  span_s=86394.3  gaps=0  updates_lost=0  snaps=0
+  2026-08-11  [USABLE ]  size=  72729742  msgs=   160490  uid_span=   934352  vol5m=  21.22%  med_spread_bp=  0.6640  trades=   1502  lambda=  0.01738
+             grid_s=86399  crossed_s=0  vol_n=286  vol_excl=1  spread_n=86392  span_s=86397.9  gaps=1  updates_lost=54  snaps=1
+  2026-08-12  [USABLE ]  size=  88184639  msgs=   192208  uid_span=  1130270  vol5m=  22.00%  med_spread_bp=  0.5002  trades=   3185  lambda=  0.03686
+             grid_s=86400  crossed_s=0  vol_n=287  vol_excl=0  spread_n=86400  span_s=86399.5  gaps=0  updates_lost=0  snaps=0
+  2026-08-13  [USABLE ]  size=  77747062  msgs=   180212  uid_span=   895298  vol5m=  26.65%  med_spread_bp=  0.4858  trades=   1696  lambda=  0.01963
+             grid_s=86399  crossed_s=0  vol_n=287  vol_excl=0  spread_n=86399  span_s=86398.3  gaps=0  updates_lost=0  snaps=0
+  2026-08-14  [USABLE ]  size=  80562656  msgs=   182391  uid_span=   971163  vol5m=  19.74%  med_spread_bp=  0.7682  trades=   2676  lambda=  0.03097
+             grid_s=86400  crossed_s=0  vol_n=287  vol_excl=0  spread_n=86400  span_s=86399.2  gaps=0  updates_lost=0  snaps=0
+  2026-08-15  [USABLE ]  size=  28674678  msgs=    78191  uid_span=   248247  vol5m=   8.41%  med_spread_bp=  0.6436  trades=   1200  lambda=  0.01389
+             grid_s=86399  crossed_s=6095  vol_n=266  vol_excl=21  spread_n=80298  span_s=86397.5  gaps=2  updates_lost=35  snaps=1
+  2026-08-16  [USABLE ]  size=  30728415  msgs=    77356  uid_span=   309364  vol5m=  10.91%  med_spread_bp=  0.7794  trades=   1204  lambda=  0.01394
+             grid_s=86400  crossed_s=0  vol_n=287  vol_excl=0  spread_n=86400  span_s=86398.7  gaps=0  updates_lost=0  snaps=0
+  2026-08-17  [USABLE ]  size=  87125275  msgs=   195603  uid_span=  1033667  vol5m=     n/a  med_spread_bp=  0.0016  trades=   2328  lambda=  0.02694
+             grid_s=86399  crossed_s=85921  vol_n=1  vol_excl=286  spread_n=468  span_s=86398.8  gaps=2  updates_lost=143  snaps=1
+  2026-08-18  [USABLE ]  size=  73093292  msgs=   168832  uid_span=   824593  vol5m=     n/a  med_spread_bp=     n/a  trades=   1552  lambda=  0.01796
+             grid_s=86400  crossed_s=86400  vol_n=0  vol_excl=287  spread_n=0  span_s=86399.9  gaps=0  updates_lost=0  snaps=0
+  2026-08-19  [USABLE ]  size= 170121824  msgs=   337017  uid_span=  2324599  vol5m=     n/a  med_spread_bp=     n/a  trades=   7393  lambda=  0.08557
+             grid_s=86399  crossed_s=86399  vol_n=0  vol_excl=287  spread_n=0  span_s=86398.6  gaps=0  updates_lost=0  snaps=0
+  2026-08-20  [USABLE ]  size= 212441852  msgs=   446613  uid_span=  2833630  vol5m=     n/a  med_spread_bp=     n/a  trades=   8983  lambda=  0.10397
+             grid_s=86400  crossed_s=86400  vol_n=0  vol_excl=287  spread_n=0  span_s=86399.8  gaps=0  updates_lost=0  snaps=0
+  2026-08-21  [USABLE ]  size= 274440648  msgs=   547143  uid_span=  4005932  vol5m=     n/a  med_spread_bp=  0.1969  trades=  11930  lambda=  0.13808
+             grid_s=86400  crossed_s=86385  vol_n=0  vol_excl=287  spread_n=14  span_s=86399.9  gaps=2  updates_lost=453  snaps=1
+  2026-08-22  [USABLE ]  size= 170232924  msgs=   377878  uid_span=  2259848  vol5m=     n/a  med_spread_bp=     n/a  trades=   6506  lambda=  0.07530
+             grid_s=86400  crossed_s=86400  vol_n=0  vol_excl=287  spread_n=0  span_s=86399.3  gaps=0  updates_lost=0  snaps=0
+  2026-08-23  [USABLE ]  size= 144600677  msgs=   326830  uid_span=  1893278  vol5m=  39.06%  med_spread_bp=  0.9703  trades=   5467  lambda=  0.06328
+             grid_s=86400  crossed_s=40490  vol_n=150  vol_excl=137  spread_n=45910  span_s=86399.5  gaps=2  updates_lost=134  snaps=1
+  2026-08-24  [USABLE ]  size= 199435585  msgs=   418716  uid_span=  2815380  vol5m=  50.88%  med_spread_bp=  0.7594  trades=   8418  lambda=  0.09743
+             grid_s=86400  crossed_s=0  vol_n=287  vol_excl=0  spread_n=86400  span_s=86399.8  gaps=0  updates_lost=0  snaps=0
+  2026-08-25  [USABLE ]  size= 194768010  msgs=   395709  uid_span=  2924874  vol5m=  54.18%  med_spread_bp=  0.8081  trades=   8132  lambda=  0.09412
+             grid_s=86400  crossed_s=0  vol_n=287  vol_excl=0  spread_n=86400  span_s=86399.6  gaps=0  updates_lost=0  snaps=0
+  2026-08-26  [USABLE ]  size= 170332166  msgs=   350462  uid_span=  2487924  vol5m=  38.53%  med_spread_bp=  0.5014  trades=   4908  lambda=  0.05681
+             grid_s=86400  crossed_s=63401  vol_n=74  vol_excl=213  spread_n=22998  span_s=86399.2  gaps=2  updates_lost=18  snaps=1
+  2026-08-27  [USABLE ]  size= 160829001  msgs=   323788  uid_span=  2517978  vol5m=  36.65%  med_spread_bp=  0.1751  trades=   7564  lambda=  0.08755
+             grid_s=86400  crossed_s=20615  vol_n=217  vol_excl=70  spread_n=65785  span_s=86399.7  gaps=0  updates_lost=0  snaps=0
+  2026-08-28  [USABLE ]  size= 171539697  msgs=   340055  uid_span=  2760463  vol5m=  45.19%  med_spread_bp=  0.0425  trades=   9826  lambda=  0.11373
+             grid_s=86400  crossed_s=0  vol_n=287  vol_excl=0  spread_n=86400  span_s=86399.8  gaps=0  updates_lost=0  snaps=0
+  2026-08-29  [USABLE ]  size=  66468597  msgs=   157358  uid_span=   816754  vol5m=  13.57%  med_spread_bp=  0.0013  trades=   2538  lambda=  0.02938
+             grid_s=86398  crossed_s=80744  vol_n=15  vol_excl=272  spread_n=5646  span_s=86397.0  gaps=3  updates_lost=530  snaps=1
+
+=== Crossed-book contamination (stated first: it decides which days exist) ===
+  A stuck 'ghost' level whose removal is never seen in the diff stream leaves the
+  reconstructed book crossed (best_bid >= best_ask) until the next snapshot
+  re-anchors it. Same defect class as the documented local 07-09 -> 07-10 event.
+  Usable-window days on disk: 46
+  Days with any crossed second: 13
+    2026-07-17 (Fri)  crossed  58121/86400 s =  67.27%   vol_returns_left= 89 
+    2026-08-05 (Wed)  crossed   3874/86400 s =   4.48%   vol_returns_left=272 
+    2026-08-15 (Sat)  crossed   6095/86399 s =   7.05%   vol_returns_left=266 
+    2026-08-17 (Mon)  crossed  85921/86399 s =  99.45%   vol_returns_left=  1 <-- no volatility possible
+    2026-08-18 (Tue)  crossed  86400/86400 s = 100.00%   vol_returns_left=  0 <-- no volatility possible
+    2026-08-19 (Wed)  crossed  86399/86399 s = 100.00%   vol_returns_left=  0 <-- no volatility possible
+    2026-08-20 (Thu)  crossed  86400/86400 s = 100.00%   vol_returns_left=  0 <-- no volatility possible
+    2026-08-21 (Fri)  crossed  86385/86400 s =  99.98%   vol_returns_left=  0 <-- no volatility possible
+    2026-08-22 (Sat)  crossed  86400/86400 s = 100.00%   vol_returns_left=  0 <-- no volatility possible
+    2026-08-23 (Sun)  crossed  40490/86400 s =  46.86%   vol_returns_left=150 
+    2026-08-26 (Wed)  crossed  63401/86400 s =  73.38%   vol_returns_left= 74 
+    2026-08-27 (Thu)  crossed  20615/86400 s =  23.86%   vol_returns_left=217 
+    2026-08-29 (Sat)  crossed  80744/86398 s =  93.46%   vol_returns_left= 15 
+  Days lost entirely (no computable volatility): 6 -> 2026-08-17, 2026-08-18, 2026-08-19, 2026-08-20, 2026-08-21, 2026-08-22
+  Bytes lost to contamination: 987455815 of 5186759540 (19.0% of the usable window)
+  note: the largest file in the usable window is 2026-08-21 (274440648 bytes, 11930 trades) and it is one of the lost days.
+
+Usable days with a computable volatility: 40
+
+=== Question 1: range across the 40 usable days ===
+  realised vol, 5min, annualized:
+    min=7.70%  p25=19.29%  median=26.85%  p75=32.49%  max=54.18%  max/min=7.037x
+    lowest  vol day: 2026-08-08  (7.70%, size=26686570)
+    highest vol day: 2026-08-25  (54.18%, size=194768010)
+  median relative spread, bp:
+    min=0.0013  p25=0.1561  median=0.3060  p75=0.6768  max=0.9703  max/min=754.760x
+    narrowest day: 2026-08-29  (0.0013 bp)
+    widest    day: 2026-08-23  (0.9703 bp)
+  lambda, unique aggTrades/sec:
+    min=0.00779  p25=0.01940  median=0.03674  p75=0.04725  max=0.11373  max/min=14.600x
+    quietest day: 2026-07-25  (0.00779/s)
+    busiest  day: 2026-08-28  (0.11373/s)
+  file size, bytes:
+    min=26686570  p25=68219150  median=103449118  p75=142162130  max=199435585  max/min=7.473x
+  message count:
+    min=73054  p25=157665  median=229533  p75=305366  max=418716  max/min=5.732x
+
+=== Question 2: does size predict volatility? ===
+  file size  vs  realised vol:
+    Pearson  r = +0.9413   (r^2 = 0.8861, t = +17.194 on 38 df)
+    Spearman r = +0.9396
+  message count  vs  realised vol:
+    Pearson  r = +0.9388   (r^2 = 0.8813, t = +16.800 on 38 df)
+    Spearman r = +0.9381
+  file size  vs  lambda:
+    Pearson  r = +0.8545   (r^2 = 0.7302, t = +10.141 on 38 df)
+    Spearman r = +0.9129
+  file size  vs  median spread:
+    Pearson  r = -0.1991   (r^2 = 0.0396, t = -1.252 on 38 df)
+    Spearman r = -0.2205
+  realised vol  vs  median spread:
+    Pearson  r = -0.0259   (r^2 = 0.0007, t = -0.160 on 38 df)
+    Spearman r = -0.0850
+  realised vol  vs  lambda:
+    Pearson  r = +0.8640   (r^2 = 0.7466, t = +10.580 on 38 df)
+    Spearman r = +0.8627
+  lambda  vs  median spread:
+    Pearson  r = -0.0978   (r^2 = 0.0096, t = -0.606 on 38 df)
+    Spearman r = -0.1916
+  (two-sided |t| > 2.02 is p<0.05 at 38 df; |t| > 2.69 is p<0.01)
+
+=== Question 3: is there a defensible split? ===
+  Sorted volatility series, with the jump to the next day shown, so a genuine
+  boundary is visible as a jump rather than asserted:
+     1  2026-08-08  vol=   7.70%  spread= 0.5464bp  lambda=0.01706  size=  26686570   jump_to_next=+0.713pp (+9.26%)
+     2  2026-08-15  vol=   8.41%  spread= 0.6436bp  lambda=0.01389  size=  28674678   jump_to_next=+2.499pp (+29.70%)
+     3  2026-08-16  vol=  10.91%  spread= 0.7794bp  lambda=0.01394  size=  30728415   jump_to_next=+1.015pp (+9.31%)
+     4  2026-07-25  vol=  11.93%  spread= 0.2063bp  lambda=0.00779  size=  49661459   jump_to_next=+0.981pp (+8.23%)
+     5  2026-08-09  vol=  12.91%  spread= 0.5897bp  lambda=0.01418  size=  30564724   jump_to_next=+0.663pp (+5.14%)
+     6  2026-08-29  vol=  13.57%  spread= 0.0013bp  lambda=0.02938  size=  66468597   jump_to_next=+0.568pp (+4.19%)
+     7  2026-08-01  vol=  14.14%  spread= 0.8996bp  lambda=0.01871  size=  43361874   jump_to_next=+0.055pp (+0.39%)
+     8  2026-07-18  vol=  14.19%  spread= 0.0047bp  lambda=0.01549  size=  57331773   jump_to_next=+2.724pp (+19.19%)
+     9  2026-07-26  vol=  16.92%  spread= 0.2939bp  lambda=0.01539  size=  53015071   jump_to_next=+1.028pp (+6.08%)
+    10  2026-07-19  vol=  17.95%  spread= 0.2321bp  lambda=0.01660  size=  68802668   jump_to_next=+1.792pp (+9.99%)
+    11  2026-08-14  vol=  19.74%  spread= 0.7682bp  lambda=0.03097  size=  80562656   jump_to_next=+1.488pp (+7.54%)
+    12  2026-08-11  vol=  21.22%  spread= 0.6640bp  lambda=0.01738  size=  72729742   jump_to_next=+0.770pp (+3.63%)
+    13  2026-08-12  vol=  22.00%  spread= 0.5002bp  lambda=0.03686  size=  88184639   jump_to_next=+0.046pp (+0.21%)
+    14  2026-08-06  vol=  22.04%  spread= 0.2571bp  lambda=0.02654  size=  87525574   jump_to_next=+1.678pp (+7.61%)
+    15  2026-08-07  vol=  23.72%  spread= 0.3181bp  lambda=0.04242  size=  97833394   jump_to_next=+0.438pp (+1.85%)
+    16  2026-08-02  vol=  24.16%  spread= 0.7152bp  lambda=0.03096  size=  56068097   jump_to_next=+2.328pp (+9.64%)
+    17  2026-08-10  vol=  26.49%  spread= 0.5658bp  lambda=0.03574  size=  81762198   jump_to_next=+0.057pp (+0.21%)
+    18  2026-07-22  vol=  26.54%  spread= 0.0030bp  lambda=0.04281  size= 128969166   jump_to_next=+0.068pp (+0.26%)
+    19  2026-07-23  vol=  26.61%  spread= 0.0046bp  lambda=0.03690  size= 125762145   jump_to_next=+0.037pp (+0.14%)
+    20  2026-08-13  vol=  26.65%  spread= 0.4858bp  lambda=0.01963  size=  77747062   jump_to_next=+0.404pp (+1.52%)
+    21  2026-07-17  vol=  27.05%  spread= 0.1435bp  lambda=0.04801  size= 156285293   jump_to_next=+0.914pp (+3.38%)
+    22  2026-07-21  vol=  27.97%  spread= 0.0015bp  lambda=0.06699  size= 128719851   jump_to_next=+0.084pp (+0.30%)
+    23  2026-08-05  vol=  28.05%  spread= 0.7984bp  lambda=0.03034  size=  98298848   jump_to_next=+0.305pp (+1.09%)
+    24  2026-08-04  vol=  28.36%  spread= 0.7293bp  lambda=0.03494  size= 105089826   jump_to_next=+0.913pp (+3.22%)
+    25  2026-07-30  vol=  29.27%  spread= 0.0875bp  lambda=0.03785  size= 101808411   jump_to_next=+1.033pp (+3.53%)
+    26  2026-08-03  vol=  30.30%  spread= 0.9051bp  lambda=0.04259  size= 106569491   jump_to_next=+0.702pp (+2.32%)
+    27  2026-07-24  vol=  31.00%  spread= 0.2149bp  lambda=0.02634  size= 124841857   jump_to_next=+0.680pp (+2.19%)
+    28  2026-07-16  vol=  31.68%  spread= 0.2169bp  lambda=0.04366  size= 142476102   jump_to_next=+0.321pp (+1.01%)
+    29  2026-07-15  vol=  32.00%  spread= 0.2931bp  lambda=0.03661  size= 131927414   jump_to_next=+0.134pp (+0.42%)
+    30  2026-07-31  vol=  32.14%  spread= 0.1602bp  lambda=0.05840  size= 115115294   jump_to_next=+1.402pp (+4.36%)
+    31  2026-07-27  vol=  33.54%  spread= 0.1800bp  lambda=0.04196  size= 142057472   jump_to_next=+0.410pp (+1.22%)
+    32  2026-07-28  vol=  33.95%  spread= 0.0345bp  lambda=0.04116  size= 134042614   jump_to_next=+2.700pp (+7.95%)
+    33  2026-08-27  vol=  36.65%  spread= 0.1751bp  lambda=0.08755  size= 160829001   jump_to_next=+1.878pp (+5.12%)
+    34  2026-08-26  vol=  38.53%  spread= 0.5014bp  lambda=0.05681  size= 170332166   jump_to_next=+0.431pp (+1.12%)
+    35  2026-07-29  vol=  38.96%  spread= 0.4834bp  lambda=0.04699  size= 156969624   jump_to_next=+0.106pp (+0.27%)
+    36  2026-08-23  vol=  39.06%  spread= 0.9703bp  lambda=0.06328  size= 144600677   jump_to_next=+4.552pp (+11.65%)
+    37  2026-07-20  vol=  43.62%  spread= 0.0031bp  lambda=0.06431  size= 161155990   jump_to_next=+1.571pp (+3.60%)
+    38  2026-08-28  vol=  45.19%  spread= 0.0425bp  lambda=0.11373  size= 171539697   jump_to_next=+5.695pp (+12.60%)
+    39  2026-08-24  vol=  50.88%  spread= 0.7594bp  lambda=0.09743  size= 199435585   jump_to_next=+3.299pp (+6.48%)
+    40  2026-08-25  vol=  54.18%  spread= 0.8081bp  lambda=0.09412  size= 194768010
+
+  Largest consecutive jumps in the sorted volatility series:
+    +5.695 pp between rank 38 (2026-08-28, 45.19%) and rank 39 (2026-08-24, 50.88%); a cut here gives 38 low / 2 high
+    +4.552 pp between rank 36 (2026-08-23, 39.06%) and rank 37 (2026-07-20, 43.62%); a cut here gives 36 low / 4 high
+    +3.299 pp between rank 39 (2026-08-24, 50.88%) and rank 40 (2026-08-25, 54.18%); a cut here gives 39 low / 1 high
+    +2.724 pp between rank 8 (2026-07-18, 14.19%) and rank 9 (2026-07-26, 16.92%); a cut here gives 8 low / 32 high
+    +2.700 pp between rank 32 (2026-07-28, 33.95%) and rank 33 (2026-08-27, 36.65%); a cut here gives 32 low / 8 high
+    +2.499 pp between rank 2 (2026-08-15, 8.41%) and rank 3 (2026-08-16, 10.91%); a cut here gives 2 low / 38 high
+    +2.328 pp between rank 16 (2026-08-02, 24.16%) and rank 17 (2026-08-10, 26.49%); a cut here gives 16 low / 24 high
+    +1.878 pp between rank 33 (2026-08-27, 36.65%) and rank 34 (2026-08-26, 38.53%); a cut here gives 33 low / 7 high
+
+  Median consecutive step in the sorted series: 0.7705 pp
+  Largest step: 5.6948 pp  =  7.39x the median step
+  For reference, a sample of 40 draws from a single distribution still produces
+  uneven order statistics; a real regime boundary should be several times the
+  median step and should reproduce on an independent variable (spread or lambda).
+
+  Same series sorted by median spread, for the independent-variable check:
+     1  2026-08-29  spread= 0.0013bp  vol=  13.57%  lambda=0.02938
+     2  2026-07-21  spread= 0.0015bp  vol=  27.97%  lambda=0.06699
+     3  2026-07-22  spread= 0.0030bp  vol=  26.54%  lambda=0.04281
+     4  2026-07-20  spread= 0.0031bp  vol=  43.62%  lambda=0.06431
+     5  2026-07-23  spread= 0.0046bp  vol=  26.61%  lambda=0.03690
+     6  2026-07-18  spread= 0.0047bp  vol=  14.19%  lambda=0.01549
+     7  2026-07-28  spread= 0.0345bp  vol=  33.95%  lambda=0.04116
+     8  2026-08-28  spread= 0.0425bp  vol=  45.19%  lambda=0.11373
+     9  2026-07-30  spread= 0.0875bp  vol=  29.27%  lambda=0.03785
+    10  2026-07-17  spread= 0.1435bp  vol=  27.05%  lambda=0.04801
+    11  2026-07-31  spread= 0.1602bp  vol=  32.14%  lambda=0.05840
+    12  2026-08-27  spread= 0.1751bp  vol=  36.65%  lambda=0.08755
+    13  2026-07-27  spread= 0.1800bp  vol=  33.54%  lambda=0.04196
+    14  2026-07-25  spread= 0.2063bp  vol=  11.93%  lambda=0.00779
+    15  2026-07-24  spread= 0.2149bp  vol=  31.00%  lambda=0.02634
+    16  2026-07-16  spread= 0.2169bp  vol=  31.68%  lambda=0.04366
+    17  2026-07-19  spread= 0.2321bp  vol=  17.95%  lambda=0.01660
+    18  2026-08-06  spread= 0.2571bp  vol=  22.04%  lambda=0.02654
+    19  2026-07-15  spread= 0.2931bp  vol=  32.00%  lambda=0.03661
+    20  2026-07-26  spread= 0.2939bp  vol=  16.92%  lambda=0.01539
+    21  2026-08-07  spread= 0.3181bp  vol=  23.72%  lambda=0.04242
+    22  2026-07-29  spread= 0.4834bp  vol=  38.96%  lambda=0.04699
+    23  2026-08-13  spread= 0.4858bp  vol=  26.65%  lambda=0.01963
+    24  2026-08-12  spread= 0.5002bp  vol=  22.00%  lambda=0.03686
+    25  2026-08-26  spread= 0.5014bp  vol=  38.53%  lambda=0.05681
+    26  2026-08-08  spread= 0.5464bp  vol=   7.70%  lambda=0.01706
+    27  2026-08-10  spread= 0.5658bp  vol=  26.49%  lambda=0.03574
+    28  2026-08-09  spread= 0.5897bp  vol=  12.91%  lambda=0.01418
+    29  2026-08-15  spread= 0.6436bp  vol=   8.41%  lambda=0.01389
+    30  2026-08-11  spread= 0.6640bp  vol=  21.22%  lambda=0.01738
+    31  2026-08-02  spread= 0.7152bp  vol=  24.16%  lambda=0.03096
+    32  2026-08-04  spread= 0.7293bp  vol=  28.36%  lambda=0.03494
+    33  2026-08-24  spread= 0.7594bp  vol=  50.88%  lambda=0.09743
+    34  2026-08-14  spread= 0.7682bp  vol=  19.74%  lambda=0.03097
+    35  2026-08-16  spread= 0.7794bp  vol=  10.91%  lambda=0.01394
+    36  2026-08-05  spread= 0.7984bp  vol=  28.05%  lambda=0.03034
+    37  2026-08-25  spread= 0.8081bp  vol=  54.18%  lambda=0.09412
+    38  2026-08-01  spread= 0.8996bp  vol=  14.14%  lambda=0.01871
+    39  2026-08-03  spread= 0.9051bp  vol=  30.30%  lambda=0.04259
+    40  2026-08-23  spread= 0.9703bp  vol=  39.06%  lambda=0.06328
+
+  Day-by-date volatility series (chronological), to show whether high-vol days
+  cluster in time (a regime) or are scattered (day-to-day noise):
+    2026-07-15  vol=  32.00%  spread= 0.2931bp  lambda=0.03661  size= 131927414
+    2026-07-16  vol=  31.68%  spread= 0.2169bp  lambda=0.04366  size= 142476102
+    2026-07-17  vol=  27.05%  spread= 0.1435bp  lambda=0.04801  size= 156285293
+    2026-07-18  vol=  14.19%  spread= 0.0047bp  lambda=0.01549  size=  57331773
+    2026-07-19  vol=  17.95%  spread= 0.2321bp  lambda=0.01660  size=  68802668
+    2026-07-20  vol=  43.62%  spread= 0.0031bp  lambda=0.06431  size= 161155990
+    2026-07-21  vol=  27.97%  spread= 0.0015bp  lambda=0.06699  size= 128719851
+    2026-07-22  vol=  26.54%  spread= 0.0030bp  lambda=0.04281  size= 128969166
+    2026-07-23  vol=  26.61%  spread= 0.0046bp  lambda=0.03690  size= 125762145
+    2026-07-24  vol=  31.00%  spread= 0.2149bp  lambda=0.02634  size= 124841857
+    2026-07-25  vol=  11.93%  spread= 0.2063bp  lambda=0.00779  size=  49661459
+    2026-07-26  vol=  16.92%  spread= 0.2939bp  lambda=0.01539  size=  53015071
+    2026-07-27  vol=  33.54%  spread= 0.1800bp  lambda=0.04196  size= 142057472
+    2026-07-28  vol=  33.95%  spread= 0.0345bp  lambda=0.04116  size= 134042614
+    2026-07-29  vol=  38.96%  spread= 0.4834bp  lambda=0.04699  size= 156969624
+    2026-07-30  vol=  29.27%  spread= 0.0875bp  lambda=0.03785  size= 101808411
+    2026-07-31  vol=  32.14%  spread= 0.1602bp  lambda=0.05840  size= 115115294
+    2026-08-01  vol=  14.14%  spread= 0.8996bp  lambda=0.01871  size=  43361874
+    2026-08-02  vol=  24.16%  spread= 0.7152bp  lambda=0.03096  size=  56068097
+    2026-08-03  vol=  30.30%  spread= 0.9051bp  lambda=0.04259  size= 106569491
+    2026-08-04  vol=  28.36%  spread= 0.7293bp  lambda=0.03494  size= 105089826
+    2026-08-05  vol=  28.05%  spread= 0.7984bp  lambda=0.03034  size=  98298848
+    2026-08-06  vol=  22.04%  spread= 0.2571bp  lambda=0.02654  size=  87525574
+    2026-08-07  vol=  23.72%  spread= 0.3181bp  lambda=0.04242  size=  97833394
+    2026-08-08  vol=   7.70%  spread= 0.5464bp  lambda=0.01706  size=  26686570
+    2026-08-09  vol=  12.91%  spread= 0.5897bp  lambda=0.01418  size=  30564724
+    2026-08-10  vol=  26.49%  spread= 0.5658bp  lambda=0.03574  size=  81762198
+    2026-08-11  vol=  21.22%  spread= 0.6640bp  lambda=0.01738  size=  72729742
+    2026-08-12  vol=  22.00%  spread= 0.5002bp  lambda=0.03686  size=  88184639
+    2026-08-13  vol=  26.65%  spread= 0.4858bp  lambda=0.01963  size=  77747062
+    2026-08-14  vol=  19.74%  spread= 0.7682bp  lambda=0.03097  size=  80562656
+    2026-08-15  vol=   8.41%  spread= 0.6436bp  lambda=0.01389  size=  28674678
+    2026-08-16  vol=  10.91%  spread= 0.7794bp  lambda=0.01394  size=  30728415
+    2026-08-23  vol=  39.06%  spread= 0.9703bp  lambda=0.06328  size= 144600677
+    2026-08-24  vol=  50.88%  spread= 0.7594bp  lambda=0.09743  size= 199435585
+    2026-08-25  vol=  54.18%  spread= 0.8081bp  lambda=0.09412  size= 194768010
+    2026-08-26  vol=  38.53%  spread= 0.5014bp  lambda=0.05681  size= 170332166
+    2026-08-27  vol=  36.65%  spread= 0.1751bp  lambda=0.08755  size= 160829001
+    2026-08-28  vol=  45.19%  spread= 0.0425bp  lambda=0.11373  size= 171539697
+    2026-08-29  vol=  13.57%  spread= 0.0013bp  lambda=0.02938  size=  66468597
+
+  Lag-1 autocorrelation of daily volatility (chronological): +0.4370
+  (positive and sizeable => high-vol days cluster into contiguous stretches,
+   which is what a regime means; near zero => independent day-to-day draws,
+   in which case a 'regime' split is just a quantile relabelling.)
+
+=== Candidate split: WEEKDAY vs WEEKEND (a variable not in the data) ===
+  weekday days n=28   weekend days n=12
+  WEEKDAY   vol_ann          n=28  min=  19.74%  median=  29.78%  mean=  31.73%  max=  54.18%
+  WEEKEND   vol_ann          n=12  min=   7.70%  median=  13.85%  mean=  15.99%  max=  39.06%
+  WEEKDAY   lambda           n=28  min=  0.01738  median=  0.04219  mean=  0.04854  max=  0.11373
+  WEEKEND   lambda           n=12  min=  0.00779  median=  0.01604  mean=  0.02139  max=  0.06328
+  WEEKDAY   size             n=28  min=    72729742  median=   127240998  mean=   126547826  max=   199435585
+  WEEKEND   size             n=12  min=    26686570  median=    51338265  mean=    54663717  max=   144600677
+  WEEKDAY   median_spread_bp n=28  min=  0.0015  median=  0.2751  mean=  0.3609  max=  0.9051
+  WEEKEND   median_spread_bp n=12  min=  0.0013  median=  0.5681  mean=  0.4902  max=  0.9703
+
+  The test: how far down the volatility ranking is the split clean?
+    bottom  5 volatility days:  5 of  5 are weekend  (100.0%)  all weekend
+    bottom  8 volatility days:  8 of  8 are weekend  (100.0%)  all weekend
+    bottom 10 volatility days: 10 of 10 are weekend  (100.0%)  all weekend
+    bottom 12 volatility days: 10 of 12 are weekend  ( 83.3%)  
+    bottom 14 volatility days: 10 of 14 are weekend  ( 71.4%)  
+    bottom 16 volatility days: 11 of 16 are weekend  ( 68.8%)  
+    for reference, weekend days are 12 of 40 usable days (30.0%) overall
+
+  Every usable weekend day, by volatility rank (rank 1 = lowest of all 40):
+    rank  1/40  2026-08-08 (Sat)  vol=   7.70%  lambda=0.01706  size=  26686570
+    rank  2/40  2026-08-15 (Sat)  vol=   8.41%  lambda=0.01389  size=  28674678
+    rank  3/40  2026-08-16 (Sun)  vol=  10.91%  lambda=0.01394  size=  30728415
+    rank  4/40  2026-07-25 (Sat)  vol=  11.93%  lambda=0.00779  size=  49661459
+    rank  5/40  2026-08-09 (Sun)  vol=  12.91%  lambda=0.01418  size=  30564724
+    rank  6/40  2026-08-29 (Sat)  vol=  13.57%  lambda=0.02938  size=  66468597
+    rank  7/40  2026-08-01 (Sat)  vol=  14.14%  lambda=0.01871  size=  43361874
+    rank  8/40  2026-07-18 (Sat)  vol=  14.19%  lambda=0.01549  size=  57331773
+    rank  9/40  2026-07-26 (Sun)  vol=  16.92%  lambda=0.01539  size=  53015071
+    rank 10/40  2026-07-19 (Sun)  vol=  17.95%  lambda=0.01660  size=  68802668
+    rank 16/40  2026-08-02 (Sun)  vol=  24.16%  lambda=0.03096  size=  56068097
+    rank 36/40  2026-08-23 (Sun)  vol=  39.06%  lambda=0.06328  size= 144600677
+
+  Separation: lowest weekday = 19.74% ; highest weekend = 39.06%
+  Days inside the overlap band: 26 of 40
+  Median ratio weekday/weekend: 2.150x
