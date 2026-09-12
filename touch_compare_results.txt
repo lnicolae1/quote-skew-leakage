@@ -1,0 +1,102 @@
+==============================================================================
+Touch comparison at the 08-21 SNAPSHOT
+==============================================================================
+The whole-book count in repair_validate_results.txt was identical in both
+arms and therefore could not separate them. Volatility reads the mid and
+spread reads the TOUCH, so this measures the front of the book.
+
+Chain: 08-15 -> 08-16 -> 08-17 -> 08-18 -> 08-19 -> 08-20 -> 08-21   (market_data_droplet only)
+Ground truth: independently-fetched REST snapshot, lastUpdateId=4547092681,
+              compared before it is applied.
+Tick size: $0.01 (measured from exchangeInfo, NOTES.md verified fact).
+
+Run 1 of 2: CONTROL (no repair)
+  done: diffs=1281392 crossed=1132933 drops=0
+
+Run 2 of 2: REPAIRED (crossing-triggered rule, no time constant)
+  done: diffs=1281392 crossed=0 drops=21 across 15 repair events
+
+==============================================================================
+Self-check: does this duplicated machinery reproduce the committed run?
+==============================================================================
+  diffs applied (control)            expected=1281392    got=1281392    OK
+  diffs applied (repaired)           expected=1281392    got=1281392    OK
+  crossed-book events (control)      expected=1132933    got=1132933    OK
+  crossed-book events (repaired)     expected=0          got=0          OK
+  levels dropped (repaired)          expected=21         got=21         OK
+  levels dropped (control)           expected=0          got=0          OK
+  snapshot bids                      expected=779        got=779        OK
+  snapshot asks                      expected=1000       got=1000       OK
+  missing bids (control)             expected=20         got=20         OK
+  missing bids (repaired)            expected=20         got=20         OK
+  missing asks (control)             expected=448        got=448        OK
+  missing asks (repaired)            expected=448        got=448        OK
+  all OK; the duplicate reproduces 3c87b1d exactly.
+
+==============================================================================
+The touch
+==============================================================================
+  position of both books: last_update_id=4547092244
+  snapshot lastUpdateId : 4547092681   (invisible span of 437 updates in between)
+  The snapshot's own touch was CREATED inside that span, so neither arm
+  can be expected to hold it exactly. What matters is the distance.
+
+  Ground truth : best_bid=73146.24  best_ask=73147.68  mid=73146.960  spread=1.44 (144.0 ticks, 0.1969 bp)
+
+  CONTROL  : best_bid=73134.59  best_ask=62852.38  crossed=True
+      bid error : -11.65 USD = -1165.0 ticks = -1.5927 bp
+      ask error : -10295.30 USD = -1029530.0 ticks = -1407.4816 bp
+      mid error : -5153.475 USD = -515347.5 ticks = -704.5371 bp   <== what volatility reads
+      spread    : -10282.21 USD = -1028221.0 ticks = -1512.2346 bp   <== what the spread series reads
+
+  REPAIRED : best_bid=73134.59  best_ask=73150.00  crossed=False
+      bid error : -11.65 USD = -1165.0 ticks = -1.5927 bp
+      ask error : +2.32 USD = +232.0 ticks = +0.3172 bp
+      mid error : -4.665 USD = -466.5 ticks = -0.6378 bp   <== what volatility reads
+      spread    : 15.41 USD = 1541.0 ticks = 2.1069 bp   <== what the spread series reads
+
+  Difference between arms:
+    best_bid : control 73134.59 vs repaired 73134.59  (difference 0.00 USD)
+    best_ask : control 62852.38 vs repaired 73150.00  (difference 10297.62 USD)
+    mid      : control 67993.485 vs repaired 73142.295  (difference 5148.810 USD = 703.9 bp)
+
+==============================================================================
+Match rate by depth; is the error at the front or in the tail?
+==============================================================================
+  Two measures per depth N:
+    snap-side : of the SNAPSHOT's top N levels, how many does the book hold
+                with the identical quantity string (the recall of truth)
+    book-side : of the BOOK's top N levels, how many are in the snapshot's
+                top N (catches spurious levels sitting at the front)
+
+  BIDS
+    depth     CONTROL                      REPAIRED                    
+    top 5     snap  0/5    book  0/5       snap  0/5    book  0/5      
+    top 10    snap  1/10   book  1/10      snap  1/10   book  1/10     
+    top 25    snap 12/25   book 12/25      snap 12/25   book 12/25     
+
+  ASKS
+    depth     CONTROL                      REPAIRED                    
+    top 5     snap  2/5    book  0/5       snap  2/5    book  2/5      
+    top 10    snap  3/10   book  1/10      snap  3/10   book  3/10     
+    top 25    snap  9/25   book  7/25      snap  9/25   book  9/25     
+
+==============================================================================
+The front of the book, side by side (top 5)
+==============================================================================
+
+  BIDS (desc)
+    rank  SNAPSHOT (truth)           CONTROL                    REPAIRED                  
+    1     73146.24000000 @ 0.00296000 73134.59000000 @ 0.00300000 73134.59000000 @ 0.00300000
+    2     73122.68000000 @ 0.00300000 73134.58000000 @ 0.00355000 73134.58000000 @ 0.00355000
+    3     73122.67000000 @ 0.00355000 73124.99000000 @ 0.00634000 73124.99000000 @ 0.00634000
+    4     73118.07000000 @ 0.01367000 73122.88000000 @ 0.03774000 73122.88000000 @ 0.03774000
+    5     73118.01000000 @ 0.02730000 73122.61000000 @ 0.03230000 73122.61000000 @ 0.03230000
+
+  ASKS (asc)
+    rank  SNAPSHOT (truth)           CONTROL                    REPAIRED                  
+    1     73147.68000000 @ 0.00300000 62852.38000000 @ 0.00208000 73150.00000000 @ 0.00127000
+    2     73148.28000000 @ 0.00355000 62852.39000000 @ 0.00159000 73154.11000000 @ 0.08753000
+    3     73150.00000000 @ 0.00127000 62855.84000000 @ 0.03295000 73160.20000000 @ 0.00355000
+    4     73153.18000000 @ 0.03230000 62862.61000000 @ 0.01590000 73171.91000000 @ 0.03771000
+    5     73154.11000000 @ 0.08753000 62863.85000000 @ 0.00425000 73172.04000000 @ 0.03230000
