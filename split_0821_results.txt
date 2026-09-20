@@ -1,0 +1,87 @@
+==============================================================================
+split_0821.py; splitting 2026-08-21 at its re-anchor
+==============================================================================
+Anchor: in-file REST snapshot, lastUpdateId=4547092681, 779 bids / 1000 asks.
+Estimator: 5-min sampling of a 1s previous-tick forward-filled mid grid,
+           gap-straddle and crossed-book excluded. The committed one.
+40-day clean volatility range for reference: 7.70% .. 54.18%
+
+==============================================================================
+ARM A: chained  (08-15 snapshot -> 08-16 .. 08-20 -> 08-21, repair on)
+==============================================================================
+  chained 08-15  last_update_id=4539761471  cumulative drops=1
+  chained 08-16  last_update_id=4540070837  cumulative drops=1
+  chained 08-17  last_update_id=4541104505  cumulative drops=21
+  chained 08-18  last_update_id=4541929106  cumulative drops=21
+  chained 08-19  last_update_id=4544253733  cumulative drops=21
+  chained 08-20  last_update_id=4547087366  cumulative drops=21
+
+  full day: grid_s=86400 crossed_s=0 returns=286 excluded=1 vol=86.57%
+  drops on 08-21: 4
+
+  Self-check against regime_recover_results.txt (41ffc03):
+    annualised vol       committed=0.8657     got=0.8657     OK
+    returns kept         committed=286        got=286        OK
+    grid seconds         committed=86400      got=86400      OK
+    crossed seconds      committed=0          got=0          OK
+    drops on the day     committed=4          got=4          OK
+    all OK; ARM A reproduces the committed 08-21 exactly.
+
+==============================================================================
+The naive split, and why it has no power
+==============================================================================
+  grid starts   : 2026-08-21T00:00:00+00:00
+  anchor lands  : 2026-08-21T00:02:11.783983+00:00
+  PRE-ANCHOR  segment:    131.8 s  =  0.15% of the day
+  post-anchor segment:  86268.2 s  = 99.85% of the day
+  A 5-minute return needs >= 301 s of span.
+
+  segment        candidates   kept       excluded   vol       
+  pre-anchor     0            0          0          n/a       
+  post-anchor    286          286        0          86.57%    
+  full day       287          286        1          86.57%    
+
+  >>> PRE-ANCHOR has 0 USABLE 5-minute returns. The split cannot separate
+      the two halves, and no volatility is quoted for it. The anchor lands
+      132 s into the day, far short of the 301 s one return requires.
+
+  >>> But THE SAME arithmetic answers the question. 99.85% of the day is
+      already post-anchor, so the committed 86.57% is, to within rounding,
+      a post-anchor measurement. 'Chaining artifact' cannot be what makes
+      it extreme; the chain governs only the first 132 seconds.
+      ARM B below tests that directly instead of by splitting.
+
+==============================================================================
+ARM B: fresh  (08-21 alone, book seeded only by the 00:02:11 snapshot)
+==============================================================================
+  No six-day chain, no inherited state, no carried orphans. Every record
+  before the snapshot is ignored. This is the day as the exchange's own
+  book describes it.
+
+  grid_s=86269  crossed_s=0  returns=286  excluded=1  drops=4
+  annualised vol: 78.34%
+
+==============================================================================
+Lambda control; the defect cannot touch the trade stream
+==============================================================================
+  segment        trades     span (s)     lambda      
+  pre-anchor     11         130.4        0.08436     
+  post-anchor    11919      86193.3      0.13828     
+  full day       11930      86323.7      0.13820     
+
+  Trade counts are an independent readout of how busy each segment was.
+  They neither confirm nor refute the volatility; they say whether the two
+  parts of the day differ in activity at all.
+
+==============================================================================
+The comparison that decides it
+==============================================================================
+  ARM A  chained through six days, repair on : 86.57%
+  ARM B  fresh from the exchange's snapshot  : 78.34%
+  difference: -8.24 pp  (-9.51% relative)
+  40-day clean maximum: 54.18%
+
+  ARM B is still far ABOVE THE clean maximum. The extremity does not come
+  from the six-day chain: it survives rebuilding the day from the
+  exchange's own book. On the fixed reading, 08-21 is genuinely violent
+  and the recovery is sound on it.
