@@ -1,0 +1,152 @@
+==============================================================================
+lambda_refit.py; the decisive test on the recovery
+==============================================================================
+Source: regime_scan_rows.json (40 clean days) + regime_recover_results.txt (6 recovered days). No re-parse; this
+        script reads no .jsonl file.
+
+  clean days loaded    : 40
+  recovered days loaded: 6
+
+==============================================================================
+Is lambda actually immune to the repair? -- proven, not assumed
+==============================================================================
+  The cache's lambda was written by regime_scan.py (control arm, before any
+  repair existed). The results file's lambda was written by the REPAIRED
+  arm. If the repair cannot touch the trade stream these must be identical.
+
+  The results file prints lambda to 5 decimal places, so the repaired value
+  is compared at that precision; a tighter tolerance would only be testing
+  my own parsing, not the data. Full cache precision is shown alongside.
+
+  day          control (full)     repaired (5dp) identical 
+  2026-08-17       0.026944814565        0.02694 yes       
+  2026-08-18       0.017962978368        0.01796 yes       
+  2026-08-19       0.085568553856        0.08557 yes       
+  2026-08-20       0.103970182861        0.10397 yes       
+  2026-08-21       0.138078848402        0.13808 yes       
+  2026-08-22       0.075301538392        0.07530 yes       
+
+  All six identical at the printed precision. Lambda is untouched by the
+  repair, so it is a genuinely independent axis on which to test the
+  recovered volatilities.
+
+  Having proven they agree, the full-precision cache lambda is used for the
+  regression below, so no rounding from the results file enters the fit.
+  Note: the recovered volatilities are read from the results file at 2 dp
+  (e.g. 25.87%), so each carries up to 0.005 pp of print rounding. Against
+  a residual SD near 4 pp that is ~0.1% of one SD and changes nothing.
+
+==============================================================================
+Self-check: reproduce regime_recover.py's committed SIZE fit
+==============================================================================
+  intercept            committed=0.03846236       got=0.03846236       OK
+  slope                committed=2.205875e-09     got=2.2058754e-09    OK
+  residual SD (pp)     committed=3.8255           got=3.8254627        OK
+  r                    committed=0.9413           got=0.94133006       OK
+  The size fit is reproduced exactly from the cache.
+
+==============================================================================
+(1) The lambda fit; 40 previously-clean days only, six held out
+==============================================================================
+  vol = 0.112935 + 3.889509 * lambda
+  r = +0.8640    r^2 = 0.7466    residual SD = 5.7065 pp    n = 40
+  in-sample lambda range: 0.00779 .. 0.11373
+
+  for comparison, the SIZE fit on the same 40 days:
+  r = +0.9413    r^2 = 0.8861    residual SD = 3.8255 pp
+  => lambda is the weaker predictor of the two (residual SD 5.7065 vs 3.8255 pp)
+
+==============================================================================
+(2) The six on lambda   (4) with extrapolation flagged on both axes
+==============================================================================
+  in-sample lambda: 0.00779 .. 0.11373      in-sample size: 26686570 .. 199435585
+
+  day          lambda    predicted  measured   residual    in SDs   extrapolates?
+  2026-08-17     0.02694     21.77%     25.87%      +4.10pp   +0.72  no
+  2026-08-18     0.01796     18.28%     22.35%      +4.07pp   +0.71  no
+  2026-08-19     0.08557     44.58%     55.50%     +10.92pp   +1.91  no
+  2026-08-20     0.10397     51.73%     57.47%      +5.74pp   +1.01  size
+  2026-08-21     0.13808     65.00%     86.57%     +21.57pp   +3.78  LAMBDA, size
+  2026-08-22     0.07530     40.58%     43.29%      +2.71pp   +0.47  no
+
+  Same six under the committed SIZE fit, for direct comparison:
+  day          predicted  measured   residual    in SDs  
+  2026-08-17       23.06%     25.87%      +2.81pp   +0.73
+  2026-08-18       19.97%     22.35%      +2.38pp   +0.62
+  2026-08-19       41.37%     55.50%     +14.13pp   +3.69
+  2026-08-20       50.71%     57.47%      +6.76pp   +1.77
+  2026-08-21       64.38%     86.57%     +22.19pp   +5.80
+  2026-08-22       41.40%     43.29%      +1.89pp   +0.49
+
+  days beyond 3 residual SDs on LAMBDA: 2026-08-21
+  days beyond 3 residual SDs on SIZE  : 2026-08-19, 2026-08-21
+  max |SDs| on lambda: 3.78      max |SDs| on size: 5.80
+
+==============================================================================
+(5) CONTROL: the 40 clean days' own residual sign balance
+==============================================================================
+  An OLS fit forces residuals to sum to zero, but not to split evenly. If
+  the residual distribution is skewed, most points sit on one side of the
+  line, and that; not 0.5; is the null the six must be judged against.
+
+  LAMBDA fit  clean days above the line: 22/40 = 55.0%   median residual +0.822 pp
+  SIZE fit    clean days above the line: 20/40 = 50.0%   median residual +0.286 pp
+
+==============================================================================
+(3) Sign test on the six; both fits, side by side
+==============================================================================
+  fit          six positive   p vs 0.5         p vs clean rate 
+  LAMBDA       6 of 6         0.0156           0.0277          
+  SIZE         6 of 6         0.0156           0.0156          
+
+  Caveat on every p ABOVE: the six are consecutive days and daily
+  volatility has lag-1 autocorrelation +0.4370 (regime_scan_results.txt),
+  so they are nowhere near six independent draws. A crude AR(1) adjustment
+  n_eff = n(1-rho)/(1+rho) gives n_eff = 2.35, i.e. roughly two independent
+  observations. Treat these p-values as an upper bound on the evidence,
+  not as a test that clears any threshold.
+
+  Residual sign, day by day, both fits:
+  day          on LAMBDA    on SIZE     
+  2026-08-17         +4.10pp       +2.81pp
+  2026-08-18         +4.07pp       +2.38pp
+  2026-08-19        +10.92pp      +14.13pp
+  2026-08-20         +5.74pp       +6.76pp
+  2026-08-21        +21.57pp      +22.19pp
+  2026-08-22         +2.71pp       +1.89pp
+
+==============================================================================
+Nearest clean days by lambda -- the non-parametric read
+==============================================================================
+  For each recovered day, the three clean days closest in lambda, with
+  their volatilities. This makes no linearity assumption at all.
+
+  2026-08-17  lambda=0.02694  vol=25.87%
+      nearest clean 2026-08-06  lambda=0.02654  vol=22.04%  (diff +3.83 pp)
+      nearest clean 2026-07-24  lambda=0.02634  vol=31.00%  (diff -5.13 pp)
+      nearest clean 2026-08-29  lambda=0.02938  vol=13.57%  (diff +12.30 pp)
+
+  2026-08-18  lambda=0.01796  vol=22.35%
+      nearest clean 2026-08-11  lambda=0.01738  vol=21.22%  (diff +1.13 pp)
+      nearest clean 2026-08-01  lambda=0.01871  vol=14.14%  (diff +8.21 pp)
+      nearest clean 2026-08-08  lambda=0.01706  vol=7.70%  (diff +14.65 pp)
+
+  2026-08-19  lambda=0.08557  vol=55.50%
+      nearest clean 2026-08-27  lambda=0.08755  vol=36.65%  (diff +18.85 pp)
+      nearest clean 2026-08-25  lambda=0.09412  vol=54.18%  (diff +1.32 pp)
+      nearest clean 2026-08-24  lambda=0.09743  vol=50.88%  (diff +4.62 pp)
+
+  2026-08-20  lambda=0.10397  vol=57.47%
+      nearest clean 2026-08-24  lambda=0.09743  vol=50.88%  (diff +6.59 pp)
+      nearest clean 2026-08-28  lambda=0.11373  vol=45.19%  (diff +12.28 pp)
+      nearest clean 2026-08-25  lambda=0.09412  vol=54.18%  (diff +3.29 pp)
+
+  2026-08-21  lambda=0.13808  vol=86.57%
+      nearest clean 2026-08-28  lambda=0.11373  vol=45.19%  (diff +41.38 pp)
+      nearest clean 2026-08-24  lambda=0.09743  vol=50.88%  (diff +35.69 pp)
+      nearest clean 2026-08-25  lambda=0.09412  vol=54.18%  (diff +32.39 pp)
+
+  2026-08-22  lambda=0.07530  vol=43.29%
+      nearest clean 2026-07-21  lambda=0.06699  vol=27.97%  (diff +15.32 pp)
+      nearest clean 2026-07-20  lambda=0.06431  vol=43.62%  (diff -0.33 pp)
+      nearest clean 2026-08-23  lambda=0.06328  vol=39.06%  (diff +4.23 pp)
