@@ -1,0 +1,151 @@
+==============================================================================
+regime_recover.py; recovering 2026-08-17 .. 08-22
+==============================================================================
+Repair: while best_bid >= best_ask, drop whichever touch level was written
+        at the lower update-ID. No time constant. (Validated at 6c9c249:
+        mid error 704.5371 bp -> 0.6378 bp, zero false positives.)
+Anchor: 08-15's own snapshot, chained through 08-16 as warm-up.
+Scope : market_data_droplet only. No committed module touched.
+
+  ARM 1 of 2: CONTROL (no repair)
+    warm-up 08-15 chained (last_update_id=4539761471, drops=0)
+    warm-up 08-16 chained (last_update_id=4540070837, drops=0)
+    08-17: grid_s=86399 crossed_s=85921 vol_n=1 vol=n/a spread_n=468 drops=0
+    08-18: grid_s=86400 crossed_s=86400 vol_n=0 vol=n/a spread_n=0 drops=0
+    08-19: grid_s=86399 crossed_s=86399 vol_n=0 vol=n/a spread_n=0 drops=0
+    08-20: grid_s=86400 crossed_s=86400 vol_n=0 vol=n/a spread_n=0 drops=0
+    08-21: grid_s=86400 crossed_s=86385 vol_n=0 vol=n/a spread_n=14 drops=0
+    08-22: grid_s=86400 crossed_s=86400 vol_n=0 vol=n/a spread_n=0 drops=0
+
+==============================================================================
+Self-check: does the duplicated loop reproduce regime_scan_results.txt?
+==============================================================================
+  08-17  OK
+  08-18  OK
+  08-19  OK
+  08-20  OK
+  08-21  OK
+  08-22  OK
+  all six days OK on all 11 fields, and no volatility in any control day.
+
+  ARM 2 of 2: REPAIRED
+    warm-up 08-15 chained (last_update_id=4539761471, drops=1)
+    warm-up 08-16 chained (last_update_id=4540070837, drops=1)
+    08-17: grid_s=86399 crossed_s=0 vol_n=286 vol=25.87% spread_n=86389 drops=20
+    08-18: grid_s=86400 crossed_s=0 vol_n=287 vol=22.35% spread_n=86400 drops=0
+    08-19: grid_s=86399 crossed_s=0 vol_n=287 vol=55.50% spread_n=86399 drops=0
+    08-20: grid_s=86400 crossed_s=0 vol_n=287 vol=57.47% spread_n=86400 drops=0
+    08-21: grid_s=86400 crossed_s=0 vol_n=286 vol=86.57% spread_n=86389 drops=4
+    08-22: grid_s=86400 crossed_s=0 vol_n=287 vol=43.29% spread_n=86400 drops=0
+
+==============================================================================
+What the repair recovered
+==============================================================================
+  day        crossed%  ->crossed% drops    vol       spread bp   spread n 
+  08-17         99.45%      0.00%       20    25.87%      0.6314     86389
+  08-18        100.00%      0.00%        0    22.35%      0.6812     86400
+  08-19        100.00%      0.00%        0    55.50%      0.5826     86399
+  08-20        100.00%      0.00%        0    57.47%      0.6408     86400
+  08-21         99.98%      0.00%        4    86.57%      1.1172     86389
+  08-22        100.00%      0.00%        0    43.29%      0.8404     86400
+
+==============================================================================
+Spread decision; the rule was fixed before the run
+==============================================================================
+  (A) gap-adjacent exposure < 1% of 1s samples within 120s of a gap, every day
+  (B) stale touch within the clean-day range 0.75%-2.70% (spread_stale_test), every day
+
+  day        N=0        N=30       N=120      stale touch 
+  08-17         0.0116%    0.0810%    0.2894%      1.6528%
+  08-18         0.0000%    0.0000%    0.0000%      2.1111%
+  08-19         0.0000%    0.0000%    0.0000%      1.8334%
+  08-20         0.0000%    0.0000%    0.0000%      2.5602%
+  08-21         0.0127%    0.0822%    0.2905%      1.9363%
+  08-22         0.0000%    0.0000%    0.0000%      1.1632%
+
+  (A) days failing the 1% gap-adjacency bound: none
+  (B) days exceeding the clean-day stale ceiling 2.70%: none
+
+  => Spread admitted for the six recovered days. Both conditions hold.
+
+==============================================================================
+Prediction test; does each recovered day land where size predicts?
+==============================================================================
+  OLS of volatility on file size, fitted on the 40 previously clean days only,
+  so the recovered days are a genuine out-of-sample test of the recovery.
+  fit: vol = 3.846236e-02 + 2.205875e-09 * size    residual SD = 3.8255 pp   r = +0.9413
+  in-sample size range: 26686570 .. 199435585 bytes
+
+  day        size         predicted   measured    residual    in SDs  
+  2026-08-17     87125275      23.06%      25.87%      +2.81pp   +0.73
+  2026-08-18     73093292      19.97%      22.35%      +2.38pp   +0.62
+  2026-08-19    170121824      41.37%      55.50%     +14.12pp   +3.69
+  2026-08-20    212441852      50.71%      57.47%      +6.76pp   +1.77  <-- size EXTRAPOLATES beyond the fitted range
+  2026-08-21    274440648      64.38%      86.57%     +22.19pp   +5.80  <-- size EXTRAPOLATES beyond the fitted range
+  2026-08-22    170232924      41.40%      43.29%      +1.89pp   +0.49
+
+  *** 2 recovered day(s) miss the prediction by more than 3 residual SDs: 2026-08-19, 2026-08-21
+      Per the standing instruction this is evidence the recovery is wrong,
+      not a finding about the market.
+
+==============================================================================
+Updated regime analysis; 46 days (was 40)
+==============================================================================
+  realised vol: min=7.70% median=27.51% max=86.57% max/min=11.245x
+    lowest  2026-08-08 7.70%   highest 2026-08-21 86.57%
+  lambda      : min=0.00779 median=0.03688 max=0.13808 max/min=17.727x
+  file size   : min=26686570 median=105829658 max=274440648 max/min=10.284x
+
+  SIZE vs volatility
+    40 days (committed, 32803ca): Pearson +0.9413  Spearman +0.9396
+    46 days (with recovery)     : Pearson +0.9455  Spearman +0.9519  (r2=0.8939, t=+19.251 on 44 df)
+    vol vs lambda: Pearson +0.9138   size vs lambda: Pearson +0.9067
+
+==============================================================================
+Does the weekday/WEEKEND split survive?
+==============================================================================
+  The six recovered days are five weekdays (08-17 Mon .. 08-21 Fri) and one
+  saturday (08-22). Their absence was censoring the WEEKDAY side, so this is
+  the adversarial test of the split, not a confirmation of it.
+  WEEKDAY  n=33  vol min=19.74% median=30.30% mean=34.43% max=86.57%   lambda median=0.04242
+  WEEKEND  n=13  vol min=7.70% median=14.14% mean=18.09% max=43.29%   lambda median=0.01660
+  median ratio weekday/weekend: 2.143x  (was 2.150x on 40 days)
+
+  The test: how far down the volatility ranking is the split clean?
+    bottom  5 volatility days:  5 of  5 are weekend (100.0%) all weekend
+    bottom  8 volatility days:  8 of  8 are weekend (100.0%) all weekend
+    bottom 10 volatility days: 10 of 10 are weekend (100.0%) all weekend
+    bottom 12 volatility days: 10 of 12 are weekend ( 83.3%) 
+    bottom 14 volatility days: 10 of 14 are weekend ( 71.4%) 
+    bottom 16 volatility days: 10 of 16 are weekend ( 62.5%) 
+    weekend base rate: 13 of 46 days (28.3%)
+
+  Where the recovered days rank (1 = lowest volatility of 46):
+    rank 18/46  2026-08-17 (Mon)  vol= 25.87%  lambda=0.02694  size=  87125275
+    rank 15/46  2026-08-18 (Tue)  vol= 22.35%  lambda=0.01796  size=  73093292
+    rank 44/46  2026-08-19 (Wed)  vol= 55.50%  lambda=0.08557  size= 170121824
+    rank 45/46  2026-08-20 (Thu)  vol= 57.47%  lambda=0.10397  size= 212441852
+    rank 46/46  2026-08-21 (Fri)  vol= 86.57%  lambda=0.13808  size= 274440648
+    rank 39/46  2026-08-22 (Sat)  vol= 43.29%  lambda=0.07530  size= 170232924
+
+  Recovered days beside their clean neighbours (chronological):
+    2026-08-14 (Fri)           vol= 19.74%  spread= 0.7682bp  lambda=0.03097  size=  80562656
+    2026-08-15 (Sat)           vol=  8.41%  spread= 0.6436bp  lambda=0.01389  size=  28674678
+    2026-08-16 (Sun)           vol= 10.91%  spread= 0.7794bp  lambda=0.01394  size=  30728415
+    2026-08-17 (Mon) RECOVERED vol= 25.87%  spread= 0.6314bp  lambda=0.02694  size=  87125275
+    2026-08-18 (Tue) RECOVERED vol= 22.35%  spread= 0.6812bp  lambda=0.01796  size=  73093292
+    2026-08-19 (Wed) RECOVERED vol= 55.50%  spread= 0.5826bp  lambda=0.08557  size= 170121824
+    2026-08-20 (Thu) RECOVERED vol= 57.47%  spread= 0.6408bp  lambda=0.10397  size= 212441852
+    2026-08-21 (Fri) RECOVERED vol= 86.57%  spread= 1.1172bp  lambda=0.13808  size= 274440648
+    2026-08-22 (Sat) RECOVERED vol= 43.29%  spread= 0.8404bp  lambda=0.07530  size= 170232924
+    2026-08-23 (Sun)           vol= 39.06%  spread= 0.9703bp  lambda=0.06328  size= 144600677
+    2026-08-24 (Mon)           vol= 50.88%  spread= 0.7594bp  lambda=0.09743  size= 199435585
+    2026-08-25 (Tue)           vol= 54.18%  spread= 0.8081bp  lambda=0.09412  size= 194768010
+    2026-08-26 (Wed)           vol= 38.53%  spread= 0.5014bp  lambda=0.05681  size= 170332166
+    2026-08-27 (Thu)           vol= 36.65%  spread= 0.1751bp  lambda=0.08755  size= 160829001
+    2026-08-28 (Fri)           vol= 45.19%  spread= 0.0425bp  lambda=0.11373  size= 171539697
+    2026-08-29 (Sat)           vol= 13.57%  spread= 0.0013bp  lambda=0.02938  size=  66468597
+
+  Depth profile remains excluded for these six days, two independent reasons
+  already on record: a stale-drop rule removes real deep resting size, and the
+  deep ask side here is structurally incomplete (448 missing asks at 08-21).
