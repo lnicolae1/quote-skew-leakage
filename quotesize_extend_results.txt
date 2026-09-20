@@ -1,0 +1,159 @@
+﻿==============================================================================================================================
+Self-tests; quotesize_extend.py. The arm has NOT run.
+==============================================================================================================================
+  T-IDENT       PASS  SD_MIN is quotesize_verdict's own object and equals 0.08258 BTC;
+                      classify/overall/clears_sd/TARGETS/verdict/band are its objects too.
+                      Working point, seeds, k and gamma all equal the committed values.
+  T-NAN         PASS  nan, +inf, -inf and None all raise; finite values pass.
+  T-choice      PASS  0.080 point 0.09359 clears 0.08258 but its 95% lo 0.07605 does not.
+                      SE/sd across the committed four is 9.6%-11.5%; at 10.5% clearance needs
+                      sd(q) >= 0.10398, reached at quote_size 0.0982 on the committed exponent
+                      0.5148. At 0.16 the exponent could fall to 0.152 and still clear.
+  T-runaway     PASS  flag fires at 50% on each of volume, near-touch and touch-set,
+                      and not at 49.99%. It is reported, and does NOT enter the verdict.
+  T-mirror-EXT  PASS  all 17 shared quantities agree with quotesize_verdict.run to 1e-09
+                      at seed 0, quote_size 0.020 (14s). The new columns add no RNG draw.
+                      all-in touch 0.27978 bp <= residual touch 0.27978 bp, maker sets the touch 4.9% of seconds.
+
+  All 5 self-tests PASSED. T-REPRO runs inside main(), because it re-measures the four
+  committed cells at full seed count and that is the run.
+
+==============================================================================================================================
+Closing the quote_size grid; extending upward past the OUT OF GRID verdict
+==============================================================================================================================
+Working point: lam=1.8040 p_market=0.0126 mean_lifetime=720s disp=0.0055, JOIN clipping. MM present.
+k=0.17763. gamma=9.40e-06 (C=13.71). DEFAULT_GAMMA=1e-06 and DEFAULT_QUOTE_SIZE=0.02 untouched.
+8 seeds x 86400s per size, book scanned every 60s. quote_size is the only thing that varies.
+
+The threshold is unchanged and imported: sd(q) 95% lower bound >= 2.0 x 0.04129 = 0.08258 BTC.
+The committed four cells are re-run here, not copied, and asserted against
+quotesize_verdict_results.txt. That is what makes the new rows poolable with the old.
+
+  quote_size=0.020 BTC [committed]   57s  fill= 5.80%  vol=14.30%  near= 1.47%  touch-set= 4.91%  sd(q)=0.04604
+  quote_size=0.035 BTC [committed]   57s  fill= 6.19%  vol=19.41%  near= 2.63%  touch-set= 5.32%  sd(q)=0.05857
+  quote_size=0.050 BTC [committed]   57s  fill= 6.34%  vol=22.77%  near= 3.85%  touch-set= 5.62%  sd(q)=0.07211
+  quote_size=0.080 BTC [committed]   57s  fill= 6.59%  vol=27.16%  near= 6.58%  touch-set= 5.83%  sd(q)=0.09359
+  quote_size=0.120 BTC [NEW      ]   57s  fill= 6.99%  vol=33.12%  near=10.21%  touch-set= 6.34%  sd(q)=0.12012
+  quote_size=0.160 BTC [NEW      ]   57s  fill= 6.93%  vol=36.01%  near=14.24%  touch-set= 6.36%  sd(q)=0.15108
+
+==============================================================================================================================
+T-REPRO; do the four committed cells reproduce quotesize_verdict_results.txt?
+==============================================================================================================================
+  quote_size=0.020  OK -- all 9 committed fields reproduce
+  quote_size=0.035  OK; all 9 committed fields reproduce
+  quote_size=0.050  OK; all 9 committed fields reproduce
+  quote_size=0.080  OK; all 9 committed fields reproduce
+  all four committed cells reproduce. The new rows pool with them.
+
+==============================================================================================================================
+1. THE FOUR COMMITTED TARGETS, scored by clipped_window.verdict (imported, not reimplemented)
+==============================================================================================================================
+  quote_size=0.020  [committed]
+    median width bp         0.32138 +/- 0.02275    95% [  0.27679,   0.36597]  band [  0.22984,   0.34476]  UNRESOLVED
+    levels/side           550.98455 +/- 2.77665    95% [545.54231, 556.42679]  band [533.07200, 799.60800]  MET
+    aggTrades/s             0.04083 +/- 0.00066    95% [  0.03953,   0.04213]  band [  0.04059,   0.04961]  UNRESOLVED
+    mean/median shape       2.17765 +/- 0.08618    95% [  2.00875,   2.34656]  band [  0.94605,   2.83815]  MET
+    -> 2/4 MET, 0 MISSED, 2 UNRESOLVED
+
+  quote_size=0.035  [committed]
+    median width bp         0.33237 +/- 0.02036    95% [  0.29246,   0.37228]  band [  0.22984,   0.34476]  UNRESOLVED
+    levels/side           550.57817 +/- 2.88016    95% [544.93305, 556.22329]  band [533.07200, 799.60800]  MET
+    aggTrades/s             0.03927 +/- 0.00056    95% [  0.03817,   0.04038]  band [  0.04059,   0.04961]  MISSED
+    mean/median shape       2.10918 +/- 0.06383    95% [  1.98406,   2.23429]  band [  0.94605,   2.83815]  MET
+    -> 2/4 MET, 1 MISSED, 1 UNRESOLVED
+
+  quote_size=0.050  [committed]
+    median width bp         0.33556 +/- 0.01825    95% [  0.29978,   0.37133]  band [  0.22984,   0.34476]  UNRESOLVED
+    levels/side           550.63650 +/- 2.82976    95% [545.09018, 556.18282]  band [533.07200, 799.60800]  MET
+    aggTrades/s             0.03859 +/- 0.00056    95% [  0.03748,   0.03969]  band [  0.04059,   0.04961]  MISSED
+    mean/median shape       2.08267 +/- 0.05796    95% [  1.96907,   2.19628]  band [  0.94605,   2.83815]  MET
+    -> 2/4 MET, 1 MISSED, 1 UNRESOLVED
+
+  quote_size=0.080  [committed]
+    median width bp         0.33372 +/- 0.01568    95% [  0.30299,   0.36446]  band [  0.22984,   0.34476]  UNRESOLVED
+    levels/side           550.61680 +/- 2.98991    95% [544.75658, 556.47701]  band [533.07200, 799.60800]  MET
+    aggTrades/s             0.03765 +/- 0.00059    95% [  0.03649,   0.03882]  band [  0.04059,   0.04961]  MISSED
+    mean/median shape       2.08826 +/- 0.05130    95% [  1.98771,   2.18882]  band [  0.94605,   2.83815]  MET
+    -> 2/4 MET, 1 MISSED, 1 UNRESOLVED
+
+  quote_size=0.120  [NEW]
+    median width bp         0.32885 +/- 0.01700    95% [  0.29553,   0.36216]  band [  0.22984,   0.34476]  UNRESOLVED
+    levels/side           550.64119 +/- 2.97801    95% [544.80428, 556.47809]  band [533.07200, 799.60800]  MET
+    aggTrades/s             0.03637 +/- 0.00048    95% [  0.03542,   0.03731]  band [  0.04059,   0.04961]  MISSED
+    mean/median shape       2.13691 +/- 0.05446    95% [  2.03017,   2.24365]  band [  0.94605,   2.83815]  MET
+    -> 2/4 MET, 1 MISSED, 1 UNRESOLVED
+
+  quote_size=0.160  [NEW]
+    median width bp         0.33590 +/- 0.01661    95% [  0.30333,   0.36846]  band [  0.22984,   0.34476]  UNRESOLVED
+    levels/side           550.61936 +/- 2.99237    95% [544.75431, 556.48441]  band [533.07200, 799.60800]  MET
+    aggTrades/s             0.03548 +/- 0.00044    95% [  0.03461,   0.03635]  band [  0.04059,   0.04961]  MISSED
+    mean/median shape       2.07304 +/- 0.06018    95% [  1.95510,   2.19099]  band [  0.94605,   2.83815]  MET
+    -> 2/4 MET, 1 MISSED, 1 UNRESOLVED
+
+==============================================================================================================================
+2. sd(q) and max|q| across the extended grid
+==============================================================================================================================
+   quote_size                  sd(q) BTC     95% lo    sd(q)/qsize     max|q| BTC  max|q|/qsize
+        0.020           0.04604 +/- 0.00507    0.03610          2.302        0.15129         7.565
+        0.035           0.05857 +/- 0.00605    0.04672          1.673        0.20436         5.839
+        0.050           0.07211 +/- 0.00831    0.05583          1.442        0.24392         4.878
+        0.080           0.09359 +/- 0.00895    0.07606          1.170        0.31357         3.920
+        0.120   NEW     0.12012 +/- 0.01233    0.09595          1.001        0.38130         3.178
+        0.160   NEW     0.15108 +/- 0.02077    0.11038          0.944        0.47366         2.960
+
+  Fitted exponent of sd(q) on quote_size
+    committed range 0.020 -> 0.080 (re-fitted here): 0.5148   (committed value 0.5148)
+    extended range  0.020 -> 0.160                  : 0.5697   (change +0.0549)
+    NEW segment     0.080 -> 0.160                  : 0.6859   (change +0.1711)
+
+  The committed record (:65-69) already carries one failure of this power law to
+  extrapolate: 0.74 fitted below 0.020 became 0.5148 over 0.020-0.080, a change of
+  -0.2252 across non-overlapping ranges.
+  The exponent moves again. That is a third data point on the same phenomenon and
+  belongs in the results inventory: sd(q) on quote_size is not a single power law
+  over 0.005-0.160, and no exponent from any sub-range may be used to project.
+
+==============================================================================================================================
+3. The pre-registered verdict; threshold imported, not moved
+==============================================================================================================================
+  quote_size=0.020      sd(q) 95% lo = 0.03610 vs threshold 0.08258   -> TOO_SMALL
+  quote_size=0.035      sd(q) 95% lo = 0.04672 vs threshold 0.08258   -> TOO_SMALL
+  quote_size=0.050      sd(q) 95% lo = 0.05583 vs threshold 0.08258   -> TOO_SMALL
+  quote_size=0.080      sd(q) 95% lo = 0.07606 vs threshold 0.08258   -> TOO_SMALL
+  quote_size=0.120 NEW  sd(q) 95% lo = 0.09595 vs threshold 0.08258   -> BOUNDED
+  quote_size=0.160 NEW  sd(q) 95% lo = 0.11038 vs threshold 0.08258   -> BOUNDED
+
+  Overall: BOUNDED
+
+==============================================================================================================================
+4. Participation; is a cell that clears still a market?
+==============================================================================================================================
+  Pre-registered before the run: runaway if volume share, near-touch share or
+  touch-set share reaches 50%. Reported separately; it does NOT enter the verdict above.
+
+   quote_size    fill %     vol %     near % touch-set %     resid bp    all-in bp     flag
+        0.020      5.80     14.30       1.47        4.91      0.32138      0.32138       ok
+        0.035      6.19     19.41       2.63        5.32      0.33237      0.33237       ok
+        0.050      6.34     22.77       3.85        5.62      0.33556      0.33556       ok
+        0.080      6.59     27.16       6.58        5.83      0.33372      0.33372       ok
+        0.120      6.99     33.12      10.21        6.34      0.32885      0.32885       ok
+        0.160      6.93     36.01      14.24        6.36      0.33590      0.33590       ok
+
+  Baseline at the committed 0.020: fill 5.80%, volume 14.30%, near-touch 1.47%, touch-set 4.91%.
+  At 0.120 (6x the committed clip): fill 6.99% (1.20x), volume 33.12% (2.32x), near-touch 10.21% (6.95x).
+  At 0.160 (8x the committed clip): fill 6.93% (1.19x), volume 36.01% (2.52x), near-touch 14.24% (9.69x).
+
+  No cell is flagged. The maker stays below 50% on volume, near-touch size and
+  touch-setting at every size tested, so no cleared cell is cleared by becoming the
+  market. The residual and all-in touch columns show how far inside the book it sits.
+
+==============================================================================================================================
+What this run does not do
+==============================================================================================================================
+  N1  It does not measure damage. Phase 7 is not run. This establishes only whether an
+      inventory scale exists at which a damage A/B would have room to show anything.
+  N2  T=86400s per cell. The damage A/B runs 7 days, where sd(q) could be larger --
+      which makes this test conservative about reaching the threshold, not optimistic.
+  N3  The four scored targets are unchanged and near-touch depth is still not among
+      them. No new gate was invented inside this run.
+  N4  gamma is held at the binding viability cap, not swept.
