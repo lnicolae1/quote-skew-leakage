@@ -1,0 +1,138 @@
+﻿================================================================================================================================
+self-tests: damage_qs12.py (arm not yet run)
+================================================================================================================================
+  T-IDENT     PASS  SD_MIN=0.08258 from quotesize_verdict; working point, seeds, k
+                    and T match damage_ab. Sniffer size 0.020 BTC = DEFAULT_QUOTE_SIZE.
+                    gamma_for_C(13.66, 604800s) = 1.3392e-06 with C_per_gamma 1.02e+07;
+                    at 86400s it would be 9.3743e-06 with C_per_gamma 1.457e+06. NO quote_size term in
+                    either, so gamma is unchanged at 0.12. Cap C=13.66 was set at
+                    quote_size 0.020 and 86400s; re-checked in the gate block.
+  T-NAN       PASS  nan, +inf, -inf and None all raise.
+  T-RATIO     PASS  zero, negative and NaN denominators all raise; the old expression on a
+                    zero SE gave inf >= 2.0 ('DAMAGE DETECTED'); now halts.
+  T-TOL       PASS  tolerances derived from printed precision: 2dp->5e-3, 5dp->5e-6, 4dp->5e-5.
+  T-MIRROR    PASS  all 11 returned keys agree with damage_ab.run to 1e-09, both arms,
+                    at seed 0 (195s). At mm_size=SNIFF_SIZE the transcription IS the
+                    committed function; added columns draw no RNG.
+
+  all 5 self-tests PASSED.
+
+================================================================================================================================
+damage A/B at quote_size 0.12: sensitivity arm, not a new headline
+================================================================================================================================
+working point: lam=1.8040 p_market=0.0126 mean_lifetime=720s disp=0.0055, join clipping.
+cluster B: 604800s (7 days), 8 seeds, k=0.17763, C=13.66 -> gamma=1.3392e-06 (C_per_gamma 1.02e+07).
+theta=0.00, hold=10800s (headline only). Sniffer size 0.020 BTC, not rescaled with the maker.
+DEFAULT_GAMMA=1e-06 and DEFAULT_QUOTE_SIZE=0.02 untouched.
+
+pre-registered: primary = paired d edge/unit; 'damage detected' iff |mean| >= 2.0 SE.
+MDE = 2.0 x SE at both sizes, against leak amplitude sd(skew) in ticks.
+
+running mm quote_size=0.020 ...
+  8 control + 8 treatment runs in 937s
+running mm quote_size=0.120 ...
+  8 control + 8 treatment runs in 953s
+
+================================================================================================================================
+0. data integrity: NaN Sharpe seeds, min per-seed MM volume
+================================================================================================================================
+  mm_sharpe NaN is counted, not halted on; other non-finite fields and zero MM volume halt.
+
+  mm size    arm         NaN Sharpe seeds       min per-seed MM volume  
+  0.020      control      0 of 8                 6.6682 BTC (seed 6)
+  0.020      treatment    0 of 8                 6.6882 BTC (seed 6)
+  0.120      control      0 of 8                 15.6762 BTC (seed 6)
+  0.120      treatment    0 of 8                 15.5138 BTC (seed 6)
+
+  no NaN Sharpe at 0.020 in either arm; given T-MIRROR, the committed control-arm Sharpe and
+  headline d-MM-Sharpe row used all 8 seeds. Four non-headline rows not re-run.
+  zero-volume guard did not fire.
+
+================================================================================================================================
+1. cluster-B clearance: does 0.12 clear in this configuration?
+================================================================================================================================
+  1194392 clearance is cluster C (86400s, gamma 9.40e-06); this is cluster B (604800s, gamma 1.3392e-06).
+  not poolable; sd(q) re-measured here.
+  threshold from quotesize_verdict: 2.0 x 0.04129 = 0.08258 BTC on the 95% lower bound.
+
+  mm size      sd(q) BTC (control arm)    95% lo       threshold    clears?
+  0.020            0.09099 +/- 0.00798    0.07535      0.08258      NO
+  0.120            0.26929 +/- 0.00871    0.25221      0.08258      YES
+
+  SD_REF = 0.04129 is from cluster E (gamma 9.37e-06, 86400s, 5 seeds);
+  here gamma is 7.0x smaller and the horizon 7x longer; both raise sd(q).
+
+  intended case: 0.12 clears at cluster B, 0.020 does not; damage below is measured at
+  the pre-registered inventory scale.
+
+================================================================================================================================
+2. REPRODUCTION OF THE COMMITTED quote_size 0.020 HEADLINE
+================================================================================================================================
+  d_pnl          committed   -107.50000   got   -107.49897   tol 0.005000   OK
+  d_pnl_se       committed     33.40000   got     33.40231   tol 0.005000   OK
+  d_edge         committed     -0.00646   got     -0.00646   tol 0.000005   OK
+  d_edge_se      committed      0.01023   got      0.01023   tol 0.000005   OK
+  sn_share       committed      4.51870   got      4.51871   tol 0.000050   OK
+  ctrl_pnl       committed   -525.18000   got   -525.17852   tol 0.005000   OK
+  ctrl_pnl_se    committed    162.43000   got    162.43323   tol 0.005000   OK
+  all seven COMMITTED figures reproduce.
+
+================================================================================================================================
+3. primary metric: paired d edge/unit, pre-registered decision rule
+================================================================================================================================
+  mm size    d edge/unit ($/BTC)      as bp of mid             |mean|/SE  verdict
+  0.020       -0.00646 +/- 0.01023     -0.00104 +/- 0.00165    0.63       null
+  0.120        0.00563 +/- 0.00629      0.00091 +/- 0.00101    0.89       null
+
+  null at 0.12: |mean| = 0.89 SE < 2.0 SE; null survives the inventory extension.
+
+================================================================================================================================
+4. power
+================================================================================================================================
+  mm size    MDE ($/BTC)            MDE (bp)             sd(skew) ticks     MDE / leak
+  0.020      0.02046                0.00330                65.825 +/- 7.132   0.031
+  0.120      0.01258                0.00203               186.074 +/- 15.063  0.007
+
+  sd(skew): sd of 0.5*(mm_bid+mm_ask) - residual_mid, the quantity the sniffer inverts.
+  measured in the CONTROL arm; committed reference at 0.020: 2.724 ticks.
+
+  MDE as a fraction of the leak amplitude: r = 0.031 at 0.020, 0.007 at 0.12.
+  RATIO r(0.12)/r(0.020) = 0.2176, against the pre-registered bar of < 0.90 (POWER_GAIN_MIN = 0.10).
+  low bar by design: 10% is the smallest change worth calling a gain.
+  power bought: detectable effect relative to the signal shrank by 78%.
+
+================================================================================================================================
+5. secondary: d MM PnL, spread / inventory split
+================================================================================================================================
+  mm size    d MM PnL ($)               d spread ($)               d inv ($)                 
+  0.020         -107.50 +/- 33.40            -0.07 +/- 0.27           -107.43 +/- 33.15      
+  0.120         -123.86 +/- 68.05             0.08 +/- 0.49           -123.94 +/- 68.07      
+
+  secondary: Run B has an extra participant, so PnL differences are not pure leakage.
+
+================================================================================================================================
+6. caveats: sniffer share, control PnL, Phase 5 gates
+================================================================================================================================
+  mm size    sniffer share    control PnL ($)            MM fills/day     MM spread ($)    resid touch ($)
+  0.020       4.5187%           -525.18 +/- 162.43         326.6          18.3620           2.4700
+  0.120       4.5186%          -1058.55 +/- 388.57         347.7          18.3612           2.5625
+
+  sniffer share: clip stays 0.020 BTC, not rescaled with the maker.
+  committed at 0.020: 4.5187%.
+
+  CONTROL PnL: the maker loses with no adversary present (Phase 5 item 3);
+  damage is a perturbation to that baseline.
+
+  Phase 5 gates, built as in clipped_gamma_sweep.py: per-second MM spread and residual touch,
+  per-seed medians, ratio of seed means; MM fills as on_fills counts; control arm.
+  caps derived at 86400s; this run is 604800s.
+    size 0.020: GATE 2 (MM spread / market touch <= 10x) = 18.3620 / 2.4700 = 7.43x -> HOLDS
+               GATE 1 input: 326.6 MM fills/day; anchor 437.8/day is cluster C, not poolable
+    size 0.120: GATE 2 (MM spread / market touch <= 10x) = 18.3612 / 2.5625 = 7.17x -> HOLDS
+               GATE 1 input: 347.7 MM fills/day; anchor 437.8/day is cluster C, not poolable
+    GATE 1 within cluster B: 326.6 fills/day at 0.020 -> 347.7 at 0.12 = 106.5% retained.
+
+  rate-gate deviation (1194392): at quote_size 0.12 the aggTrade rate is ~19.4% below the
+  0.0451/s target (band +/-10%), so the CALIBRATION gate rejects this configuration;
+  no grid size meets it (0.020 straddles the floor: UNRESOLVED). Sensitivity arm, not the
+  calibrated damage figure.
