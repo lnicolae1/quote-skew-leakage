@@ -1,0 +1,177 @@
+﻿================================================================================================================================
+Self-tests: extraction_diag.py. The arm has not run.
+================================================================================================================================
+  T-IDENT     PASS  _finite/_ratio are damage_qs12's; T, seeds, k, gamma, sniffer size, theta,
+                    hold and both maker sizes equal the committed cluster-B values; every
+                    horizon is a multiple of the 60s sample; pre-registered constants fixed.
+  T-guards    PASS  zero/negative/NaN/inf denominators raise; a 7-seed mean, a zero-SE mean and
+                    a mean containing NaN are all refused.
+  T-OLS       PASS  recovers a planted slope of -0.5 (got -0.4993, R2 0.9983); SE matches the
+                    textbook formula; a zero-residual fit is refused rather than given SE 0.
+  T-TMB       PASS  top-minus-bottom quintile = 8.0000 on planted data, invariant to input order.
+  T-windows   PASS  window counts equal floor((T-60)/h) at every horizon; starts are exactly
+                    h apart (non-overlapping); a missing sample drops exactly the 2 windows it ends/starts.
+  T-walk      PASS  a hand-built book walks to 7.5000 bp, matching the VWAP arithmetic;
+                    every order size is unchanged afterwards, and an unfillable size raises.
+  T-VERDICT   PASS  BELOW / ABOVE / STRADDLE on hand cases, a negative move counted by magnitude,
+                    the companion halving flips an ABOVE to a STRADDLE, and both roll-ups fire.
+  T-power     (P4) benchmark, from DEFAULT_SIGMA=0.3721 and window counts only; no data:
+                    h=   60s  sigma_h=  5.131 bp  n=10079 windows/seed  expected 95% half-width   0.112 bp
+                    h=  300s  sigma_h= 11.473 bp  n= 2015 windows/seed  expected 95% half-width   0.560 bp
+                    h=  900s  sigma_h= 19.871 bp  n=  671 windows/seed  expected 95% half-width   1.681 bp
+                    h= 3600s  sigma_h= 39.743 bp  n=  167 windows/seed  expected 95% half-width   6.739 bp
+                    h=10800s  sigma_h= 68.837 bp  n=   55 windows/seed  expected 95% half-width  20.340 bp
+                    Against a cost near 0.4-0.6 bp, h>=900 cannot bound below
+                    the cost: STRUCTURAL NULL is unreachable at 8 seeds under (P2).
+  T-mirror    PASS  every one of the 16 keys damage_qs12.run_ext returns agrees to 1e-09,
+                    in both arms, seed 0, maker size 0.120 (247s).
+  T-capture   PASS  the counterparty buckets sum EXACTLY to the sniffer's own fill volume --
+                    no sniffer fill escapes the capture; and the control arm sampled >99% of
+                    the 60s grid.
+
+  All 10 self-tests PASSED (T-mirror and T-capture share one run).
+
+================================================================================================================================
+Why is extraction null? Structural null vs strategy null, cluster B, maker size 0.020 and 0.12
+================================================================================================================================
+Working point: lam=1.8040 p_market=0.0126 mean_lifetime=720s disp=0.0055, JOIN clipping. T=604800s, 8 seeds,
+gamma=1.3392e-06, k=0.17763. Sniffer 0.020 BTC, theta=0.00, hold=10800s. Samples every 60s; horizons 60, 300, 900, 3600, 10800 s.
+Pre-registered: predicted slope sign negative; the (P2) verdict; the (P3) companion
+at half the statistic; the (P4) power limit; the (P5) profit-is-not-damage reading.
+
+running maker size 0.020 ...
+  8 control + 8 treatment runs in 999s
+running maker size 0.120 ...
+  8 control + 8 treatment runs in 987s
+
+================================================================================================================================
+Reproduction of damage_qs12_results.txt; tolerances from its printed precision
+================================================================================================================================
+  size 0.020  d_edge       committed     -0.00646  got     -0.00646  tol 5e-06  OK
+  size 0.020  d_edge_se    committed      0.01023  got      0.01023  tol 5e-06  OK
+  size 0.020  sd_q         committed      0.09099  got      0.09099  tol 5e-06  OK
+  size 0.020  sd_q_se      committed      0.00798  got      0.00798  tol 5e-06  OK
+  size 0.020  sn_share     committed      4.51870  got      4.51871  tol 5e-05  OK
+  size 0.020  ctrl_pnl     committed   -525.18000  got   -525.17852  tol 5e-03  OK
+  size 0.020  ctrl_pnl_se  committed    162.43000  got    162.43323  tol 5e-03  OK
+  size 0.120  d_edge       committed      0.00563  got      0.00563  tol 5e-06  OK
+  size 0.120  d_edge_se    committed      0.00629  got      0.00629  tol 5e-06  OK
+  size 0.120  sd_q         committed      0.26929  got      0.26929  tol 5e-06  OK
+  size 0.120  sd_q_se      committed      0.00871  got      0.00871  tol 5e-06  OK
+  size 0.120  sn_share     committed      4.51860  got      4.51857  tol 5e-05  OK
+  size 0.120  ctrl_pnl     committed  -1058.55000  got  -1058.55310  tol 5e-03  OK
+  size 0.120  ctrl_pnl_se  committed    388.57000  got    388.57085  tol 5e-03  OK
+  all 14 committed figures reproduce.
+
+================================================================================================================================
+(A) Who does the sniffer trade against? Treatment arm, share of sniffer fill volume
+================================================================================================================================
+  maker size 0.020   (sniffer fill volume, all 8 seeds: 17.5200 BTC)
+    counterparty share per seed, mean +/- SE pooled share
+    MM             41.882% +/- 1.271                41.896%
+    noise          58.118% +/- 1.271                58.104%
+    informed        0.000%  (zero on every seed)             0.000%
+    seed            0.000%  (zero on every seed)             0.000%
+    other           0.000%  (zero on every seed)             0.000%
+
+  maker size 0.120   (sniffer fill volume, all 8 seeds: 17.5200 BTC)
+    counterparty share per seed, mean +/- SE pooled share
+    MM             40.444% +/- 1.818                40.466%
+    noise          59.554% +/- 1.819                59.532%
+    informed        0.002% +/- 0.002                 0.002%
+    seed            0.000%  (zero on every seed)             0.000%
+    other           0.000%  (zero on every seed)             0.000%
+
+  The maker's share of sniffer fill volume: 41.882% at 0.020, 40.444% at 0.12.
+  The sniffer can take the maker's edge directly only on that fraction of its
+  volume; the rest is paid by, or to, the other side of the market.
+
+================================================================================================================================
+(B) Does q predict future mid moves? Control arm, non-overlapping windows, true q
+================================================================================================================================
+  Predicted sign (P1): negative. Slope in bp of mid per BTC of inventory.
+  Primary SE across the 8 seeds; pooled OLS SE is naive.
+
+  maker size 0.020
+    per-seed slope (bp/BTC):
+    seed          h=60s       h=300s       h=900s      h=3600s     h=10800s
+    0            -0.024        0.071        1.429       15.165       78.372
+    1            -0.523       -2.483       -6.633      -14.931      -11.678
+    2            -0.375       -1.789       -5.078      -15.482      -39.305
+    3            -1.036       -4.899      -13.726      -40.193      -55.928
+    4            -0.218       -0.780       -0.675       12.043       37.701
+    5             0.512        2.939       10.810       60.937      289.198
+    6            -0.464       -2.181       -6.087      -15.971      -32.505
+    7            -0.535       -2.473       -6.439      -19.202      -17.044
+
+    h (s)   slope, SE across seeds   |t|       sign ok?   mean R2    pooled slope (naive SE)  windows
+    60         -0.333 +/- 0.159       2.10      yes        0.00065       -0.413 +/- 0.058       10079/seed, 80632 total
+    300        -1.449 +/- 0.809       1.79      yes        0.00199       -1.942 +/- 0.357       2015/seed, 16120 total
+    900        -3.300 +/- 2.567       1.29      yes        0.00346       -5.264 +/- 1.345       671/seed, 5368 total
+    3600       -2.204 +/- 10.980      0.20      yes        0.00524      -15.020 +/- 7.641       167/seed, 1336 total
+    10800      31.101 +/- 40.004      0.78      no         0.01443      -29.499 +/- 26.852      55/seed, 440 total
+
+  maker size 0.120
+    per-seed slope (bp/BTC):
+    seed          h=60s       h=300s       h=900s      h=3600s     h=10800s
+    0            -0.226       -1.086       -2.972      -10.306      -21.067
+    1            -0.079       -0.374       -0.996       -0.957        7.867
+    2            -0.031       -0.129       -0.172        1.412        9.240
+    3            -0.397       -1.944       -5.652      -19.430      -36.470
+    4             0.157        0.785        2.497       11.553       43.163
+    5            -0.098       -0.466       -1.160       -2.820       13.643
+    6            -0.069       -0.306       -0.775       -1.232        9.963
+    7            -0.174       -0.843       -2.412       -8.529      -15.091
+
+    h (s)   slope, SE across seeds   |t|       sign ok?   mean R2    pooled slope (naive SE)  windows
+    60         -0.115 +/- 0.057       2.02      yes        0.00130       -0.123 +/- 0.017       10079/seed, 80632 total
+    300        -0.545 +/- 0.279       1.95      yes        0.00356       -0.593 +/- 0.109       2015/seed, 16120 total
+    900        -1.455 +/- 0.833       1.75      yes        0.00543       -1.653 +/- 0.435       671/seed, 5368 total
+    3600       -3.789 +/- 3.239       1.17      yes        0.00752       -5.247 +/- 2.598       167/seed, 1336 total
+    10800       1.406 +/- 8.744       0.16      no         0.01042       -8.228 +/- 9.239       55/seed, 440 total
+
+  L1 Stambaugh: q is persistent and its innovations (fills) correlate with mid innovations.
+  Non-overlapping windows remove return overlap, not that bias; SE across seeds is
+  robust to within-seed dependence only.
+
+================================================================================================================================
+(C) Can the predictable move pay for the trade? TMB vs measured round trip
+================================================================================================================================
+
+  maker size 0.020 -- measured round-trip cost of a 0.020 BTC market order: 1.4613 +/- 0.0084 bp
+    (cost 95% band [1.4449, 1.4777] bp; mean over 10080 samples/seed; excludes permanent impact, L2)
+    h (s)   TMB bp, SE             sign ok?   |TMB| 95% band             (P2) call  (P3) companion, |TMB|/2
+    60       -0.0663 +/- 0.0459    yes        [  0.0000,   0.1563]      BELOW      BELOW     [0.0000, 0.0781]
+    300      -0.2700 +/- 0.2264    yes        [  0.0000,   0.7138]      BELOW      BELOW     [0.0000, 0.3569]
+    900      -0.6684 +/- 0.7481    yes        [  0.0000,   2.1346]      STRADDLE   BELOW     [0.0000, 1.0673]
+    3600     -1.1811 +/- 3.1054    yes        [  0.0000,   7.2678]      STRADDLE   STRADDLE  [0.0000, 3.6339]
+    10800     7.0575 +/- 10.7670   no         [  0.0000,  28.1608]      STRADDLE   STRADDLE  [0.0000, 14.0804]
+    (P2) VERDICT at 0.020: INCONCLUSIVE  -- horizon(s) 900, 3600, 10800
+    (P3) companion  at 0.020: INCONCLUSIVE  -- horizon(s) 3600, 10800
+
+  maker size 0.120 -- measured round-trip cost of a 0.020 BTC market order: 1.4704 +/- 0.0100 bp
+    (cost 95% band [1.4507, 1.4901] bp; mean over 10080 samples/seed; excludes permanent impact, L2)
+    h (s)   TMB bp, SE             sign ok?   |TMB| 95% band             (P2) call  (P3) companion, |TMB|/2
+    60       -0.1121 +/- 0.0416    yes        [  0.0307,   0.1936]      BELOW      BELOW     [0.0153, 0.0968]
+    300      -0.5573 +/- 0.2037    yes        [  0.1581,   0.9566]      BELOW      BELOW     [0.0791, 0.4783]
+    900      -1.5313 +/- 0.6218    yes        [  0.3126,   2.7500]      STRADDLE   BELOW     [0.1563, 1.3750]
+    3600     -5.2016 +/- 2.3827    yes        [  0.5314,   9.8717]      STRADDLE   STRADDLE  [0.2657, 4.9359]
+    10800    -0.6760 +/- 5.3301    yes        [  0.0000,  11.1230]      STRADDLE   STRADDLE  [0.0000, 5.5615]
+    (P2) VERDICT at 0.120: INCONCLUSIVE  -- horizon(s) 900, 3600, 10800
+    (P3) companion  at 0.120: INCONCLUSIVE  -- horizon(s) 3600, 10800
+
+================================================================================================================================
+Verdict
+================================================================================================================================
+  maker size 0.020   (P2) INCONCLUSIVE       (P3 companion) INCONCLUSIVE
+  maker size 0.120   (P2) INCONCLUSIVE       (P3 companion) INCONCLUSIVE
+
+  Overall (P2): INCONCLUSIVE
+  overall (P3 companion, one tail per trade): INCONCLUSIVE
+
+  With (A) and (P5): a STRATEGY NULL would mean a better attacker could profit from q;
+  only the maker's share
+  of sniffer volume (41.882% at 0.020, 40.444% at 0.12) could come from the maker directly.
+  (P4): STRUCTURAL NULL unreachable at 8 seeds (recorded before the run).
+
+  NaN Sharpe seeds across all 32 runs (counted, not halted on): 0
