@@ -1,0 +1,127 @@
+﻿================================================================================================================================
+Self-tests: phase8_toxicity.py. The arm has not run.
+================================================================================================================================
+  T-IDENT       PASS  calibrate/make_defended are phase8_gamma's; gamma 9.4e-6; levels are
+                      TOXICITY_PRESETS low/medium/high = 0.02/0.10/0.30, all inside the sweep;
+                      0.10 * DEFAULT_LAMBDA_NOISE == DEFAULT_LAMBDA_INFORMED EXACTLY.
+  T-parse       PASS  96 per-seed values, 4 summaries, the calibration row and the 0.020 drift
+                      row parsed from the committed files with tolerance = half the last printed digit.
+                      Committed BASELINE climb, mean of its 24 printed values: -0.018812.
+  T-rules       PASS  R-JITTER one-sided; R-QUANT two-sided -- a 10-SE positive value now fails as
+                      RECOVERY (it passed under the rule first specified), a 10-SE negative fails as
+                      'not flat', and the committed +0.0058 at 1.21 SE is flat. The between flag fires
+                      for R-QUANT on both signs, for R-JITTER only when positive. Zero SE raises; R2 fires.
+  T-callsite    PASS  level_calibration; the function the arm calls; returns the committed
+                      constants EXACTLY at 0.10 while ignoring a planted measured sd(q), and uses
+                      the measured sd(q) at 0.02 and 0.30 with w/sd = 0.34 and sigma_eps/sd_skew = 1.
+                      The run-time check on the built maker fires on a 1e-7 sigma_eps mismatch.
+  T-postsim     PASS  report_anchor() and report(); the code the run uses after the simulation --
+                      ran on planted results for all three levels (110 lines, captured, not logged).
+                      It returned RECOVERY at HIGH, NOT FLAT at LOW, R-JITTER failing at LOW, R-CONTRAST
+                      failing at LOW and R2 failing on the planted outlier; both anchors reported failure.
+  T-patch       PASS  at 0.10 the patched run is bit-identical to the unpatched one on every key;
+                      at 0.02 it differs (4596 vs 5044 public prints), so the patch is live at the
+                      call site; every binding is restored, including after an exception. (26s)
+
+  All 6 self-tests PASSED.
+
+================================================================================================================================
+Phase 8 axis 3: does the defense result survive toxicity?
+================================================================================================================================
+gamma=9.40e-06, T=86400s, k=0.17763, quote_size=0.020, 24 seeds, arms BASELINE / JITTER / QUANT, M 1 -> 300.
+Toxicity = informed:noise arrival ratio. Levels: COMMITTED 0.10, LOW 0.02, HIGH 0.30.
+Pre-registered: R-JITTER (one-sided), R-QUANT (two-sided, corrected before the run), AXIS 3 HELD, R2;
+R-CONTRAST reported. Z=2.0 with t(23)=2.069 flagged. Estimated ~42 min.
+
+running toxicity COMMITTED ratio=0.10 ...
+  done in 748s
+
+================================================================================================================================
+Anchor: the committed level must reproduce phase8_reference_results.txt's HIGH row, 24 seeds
+================================================================================================================================
+  96 per-seed climbs (BASELINE, QUANT, JITTER, Q-minus-B x 24 seeds) checked individually.
+  JITTER  base  mean                got +7.877570452  committed +7.877570  tol 5e-07  OK
+  JITTER  base  se                  got +1.317155128  committed +1.317155  tol 5e-07  OK
+  JITTER  base  worst-seed share %  got +30.796416964  committed +30.800000  tol 5e-02  OK
+  JITTER  zero  mean                got +7.858758163  committed +7.858758  tol 5e-07  OK
+  JITTER  zero  se                  got +1.317402138  committed +1.317402  tol 5e-07  OK
+  JITTER  zero  worst-seed share %  got +30.819060472  committed +30.800000  tol 5e-02  OK
+  QUANT   base  mean                got +0.005800460  committed +0.005800  tol 5e-07  OK
+  QUANT   base  se                  got +0.004795371  committed +0.004795  tol 5e-07  OK
+  QUANT   base  worst-seed share %  got +28.508169446  committed +28.500000  tol 5e-02  OK
+  QUANT   zero  mean                got -0.013011828  committed -0.013012  tol 5e-07  OK
+  QUANT   zero  se                  got +0.004552200  committed +0.004552  tol 5e-07  OK
+  QUANT   zero  worst-seed share %  got +27.085333539  committed +27.100000  tol 5e-02  OK
+  calib         sigma_eps           got +0.315531722  committed +0.315532  tol 5e-07  OK
+  calib         w_q                 got +0.015653600  committed +0.015654  tol 5e-10  OK
+  calib         sd_q_24             got +0.046087613  committed +0.046088  tol 5e-07  OK
+  calib         sd_q_24_se          got +0.003124734  committed +0.003125  tol 5e-07  OK
+  anchor HELD on all 116 checks.
+  drift  median width bp    mean got 0.321380  committed 0.32138  tol 5e-06  OK
+  drift  median width bp    se   got 0.022752  committed 0.02275  tol 5e-06  OK
+  drift  levels/side        mean got 550.984549  committed 550.98455  tol 5e-06  OK
+  drift  levels/side        se   got 2.776655  committed 2.77665  tol 5e-06  OK
+  drift  aggTrades/s        mean got 0.040826  committed 0.04083  tol 5e-06  OK
+  drift  aggTrades/s        se   got 0.000664  committed 0.00066  tol 5e-06  OK
+  drift  mean/median shape  mean got 2.177654  committed 2.17765  tol 5e-06  OK
+  drift  mean/median shape  se   got 0.086176  committed 0.08618  tol 5e-06  OK
+  drift anchor HELD: quotesize_extend's 0.020 row reproduces through the patch.
+
+running toxicity LOW       ratio=0.02 ...
+  done in 750s
+running toxicity HIGH      ratio=0.30 ...
+  done in 774s
+================================================================================================================================
+CALIBRATION: ratios held, absolute strengths re-derived per level
+================================================================================================================================
+  level      ratio  sd(q) measured, 24 sd  sd(q) used  sd(skew) as  sd(skew) measured, 8 sd sigma_eps    w_q          source
+  LOW        0.02   0.047822 +/- 0.003767  0.047822    0.327741     0.247620 +/- 0.037005  0.327741     0.016259313  measured, this level's BASELINE seeds
+  COMMITTED  0.10   0.046088 +/- 0.003125  0.046040    0.315532     0.243084 +/- 0.041600  0.315532     0.015653600  committed SD_Q_REF (anchor)
+  HIGH       0.30   0.045242 +/- 0.003609  0.045242    0.310065     0.228551 +/- 0.029145  0.310065     0.015382392  measured, this level's BASELINE seeds
+  w_q / sd(q)_used = 0.34 and sigma_eps / sd(skew)_AS = 1.0 at every level (asserted in T-callsite).
+
+================================================================================================================================
+Rules (BASELINE-referenced, 24 seeds; zero reference beside it)
+================================================================================================================================
+  R-JITTER  (one-sided: JITTER-minus-BASELINE > 0 at 2.0 SE)
+    LOW        BASELINE ref +7.400595 +/- 1.326861   5.58 SE  ok    | zero ref +7.379803 +/- 1.326094 | worst seed 14  40.9%  R2 FAIL
+    COMMITTED  BASELINE ref +7.877570 +/- 1.317155   5.98 SE  ok    | zero ref +7.858758 +/- 1.317402 | worst seed  3  30.8%
+    HIGH       BASELINE ref +8.497136 +/- 1.456131   5.84 SE  ok    | zero ref +8.476457 +/- 1.455958 | worst seed 18  27.4%
+  R-QUANT  (two-sided: |QUANT-minus-BASELINE| < 2.0 SE)
+    LOW        BASELINE ref +0.001738 +/- 0.004317   0.40 SE  ok    | zero ref -0.019054 +/- 0.004745 | worst seed  8  23.7%
+    COMMITTED  BASELINE ref +0.005800 +/- 0.004795   1.21 SE  ok    | zero ref -0.013012 +/- 0.004552 | worst seed 14  28.5%
+    HIGH       BASELINE ref -0.002460 +/- 0.005725   0.43 SE  ok    | zero ref -0.023139 +/- 0.006966 | worst seed  9  76.8%  R2 FAIL
+
+  R-CONTRAST  (reported, not part of the verdict: JITTER-minus-QUANT climb > 0 at 2.0 SE)
+    LOW        +7.398857 +/- 1.327450   5.57 SE  ok    | worst seed 14  40.9%
+    COMMITTED  +7.871770 +/- 1.316949   5.98 SE  ok    | worst seed  3  30.8%
+    HIGH       +8.499596 +/- 1.458038   5.83 SE  ok    | worst seed 18  27.3%
+
+  BASELINE climb at LOW        -0.020792 +/- 0.003608
+  BASELINE climb at COMMITTED  -0.018812 +/- 0.002724
+  BASELINE climb at HIGH       -0.020679 +/- 0.003010
+
+  R2 (no seed > 40% of the squared deviation in a scored cell): FAILED; JITTER LOW seed 14 40.9%; QUANT HIGH seed 9 76.8%
+  Calls decided between 2.0 SE and t(23)=2.069: none
+
+================================================================================================================================
+The verdict
+================================================================================================================================
+  AXIS 3 HELD. R-JITTER and the two-sided R-QUANT hold at LOW, COMMITTED and HIGH toxicity.
+  R-CONTRAST (reported): holds at every level
+  R2 FAILED in: JITTER LOW seed 14 40.9%; QUANT HIGH seed 9 76.8%; those cells are one-seed-dominated.
+
+================================================================================================================================
+MARKET DRIFT: book movement at each toxicity level vs the calibrated one (8 seeds, BASELINE)
+================================================================================================================================
+  target               real data   LOW                       COMMITTED                 HIGH                      
+  width bp             0.28730         0.27668 +/- 0.01306        0.32138 +/- 0.02275        0.38033 +/- 0.01816    
+  levels/side          666.34000     549.19149 +/- 2.62255      550.98455 +/- 2.77665      554.85399 +/- 2.47444    
+  near-touch BTC/side  0.04520         0.13458 +/- 0.00543        0.12549 +/- 0.00573        0.11276 +/- 0.00435    
+  aggTrades/s          0.04510         0.03597 +/- 0.00068        0.04083 +/- 0.00066        0.05198 +/- 0.00066    
+  mean/median shape    1.89210         2.31423 +/- 0.06968        2.17765 +/- 0.08618        2.00508 +/- 0.06780    
+  gate 2 (<= 10x)                    10.515x (18.152/1.726)         9.048x (18.153/2.006)         7.675x (18.152/2.365)      
+
+  Width, levels, agg rate, shape: clipped_window's four scored targets; near-touch
+  depth: a working-point solve target, not scored. Working point
+  not re-solved at 0.02 or 0.30. Gate 2 via clipped_gamma_sweep.run, unchanged.
