@@ -1,0 +1,225 @@
+﻿================================================================================================================================
+Self-tests: onehour_confirm.py. No scored seed has run.
+================================================================================================================================
+  extraction_diag's own tests, imported unchanged:
+  T-IDENT     PASS  _finite/_ratio are damage_qs12's; T, seeds, k, gamma, sniffer size, theta,
+                    hold and both maker sizes equal the committed cluster-B values; every
+                    horizon is a multiple of the 60s sample; pre-registered constants fixed.
+  T-guards    PASS  zero/negative/NaN/inf denominators raise; a 7-seed mean, a zero-SE mean and
+                    a mean containing NaN are all refused.
+  T-TMB       PASS  top-minus-bottom quintile = 8.0000 on planted data, invariant to input order.
+  T-windows   PASS  window counts equal floor((T-60)/h) at every horizon; starts are exactly
+                    h apart (non-overlapping); a missing sample drops exactly the 2 windows it ends/starts.
+  T-walk      PASS  a hand-built book walks to 7.5000 bp, matching the VWAP arithmetic;
+                    every order size is unchanged afterwards, and an unfillable size raises.
+  T-VERDICT   PASS  BELOW / ABOVE / STRADDLE on hand cases, a negative move counted by magnitude,
+                    the companion halving flips an ABOVE to a STRADDLE, and both roll-ups fire.
+  this script's tests:
+  T-IDENT      PASS  clip 0.12, h 3600 scored / 900 descriptive, anchor = extraction_diag's 8 seeds;
+                     T, gamma, theta, hold, sniffer size, sign and companion factor are extraction_diag's.
+  T-seeds      PASS  the specified 100-195 has 20 stream collisions (13 with committed seeds 11-23,
+                     7 inside the set) and was NOT used. The first 96 admissible seeds >= 100 are
+                     113..201 + 291..297 = SCORED, exactly; all 416 anchor+scored streams are unique and
+                     the 384 scored streams touch no stream any committed run used.
+  T-streams    PASS  for seeds 0, 7, 113, 297 the constructed world's noise, lifetime and informed RNGs are
+                     in the state of random.Random(predicted seed), and the value path regenerates
+                     from its predicted seed: the stream map is the code's, lifetime offset 90001.
+  T-call       PASS  call_at == extraction_diag.horizon_call EXACTLY at Z on 7 cases x 2 factors;
+                     the committed 8-seed cell re-calls STRADDLE; a planted call flips 1.96 -> 1.985;
+                     a tail is scored signed (a -3 bp gain is BELOW, not ABOVE); strict means refuse.
+  T-parse      PASS  the committed 0.120 block parses to cost 1.4704 +/- 0.0100, TMB3600 -5.2016 +/-
+                     2.3827, TMB900 -1.5313 +/- 0.6218, tol 5e-5 each; a planted 0.020 block placed
+                     first is never read, rows after the 0.120 verdict are ignored, and tolerances
+                     follow each number's own printed digits.
+  T-postsim    PASS  seed_summary on a planted 7-day capture: 167 / 671 windows, TMB == ED.tmb, top-bot
+                     == TMB, NaN cost raises. anchor_check passes planted committed values and fails
+                     exactly the perturbed ones. report() returns STRATEGY / INCONCLUSIVE (P2 agreeing
+                     and disagreeing) / STRUCTURAL, a sign failure, the one-tail flag, the 1.96/1.985
+                     flip and an R2 failure; 95 rows and a NaN refuse. Output captured, not logged.
+  T-power      (no new data) per-seed SDs from the committed 8 seeds; SE(|TMB|/2) at 96 = 0.3439,
+               cost band at 96 = [1.4647, 1.4761]:
+               true TMB = observed (|TMB|/2 2.6008):  P(STRATEGY) 0.905  P(STRUCTURAL) 0.000  P(INCONCLUSIVE) 0.095
+               true TMB = half     (|TMB|/2 1.3004):  P(STRATEGY) 0.007  P(STRUCTURAL) 0.069  P(INCONCLUSIVE) 0.924
+               seeds for the half case's expected upper bound to fall below the cost: ~1615
+  extraction_diag's mirror test, re-run first as registered:
+  T-mirror    PASS  every one of the 16 keys damage_qs12.run_ext returns agrees to 1e-09,
+                    in both arms, seed 0, maker size 0.120 (242s).
+  T-capture   PASS  the counterparty buckets sum EXACTLY to the sniffer's own fill volume --
+                    no sniffer fill escapes the capture; and the control arm sampled >99% of
+                    the 60s grid.
+
+  All self-tests PASSED.
+
+================================================================================================================================
+One-hour confirmation: cluster B, clip 0.12, control arm, 7 days, h = 3600 s scored
+================================================================================================================================
+Working point lam=1.8040 p_market=0.0126 life=720s disp=0.0055 JOIN; gamma=1.3392e-06 k=0.17763; T=604800s; samples every 60s.
+Anchor seeds [0, 1, 2, 3, 4, 5, 6, 7] (excluded from the verdict). Scored seeds: 113..201 + 291..297 (96), corrected
+before the run from the specified 100-195, which collides on 20 RNG streams (header (S)).
+Pre-registered: (P3) per trade at Z=1.96 is the verdict; (P2) beside it; t(95)=1.985 flagged; tails
+separately; R2 at 40%; 900 s descriptive. Estimated ~1 h 55 min.
+
+running the 8 anchor seeds ...
+  anchor  seed    0  cost 1.464634  TMB900  -4.374098  TMB3600 -13.932613  top3600  -9.285043  bot3600  +4.647570  all3600 +2.818310  n 671/167    51s
+  anchor  seed    1  cost 1.457587  TMB900  +0.063093  TMB3600  +0.352609  top3600  +8.687501  bot3600  +8.334892  all3600 +2.453615  n 671/167    51s
+  anchor  seed    2  cost 1.514308  TMB900  -0.900120  TMB3600  -2.307443  top3600  +7.935699  bot3600 +10.243142  all3600 +6.162628  n 671/167    52s
+  anchor  seed    3  cost 1.466108  TMB900  -3.702418  TMB3600 -12.374314  top3600  +0.096853  bot3600 +12.471167  all3600 +4.748603  n 671/167    51s
+  anchor  seed    4  cost 1.439241  TMB900  +0.629639  TMB3600  +5.699682  top3600  +4.420940  bot3600  -1.278743  all3600 +0.809871  n 671/167    50s
+  anchor  seed    5  cost 1.498228  TMB900  -0.692142  TMB3600  -3.216608  top3600  -3.072564  bot3600  +0.144044  all3600 -2.432739  n 671/167    51s
+  anchor  seed    6  cost 1.433046  TMB900  -1.128244  TMB3600  -5.318370  top3600  +3.380498  bot3600  +8.698868  all3600 +3.616289  n 671/167    51s
+  anchor  seed    7  cost 1.489677  TMB900  -2.145964  TMB3600 -10.515481  top3600  -7.766792  bot3600  +2.748690  all3600 -0.663238  n 671/167    51s
+  anchor done in 408s
+
+================================================================================================================================
+Anchor: seeds 0-7 must reproduce extraction_diag_results.txt's clip-0.120 block at printed precision
+================================================================================================================================
+  round-trip cost  mean  got +1.470353671  committed +1.4704  tol 5e-05  OK
+  round-trip cost  se    got +0.010049771  committed +0.0100  tol 5e-05  OK
+  TMB h=3600       mean  got -5.201567171  committed -5.2016  tol 5e-05  OK
+  TMB h=3600       se    got +2.382723989  committed +2.3827  tol 5e-05  OK
+  TMB h=900        mean  got -1.531281732  committed -1.5313  tol 5e-05  OK
+  TMB h=900        se    got +0.621775098  committed +0.6218  tol 5e-05  OK
+  anchor HELD on all 6 checks.
+
+running the 96 SCORED seeds ...
+  scored  seed  113  cost 1.494008  TMB900  -3.479492  TMB3600 -13.353204  top3600 -12.026747  bot3600  +1.326458  all3600 -2.773348  n 671/167    51s
+  scored  seed  114  cost 1.512032  TMB900  +3.164032  TMB3600 +13.775203  top3600  +1.371331  bot3600 -12.403872  all3600 -5.084933  n 671/167    50s
+  scored  seed  115  cost 1.454987  TMB900  +0.513926  TMB3600  +6.749850  top3600  +1.918216  bot3600  -4.831634  all3600 -2.679209  n 671/167    50s
+  scored  seed  116  cost 1.428314  TMB900  -0.923086  TMB3600  -2.669200  top3600  -2.473034  bot3600  +0.196167  all3600 +1.163037  n 671/167    51s
+  scored  seed  117  cost 1.415500  TMB900  -0.154951  TMB3600  +0.853607  top3600  +0.781117  bot3600  -0.072490  all3600 +2.749426  n 671/167    51s
+  scored  seed  118  cost 1.480397  TMB900  -2.217202  TMB3600  -8.318293  top3600  +6.235079  bot3600 +14.553372  all3600 +7.792326  n 671/167    50s
+  scored  seed  119  cost 1.490007  TMB900  -1.717846  TMB3600  -2.074400  top3600  -3.829851  bot3600  -1.755452  all3600 -3.749344  n 671/167    50s
+  scored  seed  120  cost 1.435156  TMB900  -0.650631  TMB3600  +2.448129  top3600  +4.032634  bot3600  +1.584505  all3600 +0.539808  n 671/167    51s
+  scored  seed  121  cost 1.503225  TMB900  -0.780639  TMB3600  +2.180511  top3600 +10.927838  bot3600  +8.747327  all3600 +5.186901  n 671/167    51s
+  scored  seed  122  cost 1.432594  TMB900  -0.935371  TMB3600  +0.078656  top3600  +0.270259  bot3600  +0.191602  all3600 -0.989471  n 671/167    49s
+  scored  seed  123  cost 1.466854  TMB900  +1.291056  TMB3600  +7.498674  top3600  -0.864021  bot3600  -8.362695  all3600 -5.356025  n 671/167    51s
+  scored  seed  124  cost 1.519257  TMB900  +1.037594  TMB3600  +4.179777  top3600 +10.436117  bot3600  +6.256339  all3600 -0.773368  n 671/167    53s
+  -- 12/96 done, 607s elapsed, ~4251s to go
+  scored  seed  125  cost 1.470349  TMB900  +3.354668  TMB3600 +23.297902  top3600 +10.154944  bot3600 -13.142958  all3600 -3.040694  n 671/167    52s
+  scored  seed  126  cost 1.484486  TMB900  -3.094932  TMB3600 -13.215393  top3600  +2.214584  bot3600 +15.429977  all3600 -0.421695  n 671/167    53s
+  scored  seed  127  cost 1.385556  TMB900  +0.976933  TMB3600  +5.445383  top3600  -0.252088  bot3600  -5.697471  all3600 +0.138471  n 671/167    53s
+  scored  seed  128  cost 1.468155  TMB900  -3.018075  TMB3600 -13.356276  top3600  -8.256320  bot3600  +5.099956  all3600 +2.855626  n 671/167    54s
+  scored  seed  129  cost 1.478951  TMB900  -2.135535  TMB3600  +2.010798  top3600  +2.430716  bot3600  +0.419918  all3600 +1.074866  n 671/167    56s
+  scored  seed  130  cost 1.560927  TMB900  -2.005158  TMB3600  -4.096296  top3600  +7.702152  bot3600 +11.798449  all3600 +0.917217  n 671/167    55s
+  scored  seed  131  cost 1.452830  TMB900  +2.222978  TMB3600 +10.220192  top3600  +7.416320  bot3600  -2.803872  all3600 -3.212162  n 671/167    54s
+  scored  seed  132  cost 1.518484  TMB900  -1.121411  TMB3600  -4.462529  top3600  -2.191497  bot3600  +2.271032  all3600 +0.686311  n 671/167    53s
+  scored  seed  133  cost 1.502063  TMB900  +1.477239  TMB3600  +6.445602  top3600  -1.406706  bot3600  -7.852308  all3600 -3.508415  n 671/167    54s
+  scored  seed  134  cost 1.463352  TMB900  +1.186775  TMB3600  +4.661919  top3600  +1.787721  bot3600  -2.874198  all3600 +0.576339  n 671/167    54s
+  scored  seed  135  cost 1.540432  TMB900  -0.725548  TMB3600  -3.371483  top3600  -7.629731  bot3600  -4.258248  all3600 -1.603999  n 671/167    51s
+  scored  seed  136  cost 1.493825  TMB900  +3.454656  TMB3600 +13.903573  top3600  +0.497909  bot3600 -13.405664  all3600 -7.158876  n 671/167    52s
+  -- 24/96 done, 1246s elapsed, ~3738s to go
+  scored  seed  137  cost 1.532835  TMB900  -1.962932  TMB3600  -6.352708  top3600  +1.316792  bot3600  +7.669500  all3600 +1.894537  n 671/167    51s
+  scored  seed  138  cost 1.435114  TMB900  -0.480628  TMB3600  -1.837335  top3600  +4.846016  bot3600  +6.683351  all3600 -1.745321  n 671/167    54s
+  scored  seed  139  cost 1.495851  TMB900  -7.554352  TMB3600 -27.533598  top3600 -12.019774  bot3600 +15.513824  all3600 -0.780486  n 671/167    54s
+  scored  seed  140  cost 1.476770  TMB900  -0.952522  TMB3600  -1.386709  top3600  -8.291835  bot3600  -6.905126  all3600 -5.247854  n 671/167    51s
+  scored  seed  141  cost 1.448521  TMB900  +2.659928  TMB3600  +9.396488  top3600  -0.104459  bot3600  -9.500947  all3600 -4.864348  n 671/167    54s
+  scored  seed  142  cost 1.467588  TMB900  -0.569825  TMB3600  +1.765689  top3600 +11.498662  bot3600  +9.732972  all3600 +5.116873  n 671/167    52s
+  scored  seed  143  cost 1.441837  TMB900  -2.209768  TMB3600 -13.235765  top3600  +4.574363  bot3600 +17.810128  all3600 +2.321230  n 671/167    52s
+  scored  seed  144  cost 1.422651  TMB900  -2.148511  TMB3600  -7.631412  top3600  +1.517105  bot3600  +9.148517  all3600 +2.636295  n 671/167    50s
+  scored  seed  145  cost 1.450085  TMB900  -1.641356  TMB3600  -7.898673  top3600 -10.271339  bot3600  -2.372665  all3600 -1.246334  n 671/167    52s
+  scored  seed  146  cost 1.533076  TMB900  -1.886171  TMB3600  -5.509397  top3600  +1.313659  bot3600  +6.823056  all3600 +1.273086  n 671/167    51s
+  scored  seed  147  cost 1.441122  TMB900  +0.003175  TMB3600  +3.070364  top3600  +6.165347  bot3600  +3.094983  all3600 +4.099910  n 671/167    52s
+  scored  seed  148  cost 1.507555  TMB900  -1.961362  TMB3600  -5.500439  top3600  +7.287478  bot3600 +12.787916  all3600 +7.662442  n 671/167    52s
+  -- 36/96 done, 1871s elapsed, ~3118s to go
+  scored  seed  149  cost 1.463216  TMB900  +1.638041  TMB3600 +14.804024  top3600  +9.598393  bot3600  -5.205631  all3600 +0.931884  n 671/167    51s
+  scored  seed  150  cost 1.396850  TMB900  -2.308731  TMB3600  -9.309765  top3600  -8.490340  bot3600  +0.819425  all3600 +0.362402  n 671/167    51s
+  scored  seed  151  cost 1.427360  TMB900  -1.017999  TMB3600  -3.075876  top3600  +4.542506  bot3600  +7.618382  all3600 +3.046318  n 671/167    51s
+  scored  seed  152  cost 1.477184  TMB900  -3.185110  TMB3600  -6.033736  top3600  -2.346508  bot3600  +3.687228  all3600 +1.391203  n 671/167    51s
+  scored  seed  153  cost 1.441109  TMB900  -0.197437  TMB3600  -3.554700  top3600  -1.728103  bot3600  +1.826597  all3600 -6.280017  n 671/167    50s
+  scored  seed  154  cost 1.453973  TMB900  -2.024628  TMB3600  -8.956765  top3600  -4.465910  bot3600  +4.490855  all3600 -0.677698  n 671/167    51s
+  scored  seed  155  cost 1.382746  TMB900  +1.354615  TMB3600  +2.394715  top3600  +7.614970  bot3600  +5.220255  all3600 +0.965851  n 671/167    52s
+  scored  seed  156  cost 1.466955  TMB900  -1.129451  TMB3600  -6.794366  top3600  -4.159872  bot3600  +2.634494  all3600 -2.175310  n 671/167    56s
+  scored  seed  157  cost 1.479325  TMB900  -2.364895  TMB3600  -6.641911  top3600  -4.885737  bot3600  +1.756174  all3600 -3.947607  n 671/167    56s
+  scored  seed  158  cost 1.467060  TMB900  -1.369748  TMB3600  +4.383991  top3600  +2.662728  bot3600  -1.721263  all3600 +0.224863  n 671/167    55s
+  scored  seed  159  cost 1.551685  TMB900  -2.249028  TMB3600  -3.223260  top3600  -2.063307  bot3600  +1.159954  all3600 -4.982077  n 671/167    53s
+  scored  seed  160  cost 1.511124  TMB900  +2.559807  TMB3600 +14.982039  top3600  +5.740231  bot3600  -9.241808  all3600 -2.292956  n 671/167    53s
+  -- 48/96 done, 2501s elapsed, ~2501s to go
+  scored  seed  161  cost 1.495445  TMB900  -2.508631  TMB3600  -8.199608  top3600  -6.259611  bot3600  +1.939997  all3600 -1.473653  n 671/167    53s
+  scored  seed  162  cost 1.488501  TMB900  -2.133892  TMB3600  -2.789300  top3600  -2.137869  bot3600  +0.651431  all3600 -2.858676  n 671/167    55s
+  scored  seed  163  cost 1.482875  TMB900  +1.977891  TMB3600 +11.514777  top3600 +10.823953  bot3600  -0.690824  all3600 +2.161718  n 671/167    52s
+  scored  seed  164  cost 1.470350  TMB900  -0.430832  TMB3600  +2.675012  top3600  -0.553478  bot3600  -3.228490  all3600 -0.814797  n 671/167    51s
+  scored  seed  165  cost 1.434571  TMB900  -0.451374  TMB3600  -2.433811  top3600  -1.175771  bot3600  +1.258040  all3600 +0.236339  n 671/167    51s
+  scored  seed  166  cost 1.525658  TMB900  +2.768111  TMB3600 +17.454754  top3600  +2.964816  bot3600 -14.489939  all3600 -4.057514  n 671/167    51s
+  scored  seed  167  cost 1.489760  TMB900  -1.620696  TMB3600  -2.221010  top3600  -1.080196  bot3600  +1.140815  all3600 -1.404090  n 671/167    52s
+  scored  seed  168  cost 1.431905  TMB900  +0.627585  TMB3600  +1.794653  top3600  +1.461446  bot3600  -0.333207  all3600 -1.564300  n 671/167    51s
+  scored  seed  169  cost 1.442610  TMB900  -1.756739  TMB3600  -0.195441  top3600  +4.611964  bot3600  +4.807404  all3600 +2.707202  n 671/167    51s
+  scored  seed  170  cost 1.494440  TMB900  +1.377357  TMB3600  +1.270324  top3600  -0.330958  bot3600  -1.601283  all3600 -3.700074  n 671/167    50s
+  scored  seed  171  cost 1.460764  TMB900  -0.790965  TMB3600  -5.523314  top3600  -4.532011  bot3600  +0.991303  all3600 -0.542297  n 671/167    52s
+  scored  seed  172  cost 1.448861  TMB900  +1.440767  TMB3600 +11.238656  top3600  +6.018615  bot3600  -5.220041  all3600 +2.613074  n 671/167    53s
+  -- 60/96 done, 3124s elapsed, ~1874s to go
+  scored  seed  173  cost 1.434921  TMB900  -1.328923  TMB3600  -4.147415  top3600  +2.022284  bot3600  +6.169699  all3600 +4.783597  n 671/167    52s
+  scored  seed  174  cost 1.469417  TMB900  +2.204785  TMB3600 +10.788571  top3600  -2.050264  bot3600 -12.838835  all3600 -1.125378  n 671/167    53s
+  scored  seed  175  cost 1.535135  TMB900  -1.361534  TMB3600  -6.089584  top3600  -9.344727  bot3600  -3.255143  all3600 -3.582478  n 671/167    51s
+  scored  seed  176  cost 1.489666  TMB900  +1.138321  TMB3600  +4.872318  top3600  +4.354735  bot3600  -0.517583  all3600 +3.400466  n 671/167    51s
+  scored  seed  177  cost 1.467437  TMB900  -0.723658  TMB3600  +0.800258  top3600  +3.369157  bot3600  +2.568898  all3600 +5.722188  n 671/167    51s
+  scored  seed  178  cost 1.489271  TMB900  -1.847922  TMB3600  -5.747599  top3600  -0.544898  bot3600  +5.202701  all3600 +0.964078  n 671/167    51s
+  scored  seed  179  cost 1.390739  TMB900  +0.947119  TMB3600  +7.569663  top3600 +11.338450  bot3600  +3.768786  all3600 +5.142308  n 671/167    55s
+  scored  seed  180  cost 1.464828  TMB900  -1.424021  TMB3600  -2.474579  top3600  +2.652012  bot3600  +5.126592  all3600 +6.159326  n 671/167    52s
+  scored  seed  181  cost 1.494937  TMB900  +3.426039  TMB3600 +17.931368  top3600 +10.392909  bot3600  -7.538458  all3600 +4.422347  n 671/167    52s
+  scored  seed  182  cost 1.458966  TMB900  +0.388227  TMB3600  +1.718841  top3600  +0.496217  bot3600  -1.222624  all3600 +3.462236  n 671/167    52s
+  scored  seed  183  cost 1.444388  TMB900  +1.012160  TMB3600  +4.745171  top3600  +1.365708  bot3600  -3.379463  all3600 -0.352097  n 671/167    53s
+  scored  seed  184  cost 1.489779  TMB900  +2.376249  TMB3600 +10.059041  top3600  +7.926237  bot3600  -2.132804  all3600 -0.730085  n 671/167    52s
+  -- 72/96 done, 3747s elapsed, ~1249s to go
+  scored  seed  185  cost 1.559788  TMB900  -2.420489  TMB3600  -9.345232  top3600  -4.234052  bot3600  +5.111180  all3600 -5.547200  n 671/167    51s
+  scored  seed  186  cost 1.420585  TMB900  +0.102747  TMB3600  +8.826286  top3600  -2.149516  bot3600 -10.975802  all3600 -1.456469  n 671/167    51s
+  scored  seed  187  cost 1.434729  TMB900  -2.115627  TMB3600  -2.828274  top3600  -1.623646  bot3600  +1.204628  all3600 -0.026633  n 671/167    51s
+  scored  seed  188  cost 1.529273  TMB900  +0.161665  TMB3600  +1.163979  top3600  -4.090288  bot3600  -5.254266  all3600 -2.987451  n 671/167    51s
+  scored  seed  189  cost 1.395931  TMB900  -1.925491  TMB3600  -0.734722  top3600  +1.877863  bot3600  +2.612585  all3600 -0.102438  n 671/167    52s
+  scored  seed  190  cost 1.494150  TMB900  -1.910264  TMB3600  -6.466332  top3600  -6.567350  bot3600  -0.101018  all3600 -2.572148  n 671/167    52s
+  scored  seed  191  cost 1.519738  TMB900  +0.205302  TMB3600  +1.017348  top3600  +5.923444  bot3600  +4.906095  all3600 -0.192498  n 671/167    52s
+  scored  seed  192  cost 1.455682  TMB900  +1.107545  TMB3600  +5.882827  top3600  +3.709488  bot3600  -2.173339  all3600 +0.650514  n 671/167    51s
+  scored  seed  193  cost 1.442900  TMB900  +1.725818  TMB3600  +5.781408  top3600  -3.057057  bot3600  -8.838465  all3600 -0.966511  n 671/167    52s
+  scored  seed  194  cost 1.496811  TMB900  -1.295020  TMB3600  -0.457828  top3600  +1.582331  bot3600  +2.040159  all3600 -0.549794  n 671/167    57s
+  scored  seed  195  cost 1.495732  TMB900  -2.611212  TMB3600 -10.463302  top3600  -3.802891  bot3600  +6.660411  all3600 -1.431690  n 671/167    51s
+  scored  seed  196  cost 1.449701  TMB900  -1.163414  TMB3600  -4.770361  top3600  +0.286924  bot3600  +5.057285  all3600 +4.302103  n 671/167    52s
+  -- 84/96 done, 4371s elapsed, ~624s to go
+  scored  seed  197  cost 1.485725  TMB900  +1.758004  TMB3600  +8.035713  top3600  +9.676801  bot3600  +1.641087  all3600 +3.288845  n 671/167    55s
+  scored  seed  198  cost 1.459778  TMB900  -1.422594  TMB3600  -6.478321  top3600  +3.420684  bot3600  +9.899005  all3600 +2.085824  n 671/167    54s
+  scored  seed  199  cost 1.527835  TMB900  -2.162100  TMB3600  -7.907975  top3600 -16.891592  bot3600  -8.983617  all3600 -10.120665  n 671/167    51s
+  scored  seed  200  cost 1.445098  TMB900  -0.594823  TMB3600  -0.005212  top3600  +1.706666  bot3600  +1.711878  all3600 -0.974907  n 671/167    51s
+  scored  seed  201  cost 1.425192  TMB900  +1.126008  TMB3600  +6.695593  top3600  +4.371173  bot3600  -2.324420  all3600 +3.009573  n 671/167    51s
+  scored  seed  291  cost 1.535458  TMB900  +2.674426  TMB3600 +15.924762  top3600  +4.844563  bot3600 -11.080199  all3600 -0.457355  n 671/167    52s
+  scored  seed  292  cost 1.440508  TMB900  -0.997503  TMB3600  -5.798734  top3600  +3.510933  bot3600  +9.309667  all3600 +7.931516  n 671/167    50s
+  scored  seed  293  cost 1.497307  TMB900  -2.882097  TMB3600  -9.421961  top3600  +0.860439  bot3600 +10.282401  all3600 +5.126214  n 671/167    51s
+  scored  seed  294  cost 1.477185  TMB900  -0.664935  TMB3600  -0.349263  top3600  +1.030168  bot3600  +1.379431  all3600 -0.660635  n 671/167    51s
+  scored  seed  295  cost 1.533306  TMB900  -0.166437  TMB3600  +6.573948  top3600  -2.248523  bot3600  -8.822472  all3600 -5.839128  n 671/167    51s
+  scored  seed  296  cost 1.459724  TMB900  -1.795609  TMB3600  -7.109542  top3600  -9.391041  bot3600  -2.281499  all3600 -3.862469  n 671/167    51s
+  scored  seed  297  cost 1.514020  TMB900  -4.739398  TMB3600 -18.518945  top3600 -10.552229  bot3600  +7.966716  all3600 +1.656709  n 671/167    50s
+  -- 96/96 done, 4989s elapsed, ~0s to go
+  scored runs done in 4989s
+
+================================================================================================================================
+Results: 96 scored seeds
+================================================================================================================================
+  measured round-trip cost of a 0.020 BTC market order, 96 seeds: 1.4731 +/- 0.0040 bp
+  (cost 95% band [1.4652, 1.4809] bp at Z=1.96; excludes permanent impact, L2)
+
+  h = 3600 s  [SCORED]
+    TMB -0.0103 +/- 0.8667 bp  (|t| 0.01)   predicted sign negative: yes
+    (P3) |TMB|/2 band [0.0000, 0.8545]  vs cost [1.4652, 1.4809]  -> BELOW     at t(95)=1.985: BELOW
+    (P2) |TMB|   band [0.0000, 1.7090]  vs cost [1.4652, 1.4809]  -> STRADDLE  at t(95)=1.985: STRADDLE
+    tails, sign-aligned gain of the trade each tail implies (descriptive):
+      top quintile (maker long)  -> sell, gain -top  -0.6154 +/- 0.5960  band [-1.7836, +0.5528]  BELOW    at t(95): BELOW
+      bottom quintile (short)    -> buy,  gain +bot  +0.6257 +/- 0.7062  band [-0.7584, +2.0098]  STRADDLE at t(95): STRADDLE
+      asymmetry gain_top - gain_bot, paired  -1.2411 +/- 0.9781 (1.27 SE)
+      all-window mean return (each seed's drift, L1)  -0.0949 +/- 0.3536
+    R2 per-seed TMB: worst seed 139 carries 11.1% of the squared deviation (bar 40%)  ok
+
+  h = 900 s  [DESCRIPTIVE]
+    TMB -0.5206 +/- 0.1989 bp  (|t| 2.62)   predicted sign negative: yes
+    (P3) |TMB|/2 band [0.0654, 0.4552]  vs cost [1.4652, 1.4809]  -> BELOW     at t(95)=1.985: BELOW
+    (P2) |TMB|   band [0.1309, 0.9104]  vs cost [1.4652, 1.4809]  -> BELOW     at t(95)=1.985: BELOW
+    tails, sign-aligned gain of the trade each tail implies (descriptive):
+      top quintile (maker long)  -> sell, gain -top  +0.1205 +/- 0.1406  band [-0.1549, +0.3960]  BELOW    at t(95): BELOW
+      bottom quintile (short)    -> buy,  gain +bot  +0.4001 +/- 0.1684  band [+0.0701, +0.7301]  BELOW    at t(95): BELOW
+      asymmetry gain_top - gain_bot, paired  -0.2795 +/- 0.2380 (1.17 SE)
+      all-window mean return (each seed's drift, L1)  -0.0260 +/- 0.0880
+    R2 per-seed TMB: worst seed 139 carries 13.7% of the squared deviation (bar 40%)  ok
+
+================================================================================================================================
+Verdict: (P3), per trade, h = 3600 s, 96 scored seeds
+================================================================================================================================
+  (P3) VERDICT: STRUCTURAL AT 1h
+  (P2) beside it (not the verdict): INCONCLUSIVE
+  R2 at 3600: ok (seed 139, 11.1%)
+  NaN Sharpe seeds (counted, not halted on): 0
