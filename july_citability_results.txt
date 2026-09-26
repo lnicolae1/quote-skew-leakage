@@ -1,0 +1,113 @@
+==============================================================================================================
+Self-tests; july_citability.py, on planted files. No real data read.
+==============================================================================================================
+  T-PASS      PASS  planted chains: 13 unique trades with the duplicate id counted once; the 30.5 s
+                    gap found; the local 07-11 span ends at the splice record, the tail feeds only
+                    trade counts; splice (a)(b)(c) hold, and a planted skipped id fails (c) and is logged.
+  T-guard     PASS  zero, negative and NaN denominators raise.
+  T-parse     PASS  trade_size_results.txt parses to 12 files summing to 39184 unique trades.
+
+  All self-tests PASSED.
+
+==============================================================================================================
+July citability; lambda, the longest gap and the 07-11 splice, from the raw spot files
+==============================================================================================================
+Local chain: market_data/btcusd_2026-07-05.jsonl .. market_data/btcusd_2026-07-11.jsonl through u=4495452846.  Cloud chain: market_data_cloud/btcusd_2026-07-11.jsonl .. market_data_cloud/btcusd_2026-07-15.jsonl.
+Read-only. Timestamps are local_timestamp. Readings fixed in the header.
+
+Anchor; per-file aggTrade counts and the unique total must equal trade_size_results.txt
+  market_data/btcusd_2026-07-05.jsonl          aggTrade records got    876 committed    876  OK
+  market_data/btcusd_2026-07-06.jsonl          aggTrade records got   4832 committed   4832  OK
+  market_data/btcusd_2026-07-07.jsonl          aggTrade records got   3967 committed   3967  OK
+  market_data/btcusd_2026-07-08.jsonl          aggTrade records got   5130 committed   5130  OK
+  market_data/btcusd_2026-07-09.jsonl          aggTrade records got   6091 committed   6091  OK
+  market_data/btcusd_2026-07-10.jsonl          aggTrade records got   5320 committed   5320  OK
+  market_data/btcusd_2026-07-11.jsonl          aggTrade records got   1050 committed   1050  OK
+  market_data_cloud/btcusd_2026-07-11.jsonl    aggTrade records got    379 committed    379  OK
+  market_data_cloud/btcusd_2026-07-12.jsonl    aggTrade records got   1164 committed   1164  OK
+  market_data_cloud/btcusd_2026-07-13.jsonl    aggTrade records got   3033 committed   3033  OK
+  market_data_cloud/btcusd_2026-07-14.jsonl    aggTrade records got   4574 committed   4574  OK
+  market_data_cloud/btcusd_2026-07-15.jsonl    aggTrade records got   2768 committed   2768  OK
+  unique aggTrades (all files)                 got  39184 committed  39184  OK
+  anchor HELD.
+
+==============================================================================================================
+(1) Trade arrival rate; unique aggTrades per second of coverage
+==============================================================================================================
+  unique aggTrades              39184        (recorded 39184)
+  coverage, sum of file spans   869497.478 s  (recorded 869497 s; difference +0.478 s)
+  coverage, continuous spans    869505.984 s  (also counts the day-boundary gaps)
+  LAMBDA                        0.045065 trades/s  (0.0451 at 4 dp; recorded 0.0451)
+    on the continuous span      0.045065 trades/s
+    Poisson SE (a floor)        0.000228   (trades cluster; understates the uncertainty)
+    daily rates, 9 full days    mean 0.045705  sd 0.020038  SE 0.006679  range 0.0135-0.0705
+
+  by UTC day:
+    2026-07-05    876 trades   25500.7 s  ( 7.08 h)  0.0344/s   partial day
+    2026-07-06   4832 trades   86399.4 s  (24.00 h)  0.0559/s
+    2026-07-07   3967 trades   86399.4 s  (24.00 h)  0.0459/s
+    2026-07-08   5130 trades   86399.9 s  (24.00 h)  0.0594/s
+    2026-07-09   6091 trades   86398.9 s  (24.00 h)  0.0705/s
+    2026-07-10   5320 trades   86399.4 s  (24.00 h)  0.0616/s
+    2026-07-11   1429 trades   86396.6 s  (24.00 h)  0.0165/s
+    2026-07-12   1164 trades   86398.0 s  (24.00 h)  0.0135/s
+    2026-07-13   3033 trades   86398.0 s  (24.00 h)  0.0351/s
+    2026-07-14   4574 trades   86399.5 s  (24.00 h)  0.0529/s
+    2026-07-15   2768 trades   66407.7 s  (18.45 h)  0.0417/s   partial day
+
+  by UTC hour of day (all days pooled):
+    00:00   1770 trades    35997.3 s  0.0492/s
+    01:00   2309 trades    36000.0 s  0.0641/s
+    02:00   2143 trades    36000.0 s  0.0595/s
+    03:00   1494 trades    36000.0 s  0.0415/s
+    04:00   1677 trades    36000.0 s  0.0466/s
+    05:00   1371 trades    36000.0 s  0.0381/s
+    06:00   1466 trades    36000.0 s  0.0407/s
+    07:00   1140 trades    36000.0 s  0.0317/s
+    08:00   1940 trades    36000.0 s  0.0539/s
+    09:00   1406 trades    36000.0 s  0.0391/s
+    10:00    940 trades    36000.0 s  0.0261/s
+    11:00    890 trades    36000.0 s  0.0247/s
+    12:00   2042 trades    36000.0 s  0.0567/s
+    13:00   2433 trades    36000.0 s  0.0676/s
+    14:00   1807 trades    36000.0 s  0.0502/s
+    15:00   2144 trades    36000.0 s  0.0596/s
+    16:00   2327 trades    36300.8 s  0.0641/s
+    17:00   1687 trades    39597.5 s  0.0426/s
+    18:00   1577 trades    37607.8 s  0.0419/s
+    19:00   1305 trades    36000.0 s  0.0362/s
+    20:00    921 trades    36000.0 s  0.0256/s
+    21:00   1484 trades    36000.0 s  0.0412/s
+    22:00   1510 trades    36000.0 s  0.0419/s
+    23:00   1401 trades    35994.2 s  0.0389/s
+  hours with coverage: 24 of 24
+  min hour 11:00 at 0.0247/s (recorded 11:00 at 0.0247); max hour 13:00 at 0.0676/s (recorded 13:00 at 0.0676)
+  per-hour counts 890-2433 (recorded 890-2433); max/min rate ratio 2.73
+  Lambda reproduces.  Hourly extremes reproduce.
+
+==============================================================================================================
+(4) Longest gap between consecutive records, any type, within each chain
+==============================================================================================================
+    22.917 s   2026-07-12 11:05:46.718353 -> 2026-07-12 11:06:09.635161   C:/Users/lnico/Desktop/market_data_cloud/btcusd_2026-07-12.jsonl
+    19.719 s   2026-07-13 22:33:04.594669 -> 2026-07-13 22:33:24.314144   C:/Users/lnico/Desktop/market_data_cloud/btcusd_2026-07-13.jsonl
+    19.414 s   2026-07-12 11:03:20.118878 -> 2026-07-12 11:03:39.532742   C:/Users/lnico/Desktop/market_data_cloud/btcusd_2026-07-12.jsonl
+    18.713 s   2026-07-12 11:00:57.623525 -> 2026-07-12 11:01:16.336987   C:/Users/lnico/Desktop/market_data_cloud/btcusd_2026-07-12.jsonl
+    16.912 s   2026-07-11 12:03:00.281808 -> 2026-07-11 12:03:17.193996   C:/Users/lnico/Desktop/market_data/btcusd_2026-07-11.jsonl
+    16.813 s   2026-07-11 12:23:35.411630 -> 2026-07-11 12:23:52.224624   C:/Users/lnico/Desktop/market_data/btcusd_2026-07-11.jsonl
+    16.613 s   2026-07-11 11:26:22.508018 -> 2026-07-11 11:26:39.121294   C:/Users/lnico/Desktop/market_data/btcusd_2026-07-11.jsonl
+    16.612 s   2026-07-12 11:29:21.662038 -> 2026-07-12 11:29:38.274507   C:/Users/lnico/Desktop/market_data_cloud/btcusd_2026-07-12.jsonl
+    16.611 s   2026-07-12 17:21:01.233203 -> 2026-07-12 17:21:17.844400   C:/Users/lnico/Desktop/market_data_cloud/btcusd_2026-07-12.jsonl
+    16.214 s   2026-07-11 11:30:45.284352 -> 2026-07-11 11:31:01.498027   C:/Users/lnico/Desktop/market_data/btcusd_2026-07-11.jsonl
+  longest 22.917 s (22.9 at 1 dp; recorded 22.9 s): reproduces
+
+==============================================================================================================
+(5) THE 2026-07-11 splice at update id 4495452846
+==============================================================================================================
+  (a) local chain: diff ending at u=4495452846 (U=4495452846) at 2026-07-11 17:53:02.303024; last applied u = 4495452846  -> OK
+      local chain resumption gaps (cross-check, expected 4, 11, 1): [('2026-07-05.jsonl', 4), ('2026-07-09.jsonl', 11), ('2026-07-11.jsonl', 1)]
+      overlap tail after it, excluded: 168 depth diffs
+  (b) cloud 07-11 first snapshot lastUpdateId = 4495452846 at 2026-07-11 17:53:04.828600  -> OK
+  (c) first cloud diff with u > 4495452846: U=4495452847 u=4495452851 at 2026-07-11 17:53:06.656828  -> OK
+      cloud diffs at or below the splice id, discarded: 0
+  cloud chain resumption gaps after the splice: 0 []
+  splice holds: local through 4495452846, cloud from 4495452847.
