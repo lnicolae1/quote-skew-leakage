@@ -1,0 +1,343 @@
+======================================================================================================================
+Self-tests
+======================================================================================================================
+  T-FITSTATS  PASS
+  T-PARSE     PASS  arms parsed: Arm A 4, Arm B 3, width 7
+  T-POSTSIM   PASS
+  t_capture_is_transparent PASS (13 fields bit-identical; pivot ratio 1.0106e+02, out-of-range 0.290)
+  T-NOBS-TRANSPARENT PASS  9 fields identical
+                    seed 0, JITTER, 86400s; identity:
+                    R2 -1.208113, rmse/sd_n 1.485972085 vs sqrt(1-R2) 1.485972085. (20s)
+
+  All self-tests passed.
+
+======================================================================================================================
+sd_n(y_test): Phase 7 Arm A (8 seeds), Arm B (8 seeds), width sweep (24 seeds); cluster C, 86400s
+======================================================================================================================
+
+running ARM A ...
+  ARM A  BASELINE   8 seeds in   67s
+  ARM A  QUANT-LOW  8 seeds in   65s
+  ARM A  QUANT-HIGH 8 seeds in   73s
+  ARM A  FLAT       8 seeds in   83s
+ANCHOR ARM A vs phase7_blind_results.txt
+  ARM A  BASELINE   r2     got +1.000000000  committed +1.000000  tol 5e-07  OK
+  ARM A  BASELINE   r2_se  got +0.000000000  committed +0.000000  tol 5e-07  OK
+  ARM A  BASELINE   rd     got +0.214692232  committed +0.214700  tol 5e-05  OK
+  ARM A  BASELINE   rd_se  got +0.040445419  committed +0.040400  tol 5e-05  OK
+  ARM A  QUANT-LOW  r2     got +0.846979839  committed +0.846980  tol 5e-07  OK
+  ARM A  QUANT-LOW  r2_se  got +0.091806717  committed +0.091807  tol 5e-07  OK
+  ARM A  QUANT-LOW  rd     got +0.232633585  committed +0.232600  tol 5e-05  OK
+  ARM A  QUANT-LOW  rd_se  got +0.039624998  committed +0.039600  tol 5e-05  OK
+  ARM A  QUANT-HIGH r2     got -121.161816199  committed -121.161816  tol 5e-07  OK
+  ARM A  QUANT-HIGH r2_se  got +119.803508013  committed +119.803508  tol 5e-07  OK
+  ARM A  QUANT-HIGH rd     got +0.217670630  committed +0.217700  tol 5e-05  OK
+  ARM A  QUANT-HIGH rd_se  got +0.031818243  committed +0.031800  tol 5e-05  OK
+  ARM A  FLAT       r2     got -6.301953272  committed -6.301953  tol 5e-07  OK
+  ARM A  FLAT       r2_se  got +2.372750079  committed +2.372750  tol 5e-07  OK
+  ARM A  FLAT       rd     got +0.202587324  committed +0.202600  tol 5e-05  OK
+  ARM A  FLAT       rd_se  got +0.039241449  committed +0.039200  tol 5e-05  OK
+  ANCHOR HELD for ARM A.
+
+running ARM B ...
+  ARM B  BASELINE   8 seeds in   77s
+  ARM B  JITTER     8 seeds in   77s
+  ARM B  QUANT      8 seeds in   78s
+ANCHOR ARM B vs phase7_nobs_results.txt
+  ARM B  BASELINE   r2     got +1.000000000  committed +1.000000  tol 5e-07  OK
+  ARM B  BASELINE   r2_se  got +0.000000000  committed +0.000000  tol 5e-07  OK
+  ARM B  BASELINE   kept   got +84672.000000000  committed +84672.000000  tol 5e-01  OK
+  ARM B  JITTER     r2     got -10.790979924  committed -10.790980  tol 5e-07  OK
+  ARM B  JITTER     r2_se  got +3.594537163  committed +3.594537  tol 5e-07  OK
+  ARM B  JITTER     kept   got +84672.000000000  committed +84672.000000  tol 5e-01  OK
+  ARM B  QUANT      r2     got +0.846979839  committed +0.846980  tol 5e-07  OK
+  ARM B  QUANT      r2_se  got +0.091806717  committed +0.091807  tol 5e-07  OK
+  ARM B  QUANT      kept   got +84672.000000000  committed +84672.000000  tol 5e-01  OK
+  ANCHOR HELD for ARM B.
+
+running WIDTH ...
+  WIDTH  BASELINE   24 seeds in  193s
+  WIDTH  Q-0.75     24 seeds in  193s
+  WIDTH  Q-1.00     24 seeds in  199s
+  WIDTH  Q-1.25     24 seeds in  200s
+  WIDTH  Q-1.50     24 seeds in  202s
+  WIDTH  Q-1.75     24 seeds in  194s
+  WIDTH  FLAT       24 seeds in  198s
+ANCHOR WIDTH vs phase7_width_results.txt
+  WIDTH  BASELINE   r2     got +1.000000000  committed +1.000000  tol 5e-07  OK
+  WIDTH  BASELINE   r2_se  got +0.000000000  committed +0.000000  tol 5e-07  OK
+  WIDTH  BASELINE   rd     got +0.284839285  committed +0.284800  tol 5e-05  OK
+  WIDTH  BASELINE   rd_se  got +0.035579422  committed +0.035600  tol 5e-05  OK
+  WIDTH  Q-0.75     r2     got +0.555334493  committed +0.555334  tol 5e-07  OK
+  WIDTH  Q-0.75     r2_se  got +0.078068449  committed +0.078068  tol 5e-07  OK
+  WIDTH  Q-0.75     rd     got +0.286806119  committed +0.286800  tol 5e-05  OK
+  WIDTH  Q-0.75     rd_se  got +0.036309784  committed +0.036300  tol 5e-05  OK
+  WIDTH  Q-1.00     r2     got -0.146493282  committed -0.146493  tol 5e-07  OK
+  WIDTH  Q-1.00     r2_se  got +0.209948621  committed +0.209949  tol 5e-07  OK
+  WIDTH  Q-1.00     rd     got +0.283385051  committed +0.283400  tol 5e-05  OK
+  WIDTH  Q-1.00     rd_se  got +0.036269370  committed +0.036300  tol 5e-05  OK
+  WIDTH  Q-1.25     r2     got -1.095621961  committed -1.095622  tol 5e-07  OK
+  WIDTH  Q-1.25     r2_se  got +0.370398827  committed +0.370399  tol 5e-07  OK
+  WIDTH  Q-1.25     rd     got +0.278924950  committed +0.278900  tol 5e-05  OK
+  WIDTH  Q-1.25     rd_se  got +0.036343230  committed +0.036300  tol 5e-05  OK
+  WIDTH  Q-1.50     r2     got -2.046212995  committed -2.046213  tol 5e-07  OK
+  WIDTH  Q-1.50     r2_se  got +0.607494326  committed +0.607494  tol 5e-07  OK
+  WIDTH  Q-1.50     rd     got +0.278597137  committed +0.278600  tol 5e-05  OK
+  WIDTH  Q-1.50     rd_se  got +0.036849834  committed +0.036800  tol 5e-05  OK
+  WIDTH  Q-1.75     r2     got -28181.981750295  committed -28181.981750  tol 5e-07  OK
+  WIDTH  Q-1.75     r2_se  got +28178.969018173  committed +28178.969018  tol 5e-07  OK
+  WIDTH  Q-1.75     rd     got +0.295002896  committed +0.295000  tol 5e-05  OK
+  WIDTH  Q-1.75     rd_se  got +0.037369789  committed +0.037400  tol 5e-05  OK
+  WIDTH  FLAT       r2     got -7.667136555  committed -7.667137  tol 5e-07  OK
+  WIDTH  FLAT       r2_se  got +1.609518651  committed +1.609519  tol 5e-07  OK
+  WIDTH  FLAT       rd     got +0.255871770  committed +0.255900  tol 5e-05  OK
+  WIDTH  FLAT       rd_se  got +0.037309677  committed +0.037300  tol 5e-05  OK
+  ANCHOR HELD for WIDTH.
+
+
+  ARM A per seed: R2 | sd_n(y_test) BTC | n_te | RMSE BTC
+    BASELINE   seed  0  R2         1.000000   sd_n 0.036262   n_te  25402   rmse 0.000000
+    BASELINE   seed  1  R2         1.000000   sd_n 0.028638   n_te  25402   rmse 0.000000
+    BASELINE   seed  2  R2         1.000000   sd_n 0.027786   n_te  25402   rmse 0.000000
+    BASELINE   seed  3  R2         1.000000   sd_n 0.026874   n_te  25402   rmse 0.000000
+    BASELINE   seed  4  R2         1.000000   sd_n 0.024731   n_te  25402   rmse 0.000000
+    BASELINE   seed  5  R2         1.000000   sd_n 0.018502   n_te  25402   rmse 0.000000
+    BASELINE   seed  6  R2         1.000000   sd_n 0.040357   n_te  25402   rmse 0.000000
+    BASELINE   seed  7  R2         1.000000   sd_n 0.039231   n_te  25402   rmse 0.000000
+    QUANT-LOW  seed  0  R2         0.970848   sd_n 0.036262   n_te  25402   rmse 0.006191
+    QUANT-LOW  seed  1  R2         0.974924   sd_n 0.028638   n_te  25402   rmse 0.004535
+    QUANT-LOW  seed  2  R2         0.966282   sd_n 0.028206   n_te  25402   rmse 0.005179
+    QUANT-LOW  seed  3  R2         0.913033   sd_n 0.027702   n_te  25402   rmse 0.008169
+    QUANT-LOW  seed  4  R2         0.818647   sd_n 0.024575   n_te  25402   rmse 0.010465
+    QUANT-LOW  seed  5  R2         0.923989   sd_n 0.018502   n_te  25402   rmse 0.005101
+    QUANT-LOW  seed  6  R2         0.989371   sd_n 0.040357   n_te  25402   rmse 0.004161
+    QUANT-LOW  seed  7  R2         0.218746   sd_n 0.039231   n_te  25402   rmse 0.034676
+    QUANT-HIGH seed  0  R2        -0.327199   sd_n 0.036262   n_te  25402   rmse 0.041775
+    QUANT-HIGH seed  1  R2        -5.146046   sd_n 0.029911   n_te  25402   rmse 0.074153
+    QUANT-HIGH seed  2  R2        -0.645894   sd_n 0.028313   n_te  25402   rmse 0.036323
+    QUANT-HIGH seed  3  R2         0.256792   sd_n 0.027390   n_te  25402   rmse 0.023613
+    QUANT-HIGH seed  4  R2        -0.196602   sd_n 0.024582   n_te  25402   rmse 0.026890
+    QUANT-HIGH seed  5  R2        -1.370224   sd_n 0.018394   n_te  25402   rmse 0.028319
+    QUANT-HIGH seed  6  R2        -2.089631   sd_n 0.040352   n_te  25402   rmse 0.070929
+    QUANT-HIGH seed  7  R2      -959.775724   sd_n 0.039416   n_te  25402   rmse 1.221761
+    FLAT       seed  0  R2        -5.227080   sd_n 0.037059   n_te  25402   rmse 0.092478
+    FLAT       seed  1  R2       -14.881414   sd_n 0.030165   n_te  25402   rmse 0.120210
+    FLAT       seed  2  R2        -0.642129   sd_n 0.028214   n_te  25402   rmse 0.036155
+    FLAT       seed  3  R2        -2.305889   sd_n 0.025785   n_te  25402   rmse 0.046883
+    FLAT       seed  4  R2         0.068914   sd_n 0.024876   n_te  25402   rmse 0.024004
+    FLAT       seed  5  R2       -17.720116   sd_n 0.019876   n_te  25402   rmse 0.085996
+    FLAT       seed  6  R2        -7.799832   sd_n 0.050053   n_te  25402   rmse 0.148479
+    FLAT       seed  7  R2        -1.908081   sd_n 0.040881   n_te  25402   rmse 0.069715
+
+  ARM B per seed: R2 | sd_n(y_test) BTC | n_te | RMSE BTC
+    BASELINE   seed  0  R2         1.000000   sd_n 0.036262   n_te  25402   rmse 0.000000
+    BASELINE   seed  1  R2         1.000000   sd_n 0.028638   n_te  25402   rmse 0.000000
+    BASELINE   seed  2  R2         1.000000   sd_n 0.027786   n_te  25402   rmse 0.000000
+    BASELINE   seed  3  R2         1.000000   sd_n 0.026874   n_te  25402   rmse 0.000000
+    BASELINE   seed  4  R2         1.000000   sd_n 0.024731   n_te  25402   rmse 0.000000
+    BASELINE   seed  5  R2         1.000000   sd_n 0.018502   n_te  25402   rmse 0.000000
+    BASELINE   seed  6  R2         1.000000   sd_n 0.040357   n_te  25402   rmse 0.000000
+    BASELINE   seed  7  R2         1.000000   sd_n 0.039231   n_te  25402   rmse 0.000000
+    JITTER     seed  0  R2        -1.208113   sd_n 0.036597   n_te  25402   rmse 0.054383
+    JITTER     seed  1  R2       -16.435560   sd_n 0.029069   n_te  25402   rmse 0.121381
+    JITTER     seed  2  R2        -3.640997   sd_n 0.026290   n_te  25402   rmse 0.056636
+    JITTER     seed  3  R2       -24.562709   sd_n 0.023944   n_te  25402   rmse 0.121059
+    JITTER     seed  4  R2        -0.263076   sd_n 0.024810   n_te  25402   rmse 0.027883
+    JITTER     seed  5  R2       -24.698857   sd_n 0.016647   n_te  25402   rmse 0.084390
+    JITTER     seed  6  R2       -12.027472   sd_n 0.038431   n_te  25402   rmse 0.138710
+    JITTER     seed  7  R2        -3.491054   sd_n 0.033109   n_te  25402   rmse 0.070165
+    QUANT      seed  0  R2         0.970848   sd_n 0.036262   n_te  25402   rmse 0.006191
+    QUANT      seed  1  R2         0.974924   sd_n 0.028638   n_te  25402   rmse 0.004535
+    QUANT      seed  2  R2         0.966282   sd_n 0.028206   n_te  25402   rmse 0.005179
+    QUANT      seed  3  R2         0.913033   sd_n 0.027702   n_te  25402   rmse 0.008169
+    QUANT      seed  4  R2         0.818647   sd_n 0.024575   n_te  25402   rmse 0.010465
+    QUANT      seed  5  R2         0.923989   sd_n 0.018502   n_te  25402   rmse 0.005101
+    QUANT      seed  6  R2         0.989371   sd_n 0.040357   n_te  25402   rmse 0.004161
+    QUANT      seed  7  R2         0.218746   sd_n 0.039231   n_te  25402   rmse 0.034676
+
+  WIDTH per seed: R2 | sd_n(y_test) BTC | n_te | RMSE BTC
+    BASELINE   seed  0  R2         1.000000   sd_n 0.036262   n_te  25402   rmse 0.000000
+    BASELINE   seed  1  R2         1.000000   sd_n 0.028638   n_te  25402   rmse 0.000000
+    BASELINE   seed  2  R2         1.000000   sd_n 0.027786   n_te  25402   rmse 0.000000
+    BASELINE   seed  3  R2         1.000000   sd_n 0.026874   n_te  25402   rmse 0.000000
+    BASELINE   seed  4  R2         1.000000   sd_n 0.024731   n_te  25402   rmse 0.000000
+    BASELINE   seed  5  R2         1.000000   sd_n 0.018502   n_te  25402   rmse 0.000000
+    BASELINE   seed  6  R2         1.000000   sd_n 0.040357   n_te  25402   rmse 0.000000
+    BASELINE   seed  7  R2         1.000000   sd_n 0.039231   n_te  25402   rmse 0.000000
+    BASELINE   seed  8  R2         1.000000   sd_n 0.034635   n_te  25402   rmse 0.000000
+    BASELINE   seed  9  R2         1.000000   sd_n 0.019586   n_te  25402   rmse 0.000000
+    BASELINE   seed 10  R2         1.000000   sd_n 0.015400   n_te  25402   rmse 0.000000
+    BASELINE   seed 11  R2         1.000000   sd_n 0.037558   n_te  25402   rmse 0.000000
+    BASELINE   seed 12  R2         1.000000   sd_n 0.018508   n_te  25402   rmse 0.000000
+    BASELINE   seed 13  R2         1.000000   sd_n 0.036655   n_te  25402   rmse 0.000000
+    BASELINE   seed 14  R2         1.000000   sd_n 0.017747   n_te  25402   rmse 0.000000
+    BASELINE   seed 15  R2         1.000000   sd_n 0.048669   n_te  25402   rmse 0.000000
+    BASELINE   seed 16  R2         1.000000   sd_n 0.018848   n_te  25402   rmse 0.000000
+    BASELINE   seed 17  R2         1.000000   sd_n 0.050689   n_te  25402   rmse 0.000000
+    BASELINE   seed 18  R2         1.000000   sd_n 0.020778   n_te  25402   rmse 0.000000
+    BASELINE   seed 19  R2         1.000000   sd_n 0.047338   n_te  25402   rmse 0.000000
+    BASELINE   seed 20  R2         1.000000   sd_n 0.050560   n_te  25402   rmse 0.000000
+    BASELINE   seed 21  R2         1.000000   sd_n 0.039545   n_te  25402   rmse 0.000000
+    BASELINE   seed 22  R2         1.000000   sd_n 0.034721   n_te  25402   rmse 0.000000
+    BASELINE   seed 23  R2         1.000000   sd_n 0.028299   n_te  25402   rmse 0.000000
+    Q-0.75     seed  0  R2         0.885315   sd_n 0.036262   n_te  25402   rmse 0.012280
+    Q-0.75     seed  1  R2         0.586331   sd_n 0.028950   n_te  25402   rmse 0.018620
+    Q-0.75     seed  2  R2         0.924851   sd_n 0.028206   n_te  25402   rmse 0.007732
+    Q-0.75     seed  3  R2         0.745253   sd_n 0.027702   n_te  25402   rmse 0.013982
+    Q-0.75     seed  4  R2         0.731254   sd_n 0.024575   n_te  25402   rmse 0.012740
+    Q-0.75     seed  5  R2         0.604296   sd_n 0.018401   n_te  25402   rmse 0.011575
+    Q-0.75     seed  6  R2         0.895845   sd_n 0.040352   n_te  25402   rmse 0.013023
+    Q-0.75     seed  7  R2         0.893480   sd_n 0.039498   n_te  25402   rmse 0.012891
+    Q-0.75     seed  8  R2        -0.794997   sd_n 0.034635   n_te  25402   rmse 0.046402
+    Q-0.75     seed  9  R2         0.450913   sd_n 0.019314   n_te  25402   rmse 0.014312
+    Q-0.75     seed 10  R2         0.522580   sd_n 0.014365   n_te  25402   rmse 0.009925
+    Q-0.75     seed 11  R2         0.814991   sd_n 0.031488   n_te  25402   rmse 0.013544
+    Q-0.75     seed 12  R2         0.674075   sd_n 0.018640   n_te  25402   rmse 0.010642
+    Q-0.75     seed 13  R2         0.838973   sd_n 0.036604   n_te  25402   rmse 0.014688
+    Q-0.75     seed 14  R2         0.702396   sd_n 0.018283   n_te  25402   rmse 0.009974
+    Q-0.75     seed 15  R2         0.144037   sd_n 0.048035   n_te  25402   rmse 0.044441
+    Q-0.75     seed 16  R2         0.671961   sd_n 0.019078   n_te  25402   rmse 0.010927
+    Q-0.75     seed 17  R2         0.594032   sd_n 0.054609   n_te  25402   rmse 0.034794
+    Q-0.75     seed 18  R2         0.544065   sd_n 0.021107   n_te  25402   rmse 0.014252
+    Q-0.75     seed 19  R2         0.062021   sd_n 0.046146   n_te  25402   rmse 0.044692
+    Q-0.75     seed 20  R2         0.690692   sd_n 0.050560   n_te  25402   rmse 0.028119
+    Q-0.75     seed 21  R2         0.336616   sd_n 0.039784   n_te  25402   rmse 0.032404
+    Q-0.75     seed 22  R2         0.764942   sd_n 0.034723   n_te  25402   rmse 0.016835
+    Q-0.75     seed 23  R2         0.044105   sd_n 0.028299   n_te  25402   rmse 0.027668
+    Q-1.00     seed  0  R2         0.836853   sd_n 0.036262   n_te  25402   rmse 0.014647
+    Q-1.00     seed  1  R2         0.536670   sd_n 0.028954   n_te  25402   rmse 0.019709
+    Q-1.00     seed  2  R2         0.208342   sd_n 0.028206   n_te  25402   rmse 0.025097
+    Q-1.00     seed  3  R2         0.071530   sd_n 0.027766   n_te  25402   rmse 0.026755
+    Q-1.00     seed  4  R2         0.729338   sd_n 0.024522   n_te  25402   rmse 0.012757
+    Q-1.00     seed  5  R2         0.523678   sd_n 0.018502   n_te  25402   rmse 0.012769
+    Q-1.00     seed  6  R2         0.672944   sd_n 0.042582   n_te  25402   rmse 0.024352
+    Q-1.00     seed  7  R2         0.856761   sd_n 0.039400   n_te  25402   rmse 0.014912
+    Q-1.00     seed  8  R2         0.819702   sd_n 0.034635   n_te  25402   rmse 0.014706
+    Q-1.00     seed  9  R2        -2.095862   sd_n 0.019314   n_te  25402   rmse 0.033983
+    Q-1.00     seed 10  R2         0.486554   sd_n 0.014365   n_te  25402   rmse 0.010293
+    Q-1.00     seed 11  R2         0.178300   sd_n 0.033367   n_te  25402   rmse 0.030247
+    Q-1.00     seed 12  R2         0.351909   sd_n 0.018582   n_te  25402   rmse 0.014959
+    Q-1.00     seed 13  R2        -0.135300   sd_n 0.037781   n_te  25402   rmse 0.040255
+    Q-1.00     seed 14  R2        -2.726845   sd_n 0.017940   n_te  25402   rmse 0.034633
+    Q-1.00     seed 15  R2        -0.729430   sd_n 0.050492   n_te  25402   rmse 0.066401
+    Q-1.00     seed 16  R2         0.234949   sd_n 0.018541   n_te  25402   rmse 0.016217
+    Q-1.00     seed 17  R2        -2.298957   sd_n 0.054533   n_te  25402   rmse 0.099048
+    Q-1.00     seed 18  R2        -0.970647   sd_n 0.020873   n_te  25402   rmse 0.029301
+    Q-1.00     seed 19  R2        -0.729144   sd_n 0.046146   n_te  25402   rmse 0.060680
+    Q-1.00     seed 20  R2        -0.910856   sd_n 0.051634   n_te  25402   rmse 0.071375
+    Q-1.00     seed 21  R2        -0.385017   sd_n 0.039782   n_te  25402   rmse 0.046818
+    Q-1.00     seed 22  R2         0.232580   sd_n 0.034721   n_te  25402   rmse 0.030416
+    Q-1.00     seed 23  R2         0.726109   sd_n 0.028384   n_te  25402   rmse 0.014855
+    Q-1.25     seed  0  R2         0.091089   sd_n 0.036262   n_te  25402   rmse 0.034571
+    Q-1.25     seed  1  R2         0.544327   sd_n 0.029208   n_te  25402   rmse 0.019716
+    Q-1.25     seed  2  R2         0.311394   sd_n 0.028207   n_te  25402   rmse 0.023407
+    Q-1.25     seed  3  R2         0.614633   sd_n 0.026239   n_te  25402   rmse 0.016288
+    Q-1.25     seed  4  R2         0.108812   sd_n 0.024522   n_te  25402   rmse 0.023149
+    Q-1.25     seed  5  R2        -3.403487   sd_n 0.018401   n_te  25402   rmse 0.038613
+    Q-1.25     seed  6  R2         0.685973   sd_n 0.038366   n_te  25402   rmse 0.021500
+    Q-1.25     seed  7  R2         0.550519   sd_n 0.039361   n_te  25402   rmse 0.026389
+    Q-1.25     seed  8  R2        -1.406883   sd_n 0.035073   n_te  25402   rmse 0.054413
+    Q-1.25     seed  9  R2        -3.855741   sd_n 0.019529   n_te  25402   rmse 0.043033
+    Q-1.25     seed 10  R2        -0.988774   sd_n 0.014365   n_te  25402   rmse 0.020258
+    Q-1.25     seed 11  R2        -2.073621   sd_n 0.033458   n_te  25402   rmse 0.058658
+    Q-1.25     seed 12  R2         0.082508   sd_n 0.018797   n_te  25402   rmse 0.018005
+    Q-1.25     seed 13  R2        -0.486605   sd_n 0.036655   n_te  25402   rmse 0.044692
+    Q-1.25     seed 14  R2         0.261515   sd_n 0.017953   n_te  25402   rmse 0.015428
+    Q-1.25     seed 15  R2        -3.797290   sd_n 0.050250   n_te  25402   rmse 0.110062
+    Q-1.25     seed 16  R2        -0.260917   sd_n 0.020373   n_te  25402   rmse 0.022877
+    Q-1.25     seed 17  R2        -0.730797   sd_n 0.050999   n_te  25402   rmse 0.067095
+    Q-1.25     seed 18  R2        -0.446832   sd_n 0.020778   n_te  25402   rmse 0.024992
+    Q-1.25     seed 19  R2        -1.132659   sd_n 0.046135   n_te  25402   rmse 0.067373
+    Q-1.25     seed 20  R2        -1.175651   sd_n 0.050881   n_te  25402   rmse 0.075051
+    Q-1.25     seed 21  R2        -4.100071   sd_n 0.038396   n_te  25402   rmse 0.086711
+    Q-1.25     seed 22  R2         0.164531   sd_n 0.034722   n_te  25402   rmse 0.031738
+    Q-1.25     seed 23  R2        -5.850899   sd_n 0.028299   n_te  25402   rmse 0.074070
+    Q-1.50     seed  0  R2         0.704731   sd_n 0.036667   n_te  25402   rmse 0.019925
+    Q-1.50     seed  1  R2        -0.465883   sd_n 0.029785   n_te  25402   rmse 0.036062
+    Q-1.50     seed  2  R2         0.143206   sd_n 0.028207   n_te  25402   rmse 0.026109
+    Q-1.50     seed  3  R2         0.394171   sd_n 0.026239   n_te  25402   rmse 0.020423
+    Q-1.50     seed  4  R2        -0.937356   sd_n 0.024522   n_te  25402   rmse 0.034131
+    Q-1.50     seed  5  R2        -2.458231   sd_n 0.018502   n_te  25402   rmse 0.034406
+    Q-1.50     seed  6  R2         0.530631   sd_n 0.038657   n_te  25402   rmse 0.026484
+    Q-1.50     seed  7  R2        -0.242538   sd_n 0.039419   n_te  25402   rmse 0.043940
+    Q-1.50     seed  8  R2        -9.067292   sd_n 0.035073   n_te  25402   rmse 0.111284
+    Q-1.50     seed  9  R2        -7.214055   sd_n 0.019314   n_te  25402   rmse 0.055354
+    Q-1.50     seed 10  R2        -1.096677   sd_n 0.014365   n_te  25402   rmse 0.020800
+    Q-1.50     seed 11  R2        -2.614360   sd_n 0.033357   n_te  25402   rmse 0.063416
+    Q-1.50     seed 12  R2         0.183978   sd_n 0.018676   n_te  25402   rmse 0.016871
+    Q-1.50     seed 13  R2        -0.148545   sd_n 0.036655   n_te  25402   rmse 0.039283
+    Q-1.50     seed 14  R2        -0.365250   sd_n 0.013802   n_te  25402   rmse 0.016127
+    Q-1.50     seed 15  R2        -3.602138   sd_n 0.051144   n_te  25402   rmse 0.109717
+    Q-1.50     seed 16  R2        -0.983441   sd_n 0.020569   n_te  25402   rmse 0.028968
+    Q-1.50     seed 17  R2        -1.727627   sd_n 0.044599   n_te  25402   rmse 0.073657
+    Q-1.50     seed 18  R2         0.369140   sd_n 0.020704   n_te  25402   rmse 0.016445
+    Q-1.50     seed 19  R2        -6.968644   sd_n 0.046151   n_te  25402   rmse 0.130278
+    Q-1.50     seed 20  R2        -3.435592   sd_n 0.050560   n_te  25402   rmse 0.106484
+    Q-1.50     seed 21  R2        -8.543575   sd_n 0.038396   n_te  25402   rmse 0.118616
+    Q-1.50     seed 22  R2         0.198425   sd_n 0.034723   n_te  25402   rmse 0.031088
+    Q-1.50     seed 23  R2        -1.762188   sd_n 0.028291   n_te  25402   rmse 0.047019
+    Q-1.75     seed  0  R2         0.302407   sd_n 0.036148   n_te  25402   rmse 0.030191
+    Q-1.75     seed  1  R2        -1.298741   sd_n 0.029911   n_te  25402   rmse 0.045350
+    Q-1.75     seed  2  R2        -0.645751   sd_n 0.028305   n_te  25402   rmse 0.036312
+    Q-1.75     seed  3  R2         0.108807   sd_n 0.027702   n_te  25402   rmse 0.026152
+    Q-1.75     seed  4  R2         0.074726   sd_n 0.024599   n_te  25402   rmse 0.023662
+    Q-1.75     seed  5  R2        -0.491575   sd_n 0.018505   n_te  25402   rmse 0.022600
+    Q-1.75     seed  6  R2         0.444661   sd_n 0.038657   n_te  25402   rmse 0.028807
+    Q-1.75     seed  7  R2        -1.083182   sd_n 0.039588   n_te  25402   rmse 0.057138
+    Q-1.75     seed  8  R2       -18.612748   sd_n 0.035153   n_te  25402   rmse 0.155680
+    Q-1.75     seed  9  R2       -18.385555   sd_n 0.019314   n_te  25402   rmse 0.085037
+    Q-1.75     seed 10  R2        -0.933571   sd_n 0.014188   n_te  25402   rmse 0.019729
+    Q-1.75     seed 11  R2        -2.865228   sd_n 0.033412   n_te  25402   rmse 0.065689
+    Q-1.75     seed 12  R2        -0.164769   sd_n 0.018676   n_te  25402   rmse 0.020156
+    Q-1.75     seed 13  R2        -1.090743   sd_n 0.036887   n_te  25402   rmse 0.053336
+    Q-1.75     seed 14  R2        -3.368231   sd_n 0.013746   n_te  25402   rmse 0.028730
+    Q-1.75     seed 15  R2        -2.552091   sd_n 0.051144   n_te  25402   rmse 0.096391
+    Q-1.75     seed 16  R2        -2.605854   sd_n 0.018289   n_te  25402   rmse 0.034729
+    Q-1.75     seed 17  R2        -2.757355   sd_n 0.051199   n_te  25402   rmse 0.099244
+    Q-1.75     seed 18  R2        -0.067187   sd_n 0.021009   n_te  25402   rmse 0.021703
+    Q-1.75     seed 19  R2   -676298.268696   sd_n 0.046151   n_te  25402   rmse 37.953145
+    Q-1.75     seed 20  R2        -2.684876   sd_n 0.051634   n_te  25402   rmse 0.099117
+    Q-1.75     seed 21  R2       -10.464454   sd_n 0.038748   n_te  25402   rmse 0.131197
+    Q-1.75     seed 22  R2        -0.251545   sd_n 0.035006   n_te  25402   rmse 0.039162
+    Q-1.75     seed 23  R2         0.099545   sd_n 0.028376   n_te  25402   rmse 0.026927
+    FLAT       seed  0  R2        -5.227080   sd_n 0.037059   n_te  25402   rmse 0.092478
+    FLAT       seed  1  R2       -14.881414   sd_n 0.030165   n_te  25402   rmse 0.120210
+    FLAT       seed  2  R2        -0.642129   sd_n 0.028214   n_te  25402   rmse 0.036155
+    FLAT       seed  3  R2        -2.305889   sd_n 0.025785   n_te  25402   rmse 0.046883
+    FLAT       seed  4  R2         0.068914   sd_n 0.024876   n_te  25402   rmse 0.024004
+    FLAT       seed  5  R2       -17.720116   sd_n 0.019876   n_te  25402   rmse 0.085996
+    FLAT       seed  6  R2        -7.799832   sd_n 0.050053   n_te  25402   rmse 0.148479
+    FLAT       seed  7  R2        -1.908081   sd_n 0.040881   n_te  25402   rmse 0.069715
+    FLAT       seed  8  R2       -11.416657   sd_n 0.041532   n_te  25402   rmse 0.146347
+    FLAT       seed  9  R2       -35.383412   sd_n 0.014717   n_te  25402   rmse 0.088774
+    FLAT       seed 10  R2        -0.546200   sd_n 0.014194   n_te  25402   rmse 0.017650
+    FLAT       seed 11  R2        -7.958729   sd_n 0.032536   n_te  25402   rmse 0.097384
+    FLAT       seed 12  R2        -1.249403   sd_n 0.020021   n_te  25402   rmse 0.030028
+    FLAT       seed 13  R2        -8.705419   sd_n 0.039038   n_te  25402   rmse 0.121618
+    FLAT       seed 14  R2       -15.300122   sd_n 0.015216   n_te  25402   rmse 0.061430
+    FLAT       seed 15  R2       -12.054103   sd_n 0.053634   n_te  25402   rmse 0.193783
+    FLAT       seed 16  R2        -9.001409   sd_n 0.014003   n_te  25402   rmse 0.044285
+    FLAT       seed 17  R2        -7.782824   sd_n 0.053382   n_te  25402   rmse 0.158202
+    FLAT       seed 18  R2        -2.479175   sd_n 0.023942   n_te  25402   rmse 0.044658
+    FLAT       seed 19  R2        -2.176407   sd_n 0.050901   n_te  25402   rmse 0.090718
+    FLAT       seed 20  R2        -5.360696   sd_n 0.050408   n_te  25402   rmse 0.127131
+    FLAT       seed 21  R2       -10.233910   sd_n 0.039768   n_te  25402   rmse 0.133291
+    FLAT       seed 22  R2        -4.359249   sd_n 0.037730   n_te  25402   rmse 0.087345
+    FLAT       seed 23  R2         0.412064   sd_n 0.037581   n_te  25402   rmse 0.028816
+
+  summary: mean +/- SE across seeds (BLIND.mean_se)
+  config arm         seeds       sd_n(y_test) BTC         sd_n min-max               RMSE BTC     n_te
+  ARM A  BASELINE        8   0.030298 +/- 0.002698   0.01850-0.04036   0.000000 +/- 0.000000    25402
+  ARM A  QUANT-LOW       8   0.030434 +/- 0.002680   0.01850-0.04036   0.009810 +/- 0.003630    25402
+  ARM A  QUANT-HIGH      8   0.030577 +/- 0.002693   0.01839-0.04035   0.190470 +/- 0.147488    25402
+  ARM A  FLAT            8   0.032114 +/- 0.003496   0.01988-0.05005   0.077990 +/- 0.015075    25402
+  ARM B  BASELINE        8   0.030298 +/- 0.002698   0.01850-0.04036   0.000000 +/- 0.000000    25402
+  ARM B  JITTER          8   0.028612 +/- 0.002554   0.01665-0.03843   0.084326 +/- 0.013842    25402
+  ARM B  QUANT           8   0.030434 +/- 0.002680   0.01850-0.04036   0.009810 +/- 0.003630    25402
+  WIDTH  BASELINE       24   0.031746 +/- 0.002287   0.01540-0.05069   0.000000 +/- 0.000000    25402
+  WIDTH  Q-0.75         24   0.031651 +/- 0.002320   0.01436-0.05461   0.019853 +/- 0.002478    25402
+  WIDTH  Q-1.00         24   0.031970 +/- 0.002399   0.01436-0.05453   0.031883 +/- 0.004581    25402
+  WIDTH  Q-1.25         24   0.031551 +/- 0.002272   0.01436-0.05100   0.042420 +/- 0.005310    25402
+  WIDTH  Q-1.50         24   0.031182 +/- 0.002252   0.01380-0.05114   0.051120 +/- 0.007516    25402
+  WIDTH  Q-1.75         24   0.031514 +/- 0.002373   0.01375-0.05163   1.633341 +/- 1.579141    25402
+  WIDTH  FLAT           24   0.033146 +/- 0.002681   0.01400-0.05363   0.087307 +/- 0.009905    25402
