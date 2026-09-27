@@ -1,0 +1,35 @@
+====================================================================================================
+Self-tests; confirm_check.py. clipped_confirm has not been re-run.
+====================================================================================================
+  T-message   PASS  the 847a7fa message parses: 4/4 MET, margins 4.39 / 7.15 / 5.55 / 4.15 SE.
+  T-compare   PASS  planted output in clipped_confirm's exact format reproduces; a 0.01 shift
+                    in levels/side, a margin 0.01 SE off, and 3/4 MET each fail; an empty output raises.
+
+  All self-tests PASSED.
+
+====================================================================================================
+Does the working-point confirmation reproduce?; clipped_confirm_results.txt vs 847a7fa
+====================================================================================================
+  (a) targets vs clipped_mm_check.ABSENT
+      median width bp             got      0.28879  committed      0.28879  tol 5e-06  OK
+      median width bp        SE   got      0.01276  committed      0.01276  tol 5e-06  OK
+      levels/side                 got    551.23755  committed    551.23755  tol 5e-06  OK
+      levels/side            SE   got      2.53988  committed      2.53988  tol 5e-06  OK
+      aggTrades/s                 got      0.04464  committed      0.04464  tol 5e-06  OK
+      aggTrades/s            SE   got      0.00073  committed      0.00073  tol 5e-06  OK
+      mean/median shape           got      2.49631  committed      2.49631  tol 5e-06  OK
+      mean/median shape      SE   got      0.08231  committed      0.08231  tol 5e-06  OK
+  (b) verdicts: median_bp MET, levels_per_side MET, agg_per_s MET, shape MET; 4/4 MET (message: 4/4)  OK
+  (c) margins vs the 847a7fa message
+      median width bp        got   4.39 SE  recorded   4.39 SE  OK
+      levels/side            got   7.15 SE  recorded   7.15 SE  OK
+      aggTrades/s            got   5.55 SE  recorded   5.55 SE  OK
+      mean/median shape      got   4.15 SE  recorded   4.15 SE  OK
+  diagnostics (reported, not part of the reading)
+      near_btc               got       0.1244  committed       0.1244  tol 5e-05  match
+      near_lvl               got       3.1668  committed       3.1668  tol 5e-05  match
+      touch_age              got     395.9333  committed     395.9300  tol 5e-03  match
+      orders_per_side        got     623.3000  committed     623.3000  tol 5e-02  match
+      mean_bp                got       0.7081  committed       0.7081  tol 5e-05  match
+
+  The confirmation reproduces.

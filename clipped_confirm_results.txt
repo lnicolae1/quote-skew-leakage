@@ -1,0 +1,36 @@
+==========================================================================================================================
+Phase 5d; confirmation run at the working point
+==========================================================================================================================
+lam=1.8040  p_market=0.0126  mean_lifetime=720s  disp=0.0055  JOIN clipping, MM absent.
+15 seeds x 86400s. Point estimates are means over per-seed statistics; +/- is 1 SE.
+
+Verdicts  (95% interval vs tolerance band)
+--------------------------------------------------------------------------------------------------------------------------
+  median width bp         0.28879 +/- 0.01276    95% [  0.26378,   0.31379]  band [  0.22984,   0.34476]  MET
+  levels/side           551.23755 +/- 2.53988    95% [546.25939, 556.21570]  band [533.07200, 799.60800]  MET
+  aggTrades/s             0.04464 +/- 0.00073    95% [  0.04321,   0.04607]  band [  0.04059,   0.04961]  MET
+  mean/median shape       2.49631 +/- 0.08231    95% [  2.33499,   2.65763]  band [  0.94605,   2.83815]  MET
+
+  -> 4/4 MET
+
+Margin report; distance from point estimate to the nearest band edge, in SE
+--------------------------------------------------------------------------------------------------------------------------
+  median width bp          4.39 SE from the upper edge
+  levels/side              7.15 SE from the lower edge
+  aggTrades/s              5.55 SE from the lower edge
+  mean/median shape        4.15 SE from the upper edge
+
+  Tightest: mean/median shape at 4.15 SE.
+  4/4 with every target at least 2 SE inside its band.
+
+Unflagged diagnostics (not targets; not controlled by the knobs above)
+--------------------------------------------------------------------------------------------------------------------------
+  near-touch BTC (<=1bp)           0.1244 +/- 0.0048    vs    0.0452   2.75x
+  near-touch levels (<=1bp)        3.1668 +/- 0.0532    vs    2.1500   1.47x
+  touch-order age (s)            395.9333 +/- 11.2167   vs  247.0000   1.60x
+
+  Standing problem: size per near-touch level
+  is too high; no knob in this investigation addresses it.
+
+  orders/side 623.3 +/- 0.9   levels/side 551.2 +/- 2.5   mean bp 0.7081   clipped 12.8%   coherence 0.323
+  wall clock 68s
