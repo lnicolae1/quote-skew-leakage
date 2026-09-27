@@ -1,0 +1,51 @@
+======================================================================================================================
+Self-tests; cluster_b_calibration.py. No run yet.
+======================================================================================================================
+  T-IDENT     PASS  working point, k = 0.17763 and seeds 0-7 equal damage_ab's; clipped_window.TARGETS keys as expected.
+  T-patch     PASS  cluster_b() sets T=604800 and gamma=1.3392e-06, and restores 86400 / 9.4e-06,
+                    including after a planted exception.
+  T-parse     PASS  the committed 0.020 row parses: width 0.32138, levels 550.98455, rate 0.04083,
+                    shape SE 0.08618, sd(q) 0.04604, fill 5.80%; only the first 0.020 block is read.
+  T-score     PASS  score(); the function main() uses; on planted values: 0.389 +/- 0.005 misses,
+                    levels and shape MET, rate UNRESOLVED; 0.389 confirmed, 0.3905 not; NaN and
+                    zero SE raise. Output captured, not logged.
+
+  All self-tests PASSED.
+
+======================================================================================================================
+Cluster B, maker present; the four calibration targets at k = 0.17763, 8 seeds x 604800 s
+======================================================================================================================
+gamma=1.3392e-06 (damage_ab.GAMMA), quote size 0.020, lam=1.804 p_market=0.0126 life=720 disp=0.0055 JOIN.
+Scored by clipped_window.verdict. Readings fixed in the header.
+
+Gate 1; anchor: unpatched quotesize_verdict.measure(0.020) vs its committed row
+  fill_share         got     5.800004  committed      5.80000  tol 5e-03  OK
+  vol_share          got    14.295005  committed     14.30000  tol 5e-03  OK
+  sd_q               got     0.046035  committed      0.04604  tol 5e-06  OK
+  median_bp          got     0.321380  committed      0.32138  tol 5e-06  OK
+  median_bp_se       got     0.022752  committed      0.02275  tol 5e-06  OK
+  levels_per_side    got   550.984549  committed    550.98455  tol 5e-06  OK
+  levels_per_side_se got     2.776655  committed      2.77665  tol 5e-06  OK
+  agg_per_s          got     0.040826  committed      0.04083  tol 5e-06  OK
+  agg_per_s_se       got     0.000664  committed      0.00066  tol 5e-06  OK
+  shape              got     2.177654  committed      2.17765  tol 5e-06  OK
+  shape_se           got     0.086176  committed      0.08618  tol 5e-06  OK
+  anchor HELD (65s).
+
+Gate 2; mirror: patched quotesize_verdict.run vs damage_qs12.run_ext, seed 0, cluster B
+  mm_spread  patched run 18.875492435189   run_ext 18.875492435189   OK
+  sd_q       patched run 0.100522655406   run_ext 0.100522655406   OK
+  mirror HELD (106s): the patch produces the damage runs' world.
+
+Score; patched quotesize_verdict.measure(0.020), seeds 0-7
+  8 seven-day runs in 432s
+
+  target             Cluster B, maker present (8)       verdict    margin    maker absent (15, a8f801d) cluster C, maker (8)    
+  median width bp       0.38945 +/- 0.00487   [0.2298, 0.3448] MISSED      -9.17 SE     0.28879 +/- 0.01276      0.32138 +/- 0.02275  
+  levels/side         556.75990 +/- 1.12035   [533.0720, 799.6080] MET         21.14 SE   551.23755 +/- 2.53988    550.98455 +/- 2.77665  
+  aggTrades/s           0.04286 +/- 0.00035   [0.0406, 0.0496] MET          6.54 SE     0.04464 +/- 0.00073      0.04083 +/- 0.00066  
+  mean/median shape     1.90054 +/- 0.01614   [0.9460, 2.8381] MET         58.09 SE     2.49631 +/- 0.08231      2.17765 +/- 0.08618  
+  -> 3/4 MET, 1 MISSED, 0 UNRESOLVED
+  derived width 0.389 bp (2 x touch_geometry's 0.1947): measured 0.38945 bp -> confirmed
+
+  also: maker spread $18.3620 +/- 0.1888, sd(q) 0.09099 +/- 0.00798, mean width 0.7397 bp
