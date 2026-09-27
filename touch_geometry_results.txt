@@ -1,0 +1,57 @@
+==============================================================================================================
+Self-tests: touch_geometry.py
+==============================================================================================================
+  T-PARSE     PASS  size-0.020 row -> 18.3620 / 2.4700, tol 5e-5; 0.120 row ignored
+  T-DEPTH     PASS  near_depth counts non-MM size within 1 bp, side-averaged (0.20)
+  T-POSTSIM   PASS  planted rows: SUPERSEDED at 1.48/0.199, SURVIVES at 1.46/0.156;
+                    perturbed seed fails anchor; NaN raises
+  T-MIRROR    PASS  seed 0: MM median spread, residual median touch, final PnL match
+                    damage_qs12.run_ext's control arm to 1e-09 (109s).
+
+  self-tests PASS
+
+==============================================================================================================
+Touch geometry: cluster B, control arm, quote size 0.020, 8 seeds x 604800s
+==============================================================================================================
+gamma=1.3392e-06 k=0.17763 lam=1.804 p_market=0.0126 life=720 disp=0.0055 JOIN.
+Half-spreads in bp of mid; per-seed median over seconds primary.
+
+  seed 0  MM half 1.4420  resid touch half 0.1917  (0s)
+  seed 1  MM half 1.4569  resid touch half 0.1933  (53s)
+  seed 2  MM half 1.4499  resid touch half 0.2057  (52s)
+  seed 3  MM half 1.4344  resid touch half 0.1948  (51s)
+  seed 4  MM half 1.4658  resid touch half 0.1821  (51s)
+  seed 5  MM half 1.4648  resid touch half 0.1948  (52s)
+  seed 6  MM half 1.4514  resid touch half 0.1943  (55s)
+  seed 7  MM half 1.4656  resid touch half 0.2012  (53s)
+  8 runs in 366s (seed 0 reused from T-MIRROR)
+
+Anchor: 8-seed means of per-seed dollar medians vs damage_qs12_results.txt
+  mm_spread    got 18.362016  committed 18.3620  tol 5e-05  OK
+  resid_touch  got 2.470000  committed 2.4700  tol 5e-05  OK
+  ANCHOR HELD.
+
+  per seed (median over seconds unless marked):
+  seed    MM half   MM mean  full tch resid tch  resid mn     ratio near BTC   seconds
+  0        1.4420    1.4415    0.1917    0.1917    0.3670     7.344   0.1002    604800
+  1        1.4569    1.4524    0.1933    0.1933    0.3622     7.462   0.0939    604800
+  2        1.4499    1.4354    0.2057    0.2057    0.3792     6.857   0.1017    604800
+  3        1.4344    1.4306    0.1948    0.1948    0.3657     7.237   0.1002    604800
+  4        1.4658    1.4592    0.1821    0.1821    0.3614     7.713   0.1156    604800
+  5        1.4648    1.4699    0.1948    0.1948    0.3789     7.325   0.1058    604800
+  6        1.4514    1.4408    0.1943    0.1943    0.3674     7.271   0.1059    604800
+  7        1.4656    1.4645    0.2012    0.2012    0.3770     6.894   0.1068    604800
+
+  MM half-spread, median (bp)               1.4539 +/- 0.0041   (8 seeds)
+  MM half-spread, mean (bp)                 1.4493 +/- 0.0051   (8 seeds)
+  full-book touch half, median (bp)         0.1947 +/- 0.0024   (8 seeds)
+  full-book touch half, mean (bp)           0.3498 +/- 0.0025   (8 seeds)
+  residual touch half, median (bp)          0.1947 +/- 0.0024   (8 seeds)
+  residual touch half, mean (bp)            0.3699 +/- 0.0026   (8 seeds)
+  MM / residual touch, median ratio         7.2630 +/- 0.0995   (8 seeds)
+  near-touch non-MM BTC/side (<=1bp)        0.1037 +/- 0.0023   (8 seeds)
+
+  '~1.46 bp from mid'     measured 1.4539 bp -> SUPERSEDED
+  '~0.156 bp market touch' measured 0.1947 bp (residual; full book 0.1947) -> SUPERSEDED
+  'about nine times'       measured 7.26x
+  '0.1244 BTC/side'        measured 0.1037 BTC/side (descriptive; prose figure maker-absent)
