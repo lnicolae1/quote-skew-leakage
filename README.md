@@ -21,7 +21,7 @@ The paper builds an explicit attacker that recovers an Avellaneda–Stoikov mark
 
 **Experiments**
 
-Each experiment has a script and a `*_results.txt` file holding its printed output. Most scripts state their decision rule in the header and were committed before they were run. Appendix B of the paper lists these commits.
+Each experiment has a script and a `*_results.txt` file holding its printed output. The pre-registered scripts state their decision rule in the header and were committed before they were run.
 
 | Paper section | Results files |
 |---|---|
@@ -44,4 +44,6 @@ python make_figs.py
 
 ## Notes
 
-`NOTES.md`, cited in some scripts and results files, is the author's project notes and is not included.
+`NOTES.md`, cited in some scripts and results files, is the author's notes file and is not included.
+
+AI use: The code was written with AI coding tools (Claude Code) from the author's specifications; the research questions, experimental design and decision rules are the author's.
